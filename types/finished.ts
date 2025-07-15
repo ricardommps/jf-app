@@ -1,0 +1,25 @@
+export type Finished = {
+  id: number;
+  workoutsId: number;
+  executionDay: string;
+  distance: number | null;
+  duration: number | null;
+  pace: string | null;
+  link: string | null;
+  rpe: number | null;
+  trimp: string | null;
+  review: boolean | null;
+  comments: string | null;
+  feedback: string | null;
+  unrealized: boolean;
+  outdoor: boolean;
+  intensities: string[] | null;
+  unitMeasurement: string | null;
+  typeWorkout: string | null;
+  checkList: number[];
+  distanceInMeters: number | null;
+  durationInSeconds: number | null;
+  paceInSeconds: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
