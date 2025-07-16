@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "jfassessoria",
+    "name": "jfapp",
     "slug": "jfapp",
     "owner": "jftreinos",
     "version": "1.0.0",
@@ -17,7 +17,13 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "package": "com.jftreinos.jfapp",
+      "compileSdkVersion": 34,
+      "targetSdkVersion": 34,
+      "buildToolsVersion": "34.0.0",
+      "minSdkVersion": 21,
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
@@ -46,7 +52,7 @@
     },
     "notification": {
       "icon": "./assets/images/logo_header.png",
-      "color": "#ffffff" // opcional, define a cor de fundo do ícone
+      "color": "#ffffff"
     }
   }
 }
