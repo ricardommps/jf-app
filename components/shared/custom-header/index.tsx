@@ -1,7 +1,6 @@
 import React, { useContext } from "react";
 import { HStack } from "@/components/ui/hstack";
 import { SearchIcon } from "@/components/ui/icon";
-import { VStack } from "@/components/ui/vstack";
 import { Text } from "@/components/ui/text";
 import { Box } from "@/components/ui/box";
 import { Image } from "@/components/ui/image";
@@ -9,7 +8,6 @@ import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Mic, LogOut } from "lucide-react-native";
 import { ThemeContext } from "@/contexts/theme-context";
 import { useSession } from "@/contexts/Authentication";
-import { useRouter } from "expo-router";
 
 const CustomHeader = ({
   variant = "general",
@@ -28,23 +26,23 @@ const CustomHeader = ({
   return (
     <Box
       className={`${
-        isDarkMode ? "bg-gray-900" : "bg-gray-100"
+        isDarkMode ? "bg-[#2b2b2b9d] " : "bg-gray-100"
       } rounded-b-3xl overflow-hidden mb-3 items-center justify-center`}
     >
       <HStack className="p-5 pt-16 gap-6 justify-between w-full max-w-screen-lg mx-auto items-center">
         <HStack className="items-center gap-3">
           <Image
-            source={require("@/assets/images/logo_header.png")}
+            source={require("@/assets/images/jf_icone_v1.png")}
             alt="image"
-            size="none"
-            className="h-12 w-12"
+            className="h-10 w-10"
+            resizeMode="contain"
           />
           <Text
             className={`${
               isDarkMode ? "text-gray-300" : "text-black"
             } font-dm-sans-medium text-lg`}
           >
-            Olá {profile?.name}!
+            Olá {profile?.user.name}!
           </Text>
         </HStack>
         <HStack className="items-center gap-3">

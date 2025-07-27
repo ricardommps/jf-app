@@ -41,13 +41,13 @@ const buttonStyle = tva({
   variants: {
     action: {
       primary:
-        "bg-[#3D44CD] " +
-        "data-[hover=true]:bg-[#3539ad] " +
-        "data-[active=true]:bg-[#2c318e] " +
-        "border-[#9ea7f7] " +
-        "data-[hover=true]:border-[#7a85f3] " +
-        "data-[active=true]:border-[#564ff0] " +
-        "data-[focus-visible=true]:web:ring-[#3D44CD]",
+        "bg-[#3b3b3b] " +
+        "data-[hover=true]:bg-[#2d2d2d] " +
+        "data-[active=true]:bg-[#1f1f1f] " +
+        "border-[#3b3b3b] " +
+        "data-[hover=true]:border-[#2d2d2d] " +
+        "data-[active=true]:border-[#1f1f1f] " +
+        "data-[focus-visible=true]:web:ring-[#5a5a5a]",
       secondary:
         "bg-secondary-500 border-secondary-300 data-[hover=true]:bg-secondary-600 data-[hover=true]:border-secondary-400 data-[active=true]:bg-secondary-700 data-[active=true]:border-secondary-700 data-[focus-visible=true]:web:ring-indicator-info",
       positive:

@@ -12,7 +12,7 @@ const ProgramView = () => {
   const { id, type } = useLocalSearchParams();
   const safeId = id as string;
   const router = useRouter();
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["workoutsData", id, type],
     queryFn: async () => await getWorkouts(Number(safeId), Number(type)),
     enabled: !!id,
@@ -21,7 +21,7 @@ const ProgramView = () => {
     if (type === "1") {
       return <RunnerView workouts={data} programId={safeId} />;
     }
-    return <GymView />;
+    return <GymView workouts={data} programId={safeId} />;
   };
 
   if (error) {
@@ -30,11 +30,7 @@ const ProgramView = () => {
 
   return (
     <VStack space="md" className="flex-1 bg-background-0">
-      <HeaderNavigation
-        variant="search"
-        title="Meus treinos"
-        label="Search for a city"
-      />
+      <HeaderNavigation title="Meus treinos" />
       {isLoading ? <Loading /> : <>{data?.length && renderItem()}</>}
     </VStack>
   );

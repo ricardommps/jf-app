@@ -5,16 +5,46 @@
     "owner": "jftreinos",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "icon": "./assets/images/jf_icone_v1.png",
+    "scheme": "jfapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "linking": {
+      "prefixes": [
+        "jfapp://",
+        "https://connect.garmin.com",
+        "https://www.strava.com"
+      ]
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jftreinos.jfapp",
+      "associatedDomains": [
+        "applinks:connect.garmin.com",
+        "applinks:www.strava.com"
+      ],
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "jfapp",
+            "CFBundleURLSchemes": ["jfapp"]
+          }
+        ],
+        "NSExtension": {
+          "NSExtensionAttributes": {
+            "NSExtensionActivationRule": {
+              "NSExtensionActivationSupportsText": true,
+              "NSExtensionActivationSupportsWebURLWithMaxCount": 1
+            }
+          },
+          "NSExtensionMainStoryboard": "MainInterface",
+          "NSExtensionPointIdentifier": "com.apple.share-services"
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/jf_icone_v1.png",
         "backgroundColor": "#ffffff"
       },
       "softwareKeyboardLayoutMode": "pan",
@@ -23,7 +53,57 @@
       "targetSdkVersion": 34,
       "buildToolsVersion": "34.0.0",
       "minSdkVersion": 21,
-      "versionCode": 1
+      "versionCode": 1,
+      "intentFilters": [
+        {
+          "action": "android.intent.action.SEND",
+          "category": ["android.intent.category.DEFAULT"],
+          "data": {
+            "mimeType": "text/plain"
+          }
+        },
+        {
+          "action": "android.intent.action.SEND",
+          "category": ["android.intent.category.DEFAULT"],
+          "data": {
+            "mimeType": "text/*"
+          }
+        },
+        {
+          "action": "android.intent.action.VIEW",
+          "category": [
+            "android.intent.category.DEFAULT",
+            "android.intent.category.BROWSABLE"
+          ],
+          "data": {
+            "scheme": "jfapp"
+          }
+        },
+        {
+          "action": "android.intent.action.VIEW",
+          "category": [
+            "android.intent.category.DEFAULT",
+            "android.intent.category.BROWSABLE"
+          ],
+          "data": {
+            "scheme": "https",
+            "host": "connect.garmin.com",
+            "pathPrefix": "/modern/activity"
+          }
+        },
+        {
+          "action": "android.intent.action.VIEW",
+          "category": [
+            "android.intent.category.DEFAULT",
+            "android.intent.category.BROWSABLE"
+          ],
+          "data": {
+            "scheme": "https",
+            "host": "www.strava.com",
+            "pathPrefix": "/activities"
+          }
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -35,12 +115,13 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/jf_logo_full.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "./plugins/receive-sharing-intent.js"
     ],
     "experiments": {
       "typedRoutes": true
@@ -51,7 +132,7 @@
       }
     },
     "notification": {
-      "icon": "./assets/images/logo_header.png",
+      "icon": "./assets/images/jf_icone_v1.png",
       "color": "#ffffff"
     }
   }

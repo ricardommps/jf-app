@@ -1,4 +1,4 @@
-import { ExerciseInfo, Media } from "@/types/workout";
+import { ExerciseInfo, Media, MediaInfo } from "@/types/workout";
 import { useState } from "react";
 import { VStack } from "@/components/ui/vstack";
 import { Text } from "@/components/ui/text";
@@ -9,7 +9,7 @@ import { Button, ButtonText } from "@/components/ui/button";
 
 interface Props {
   media: Media;
-  exerciseInfo: ExerciseInfo[];
+  exerciseInfo: MediaInfo[];
 }
 
 const getYoutubeId = (url?: string) => {

@@ -12,3 +12,14 @@ export async function getWorkouts(programId: number, type: number) {
     throw error;
   }
 }
+
+export async function getWorkout(workoutId: string) {
+  try {
+    const url = `/api/v2/workouts/workout?id=${workoutId}`;
+    const response = await axiosInstance.get(url);
+    return response.data;
+  } catch (error) {
+    console.error("getPrograms", error);
+    throw error;
+  }
+}

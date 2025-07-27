@@ -22,7 +22,6 @@ type SessionData = {
 };
 
 type AuthType = {
-  signIn: () => void;
   signOut: () => void;
   session: SessionData | null;
   isLoading: boolean;
@@ -31,7 +30,6 @@ type AuthType = {
 };
 
 const AuthContext = createContext<AuthType>({
-  signIn: () => null,
   signOut: () => null,
   session: null,
   isLoading: false,
@@ -110,7 +108,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     }
   };
 
-  const getProfile = () => session?.user ?? null;
+  const getProfile = () => (session ? { user: session.user } : null);
 
   return (
     <AuthContext.Provider

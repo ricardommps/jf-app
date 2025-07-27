@@ -9,53 +9,44 @@ import { ThemeContext } from "@/contexts/theme-context";
 import GoBackButton from "../go-back-button";
 import { router } from "expo-router";
 
-const HeaderNavigation = ({
-  variant = "general",
-  title,
-  label,
-}: {
-  variant: "general" | "search";
-  title?: string;
-  label?: string;
-}) => {
+const HeaderNavigation = ({ title }: { title?: string }) => {
   const { colorMode }: any = useContext(ThemeContext);
   const isDarkMode = colorMode === "dark";
   return (
     <Box
-      className={`${
-        isDarkMode ? "bg-gray-900" : "bg-gray-100"
-      } rounded-b-3xl overflow-hidden items-center justify-center`}
+      className={
+        "bg-[#2b2b2b9d] rounded-b-3xl overflow-hidden items-center justify-center"
+      }
     >
       <HStack className="pt-10 px-5 gap-2 justify-between w-full max-w-screen-lg mx-auto items-center">
-        <HStack className="justify-between">
-          <VStack className="gap-2 justify-between">
-            <Text
-              className={`${
-                isDarkMode ? "text-gray-300" : "text-black"
-              } font-dm-sans-medium text-xl`}
-            >
-              {title}
-            </Text>
-            <HStack space="sm">
-              <GoBackButton
-                title="Voltar"
-                icon={ArrowLeftCircleIcon}
-                onPress={() => router.back()}
-                active={colorMode === "light"}
-              />
-            </HStack>
-          </VStack>
-        </HStack>
-        <HStack className="gap-4">
-          <VStack className="justify-end">
-            <Image
-              source={require("@/assets/images/logo_header.png")}
-              alt="logo"
-              contentFit="contain"
-              className="h-9 w-9"
+        <VStack className="gap-1 flex-1 min-w-0">
+          <Text
+            className={`${
+              isDarkMode ? "text-gray-300" : "text-black"
+            } font-dm-sans-medium text-xl`}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {title}
+          </Text>
+          <HStack space="sm" className="flex-shrink-0">
+            <GoBackButton
+              title="Voltar"
+              icon={ArrowLeftCircleIcon}
+              onPress={() => router.back()}
+              active={colorMode === "light"}
             />
-          </VStack>
-        </HStack>
+          </HStack>
+        </VStack>
+
+        <VStack className="justify-end flex-shrink-0 ml-2">
+          <Image
+            source={require("@/assets/images/jf_icone_v1.png")}
+            alt="logo"
+            contentFit="contain"
+            className="h-9 w-9"
+          />
+        </VStack>
       </HStack>
     </Box>
   );

@@ -32,6 +32,15 @@ import { HomeIcon, ActiveHomeIcon } from "@/components/shared/icon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RFValue } from "react-native-responsive-fontsize";
 import VolumeModalScreen from "../components/volume-modal";
+import ExtrapolativeValidity from "@/components/extrapolative-validity";
+import TablePace from "@/components/table-pace";
+import ExertionZone from "@/components/exertion-zone/indx";
+import { useQuery } from "@tanstack/react-query";
+import { getProgram } from "@/services/program.services";
+import { useRouter } from "expo-router";
+import Loading from "@/components/shared/loading";
+import { extrapolation } from "@/utils/extrapolation";
+import { ExtrapolationEntry } from "@/types/extrapolation";
 
 interface Props {
   workouts: Workout[];
@@ -69,11 +78,18 @@ const tabItems: TabItem[] = [
 ];
 
 const RunnerView = ({ workouts, programId }: Props) => {
+  const router = useRouter();
   const today = new Date();
   const flashListRef = useRef<FlatList<Workout>>(null);
   const scrollRef = useRef<ScrollView>(null);
   const { width } = Dimensions.get("window");
   const cardWidth = width - 24;
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["programData", programId],
+    queryFn: async () => await getProgram(programId),
+    enabled: !!programId,
+  });
 
   const { colorMode }: any = useContext(ThemeContext);
   const isDarkMode = colorMode === "dark";
@@ -87,6 +103,24 @@ const RunnerView = ({ workouts, programId }: Props) => {
     toISOStringWithTimezone(today)
   );
   const [activeTab, setActiveTab] = useState<TabId | null>(null);
+
+  const [showExtrapolativeValidity, setShowExtrapolativeValidity] =
+    useState(false);
+  const [showTablePace, setShowTablePace] = useState(false);
+  const [showExertionZone, setShowExertionZone] = useState(false);
+
+  const [currentExtrapolation, setCurrentExtrapolation] =
+    useState<ExtrapolationEntry | null>(null);
+
+  const getExtrapolationByPv = (pv: number | string) => {
+    const resultValue = extrapolation[pv as keyof typeof extrapolation];
+    if (resultValue) {
+      setCurrentExtrapolation(resultValue);
+    } else {
+      setCurrentExtrapolation(null);
+    }
+  };
+
   const insets = useSafeAreaInsets();
 
   const handleClose = () => {
@@ -116,8 +150,6 @@ const RunnerView = ({ workouts, programId }: Props) => {
     });
   }
 
-  // Função para gerar as configurações de marcação do calendário
-  // Função para gerar as configurações de marcação do calendário
   const generateMarkedDatesConfig = useCallback((workouts: Workout[]) => {
     const config: { [key: string]: { color: string; textColor: string } } = {};
     const today = toISOStringWithTimezone(new Date());
@@ -126,27 +158,20 @@ const RunnerView = ({ workouts, programId }: Props) => {
       const workoutDate = toISOStringWithTimezone(
         new Date(workout.datePublished)
       );
-
-      // Se é hoje, sempre azul (prioridade máxima)
       if (workoutDate === today) {
         config[workoutDate] = { color: "#1E40AF", textColor: "#ffffff" };
         return;
       }
-
-      // Se já existe configuração para esta data, verificar prioridade
       if (config[workoutDate]) {
-        // Verde tem prioridade sobre todas as outras cores (exceto hoje)
         if (config[workoutDate].color === "#4ADE80") {
           return;
         }
-        // Laranja tem prioridade sobre vermelho e azul claro
         if (
           config[workoutDate].color === "#FB923C" &&
           !(workout.finished && !workout.unrealized)
         ) {
           return;
         }
-        // Vermelho tem prioridade sobre azul claro
         if (
           config[workoutDate].color === "#EF4444" &&
           !(workout.finished && !workout.unrealized) &&
@@ -155,22 +180,17 @@ const RunnerView = ({ workouts, programId }: Props) => {
           return;
         }
       }
-      // Aplicar regras de cor (ordem de prioridade)
       if (workout.finished && !workout.unrealized) {
-        // Treino realizado - Verde (prioridade alta)
         config[workoutDate] = { color: "#4ADE80", textColor: "#ffffff" };
       } else if (workout.finished && workout.unrealized) {
-        // Treino não realizado - Laranja (prioridade média-alta)
         config[workoutDate] = { color: "#FB923C", textColor: "#ffffff" };
       } else if (!workout.finished && workoutDate < today) {
-        // Treino em atraso - Vermelho (prioridade média)
         config[workoutDate] = { color: "#EF4444", textColor: "#ffffff" };
       } else if (
         !workout.finished &&
         (workout.unrealized === false || workout.unrealized === null) &&
         workoutDate > today
       ) {
-        // Treino futuro - Azul claro (prioridade baixa)
         config[workoutDate] = { color: "#60A5FA", textColor: "#ffffff" };
       }
     });
@@ -178,7 +198,6 @@ const RunnerView = ({ workouts, programId }: Props) => {
     return config;
   }, []);
 
-  // Usar o hook do calendário com a configuração correta
   const calendar = useCalendar({
     initialDate: selectedDate,
     onDateChange: (date: string | string[]) => {
@@ -221,6 +240,20 @@ const RunnerView = ({ workouts, programId }: Props) => {
         return;
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (data?.pv) {
+      getExtrapolationByPv(data.pv);
+    }
+  }, [data]);
+
+  if (error) {
+    router.push(`/error/view`);
+  }
+  if (isLoading) {
+    return <Loading />;
+  }
+
   return (
     <>
       <HStack className="px-0 rounded-1xl gap-3 p-3" space="md">
@@ -262,7 +295,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
             <Text>Nenhum treino encontrado para esta data</Text>
           </View>
         )}
-        contentContainerStyle={{ paddingVertical: 16 }}
+        contentContainerStyle={{ paddingVertical: 16, padding: 12 }}
         ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
       />
       <Box className="bg-background-0">
@@ -326,53 +359,68 @@ const RunnerView = ({ workouts, programId }: Props) => {
             </Pressable>
           </HStack>
 
-          {[
-            "Validade Extrapolativa",
-            "Tabela Pace km-h",
-            "Zona de esforço",
-          ].map((label) => (
-            <HStack key={label} className="items-center w-full mt-5 gap-3">
-              <Text size="lg" className="font-semibold">
-                {label}
-              </Text>
-              <Pressable>
-                <Icon as={InfoIcon} size="lg" />
-              </Pressable>
-            </HStack>
-          ))}
-
           <HStack className="items-center w-full mt-5 gap-3">
             <Text size="lg" className="font-semibold">
-              Vo2 Max: 49,0
+              Validade Extrapolativa
             </Text>
+            <Pressable onPress={() => setShowExtrapolativeValidity(true)}>
+              <Icon as={InfoIcon} size="lg" />
+            </Pressable>
           </HStack>
 
           <HStack className="items-center w-full mt-5 gap-3">
-            <Text size="lg" className="font-semibold flex-1">
-              PV: 14
-            </Text>
             <Text size="lg" className="font-semibold">
-              Pace do PV Max: 4.15
+              Tabela Pace km-h
             </Text>
+            <Pressable onPress={() => setShowTablePace(true)}>
+              <Icon as={InfoIcon} size="lg" />
+            </Pressable>
           </HStack>
 
           <HStack className="items-center w-full mt-5 gap-3">
-            <Text size="lg" className="font-semibold flex-1">
-              VLA: 9.8
-            </Text>
             <Text size="lg" className="font-semibold">
-              Pace VLA: 6.10
+              Zona de esforço
             </Text>
+            <Pressable onPress={() => setShowExertionZone(true)}>
+              <Icon as={InfoIcon} size="lg" />
+            </Pressable>
           </HStack>
+          {data && (
+            <>
+              <HStack className="items-center w-full mt-5 gap-3">
+                <Text size="lg" className="font-semibold">
+                  Vo2 Max: {currentExtrapolation?.VO2 || 0}
+                </Text>
+              </HStack>
 
-          <HStack className="items-center w-full mt-5 gap-3">
-            <Text size="lg" className="font-semibold flex-1">
-              VLAN: 11.2
-            </Text>
-            <Text size="lg" className="font-semibold">
-              Pace VLAN: 5.20
-            </Text>
-          </HStack>
+              <HStack className="items-center w-full mt-5 gap-3">
+                <Text size="lg" className="font-semibold flex-1">
+                  PV: {data?.pv || 0}
+                </Text>
+                <Text size="lg" className="font-semibold">
+                  Pace do PV Max: {data?.pace || 0}
+                </Text>
+              </HStack>
+
+              <HStack className="items-center w-full mt-5 gap-3">
+                <Text size="lg" className="font-semibold flex-1">
+                  VLA: {data?.vla || 0}
+                </Text>
+                <Text size="lg" className="font-semibold">
+                  Pace VLA: {data?.paceVla || 0}
+                </Text>
+              </HStack>
+
+              <HStack className="items-center w-full mt-5 gap-3">
+                <Text size="lg" className="font-semibold flex-1">
+                  VLAN: {data?.vlan || 0}
+                </Text>
+                <Text size="lg" className="font-semibold">
+                  Pace VLAN: {data?.paceVlan || 0}
+                </Text>
+              </HStack>
+            </>
+          )}
         </ActionsheetContent>
       </Actionsheet>
 
@@ -394,6 +442,28 @@ const RunnerView = ({ workouts, programId }: Props) => {
         visible={showVolumeModal}
         onRequestClose={handleCloseVolume}
         programId={programId}
+      />
+
+      <ExtrapolativeValidity
+        visible={showExtrapolativeValidity}
+        onRequestClose={() => setShowExtrapolativeValidity(false)}
+        currentExtrapolation={currentExtrapolation}
+      />
+      <TablePace
+        visible={showTablePace}
+        onRequestClose={() => setShowTablePace(false)}
+      />
+      <ExertionZone
+        visible={showExertionZone}
+        onRequestClose={() => setShowExertionZone(false)}
+        data={{
+          pv: data?.pv,
+          pace: data?.pace,
+          vla: data?.vla,
+          paceVla: data?.paceVla,
+          vlan: data?.vlan,
+          paceVlan: data?.paceVlan,
+        }}
       />
     </>
   );

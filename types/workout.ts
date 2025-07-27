@@ -50,7 +50,7 @@ export type MediaInfo = {
   id: number;
   workoutItem: WorkoutItem;
   media: Media;
-  mediaId: string | null;
+  mediaId: string;
   method: string | null;
   reps: string | null;
   reset: string | null;

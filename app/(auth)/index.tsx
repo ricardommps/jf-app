@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { View } from "@/components/ui/view";
 import { Text } from "@/components/ui/text";
 import { Button, ButtonText } from "@/components/ui/button";
-import Logo from "@/assets/images/logo.svg";
+import { Image } from "@/components/ui/image";
 
 export default function Authentication() {
   const router = useRouter();
@@ -14,8 +14,13 @@ export default function Authentication() {
 
   return (
     <SafeAreaView className="container px-7 bg-black h-full">
-      <View className="flex justify-center items-center mt-24">
-        <Logo />
+      <View className="flex justify-center items-center mt-32">
+        <Image
+          source={require("@/assets/images/jf_logo_full.png")}
+          alt="logo"
+          contentFit="contain"
+          className="w-[500px] h-[300px]"
+        />
       </View>
       <View className="flex justify-center items-center pt-20">
         <Text className="text-3xl font-extrabold text-white text-center">

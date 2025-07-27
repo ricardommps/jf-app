@@ -15,6 +15,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Image } from "@/components/ui/image";
 
 const schema = z.object({
   cpf: z.string().min(1, "CPF é obrigatório"),
@@ -85,8 +86,13 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView className="container bg-black px-7 h-full">
-      <View className="flex justify-center items-center mt-24">
-        <Logo />
+      <View className="flex justify-center items-center mt-32">
+        <Image
+          source={require("@/assets/images/jf_logo_full.png")}
+          alt="logo"
+          contentFit="contain"
+          className="w-[400px] h-[200px]"
+        />
       </View>
       <View className="mt-12">
         <Controller
@@ -95,7 +101,7 @@ export default function LoginScreen() {
           render={({ field: { onChange, onBlur, value } }) => (
             <Input
               variant="rounded"
-              className="border-0 bg-gray-900 rounded-md mt-2 mb-5 w-full"
+              className="border-0 bg-[#2b2b2b9d] rounded-md mt-2 mb-5 w-fulll"
               size="lg"
               isDisabled={isLoading}
             >
@@ -119,7 +125,7 @@ export default function LoginScreen() {
           render={({ field: { onChange, onBlur, value } }) => (
             <Input
               variant="rounded"
-              className="border-0 bg-gray-900 rounded-md mt-2 mb-5 w-full"
+              className="border-0 bg-[#2b2b2b9d] rounded-md mt-2 mb-5 w-full"
               size="lg"
               isDisabled={isLoading}
             >

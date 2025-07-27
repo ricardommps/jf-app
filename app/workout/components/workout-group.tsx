@@ -1,4 +1,4 @@
-import { ExerciseInfo, Media } from "@/types/workout";
+import { MediaInfo } from "@/types/workout";
 import { useState, useRef } from "react";
 import { Dimensions, LayoutChangeEvent, View } from "react-native";
 import { Box } from "@/components/ui/box";
@@ -11,18 +11,18 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@/components/ui/icon";
-import WorkoutItemGroup from "./workout-item-group";
 import { window } from "@/constants/sizes";
 import { useSharedValue } from "react-native-reanimated";
+import { Media } from "@/types/media";
+import WorkoutItem from "./workout-item";
 
 interface Props {
   media: Media[];
-  exerciseInfo: ExerciseInfo[];
+  exerciseInfo: MediaInfo[];
+  isWorkoutLoad: boolean;
 }
 
-const { width } = Dimensions.get("window");
-
-const WorkoutGroup = ({ media, exerciseInfo }: Props) => {
+const WorkoutGroup = ({ media, exerciseInfo, isWorkoutLoad }: Props) => {
   const [itemHeights, setItemHeights] = useState<number[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const ref = useRef<ICarouselInstance>(null);
@@ -31,9 +31,17 @@ const WorkoutGroup = ({ media, exerciseInfo }: Props) => {
 
   const handleType = () => {
     let title = "";
-    if (media.length === 2) title = "BISET";
-    else if (media.length === 3) title = "TRISET";
-    else if (media.length > 3) title = "CIRCUITO";
+    if (media.length === 2) {
+      title = "BISET";
+    }
+
+    if (media.length === 3) {
+      title = "TRISET";
+    }
+
+    if (media.length > 3) {
+      title = "CIRCUITO";
+    }
 
     return (
       <Alert
@@ -73,13 +81,18 @@ const WorkoutGroup = ({ media, exerciseInfo }: Props) => {
     const item = media[index];
     return (
       <View onLayout={(e) => handleLayout(e, index)} className="px-4">
-        <WorkoutItemGroup media={item} exerciseInfo={exerciseInfo} />
+        <WorkoutItem
+          key={index}
+          media={item}
+          exerciseInfo={exerciseInfo}
+          isWorkoutLoad={isWorkoutLoad}
+        />
       </View>
     );
   };
 
   return (
-    <Box className="p-2 rounded-xl overflow-hidden bg-cyan-light">
+    <Box className="p-2 rounded-xl overflow-hidden bg-[#2b2b2bc9]">
       {handleType()}
       <Box className="flex-row items-center justify-center mt-4 w-full gap-x-2">
         <TouchableOpacity
@@ -117,7 +130,7 @@ const WorkoutGroup = ({ media, exerciseInfo }: Props) => {
         <Carousel
           autoPlayInterval={2000}
           data={media}
-          height={itemHeights[activeIndex] || 300}
+          height={itemHeights[activeIndex] || 500}
           loop={false}
           pagingEnabled={true}
           snapEnabled={true}

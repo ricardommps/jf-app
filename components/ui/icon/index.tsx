@@ -1873,3 +1873,57 @@ const VolumeIcon = createIcon({
 
 VolumeIcon.displayName = "VolumeIcon";
 export { VolumeIcon };
+
+const TreadmillIcon = createIcon({
+  Root: Svg,
+  viewBox: "0 0 24 24",
+  path: (
+    <>
+      {/* Base da esteira */}
+      <Path
+        d="M2 18H22C22 19 21 20 20 20H4C3 20 2 19 2 18Z"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Painel de controle */}
+      <Path
+        d="M8 18V12C8 11 9 10 10 10H14C15 10 16 11 16 12V18"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Suporte lateral esquerdo */}
+      <Path
+        d="M6 18V8C6 7 7 6 8 6"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Suporte lateral direito */}
+      <Path
+        d="M18 18V8C18 7 17 6 16 6"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Display/tela */}
+      <Path
+        d="M10 12H14"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Botões de controle */}
+      <Path
+        d="M11 14H11.01M13 14H13.01"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </>
+  ),
+});
+
+TreadmillIcon.displayName = "TreadmillIcon";
+export { TreadmillIcon };

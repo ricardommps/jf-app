@@ -72,7 +72,7 @@ const Comments = ({ open, onClose }: Props) => {
           <HStack space="lg" className="w-full px-9 py-2">
             <Avatar className="h-8 w-8">
               <AvatarImage
-                source={require("@/assets/images/logo_header.png")}
+                source={require("@/assets/images/jf_icone_v1.png")}
               />
             </Avatar>
             <VStack className="flex-1">

@@ -1,4 +1,4 @@
-import { Media, ExerciseInfo } from "@/types/workout";
+import { MediaInfo } from "@/types/workout";
 import {
   Accordion,
   AccordionItem,
@@ -13,13 +13,15 @@ import { ChevronUpIcon, ChevronDownIcon } from "@/components/ui/icon";
 import WorkoutView from "./workout-view";
 import { ScrollView } from "react-native";
 import React from "react";
+import { Media } from "@/types/media";
 
 interface Props {
   title: string;
-  description: string;
+  description: string | null;
   medias: Media[];
   mediaOrder: (number | number[])[];
-  exerciseInfo: ExerciseInfo[];
+  exerciseInfo: MediaInfo[];
+  isWorkoutLoad: boolean;
 }
 
 const WorkoutSection = ({
@@ -28,6 +30,7 @@ const WorkoutSection = ({
   medias,
   mediaOrder,
   exerciseInfo,
+  isWorkoutLoad,
 }: Props) => {
   if (!description && (!medias || medias.length === 0 || !mediaOrder?.length))
     return null;
@@ -41,7 +44,7 @@ const WorkoutSection = ({
       defaultValue={[title]}
       className="border-outline-200 bg-background-0"
     >
-      <AccordionItem value={title} className="bg-gray-900 rounded-xl m-3">
+      <AccordionItem value={title} className="bg-[#2b2b2b9d] rounded-xl m-3">
         <AccordionHeader>
           <AccordionTrigger>
             {({ isExpanded }) => {
@@ -67,6 +70,7 @@ const WorkoutSection = ({
               medias={medias}
               mediaOrder={mediaOrder}
               exerciseInfo={exerciseInfo}
+              isWorkoutLoad={isWorkoutLoad}
             />
           )}
         </AccordionContent>

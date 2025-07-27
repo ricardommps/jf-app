@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { ArrowLeftCircleIcon, CalendarDaysIcon } from "lucide-react-native";
 import {
   View,
   Text,
@@ -397,7 +396,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
               >
                 <Input
                   variant="rounded"
-                  className="border-0 bg-gray-900 rounded-md mt-2 mb-1 w-full"
+                  className="border-0 bg-[#2b2b2b9d] rounded-md mt-2 mb-1 w-full"
                   size="lg"
                   isReadOnly={true}
                   pointerEvents="none"
@@ -428,7 +427,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
               >
                 <Input
                   variant="rounded"
-                  className="border-0 bg-gray-900 rounded-md mt-2 mb-1 w-full"
+                  className="border-0 bg-[#2b2b2b9d] rounded-md mt-2 mb-1 w-full"
                   size="lg"
                   isReadOnly={true}
                   pointerEvents="none"
