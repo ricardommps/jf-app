@@ -34,7 +34,7 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
     const { dateString } = day;
 
     if (!markedDates[dateString]) {
-      return; // ← Ignora clique em datas não marcadas
+      return;
     }
     setTempSelectedDate(dateString);
   };
@@ -45,11 +45,8 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
       onRequestClose();
     }
   }, [tempSelectedDate]);
-
-  // Usar customMarkedDates se fornecido, senão usar configuração padrão
   const markedDates = React.useMemo(() => {
     if (Object.keys(customMarkedDates).length > 0) {
-      // Adicionar destaque para a data temporariamente selecionada
       const marked = { ...customMarkedDates };
 
       if (tempSelectedDate && !marked[tempSelectedDate]) {
@@ -59,7 +56,6 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
           selectedTextColor: "#ffffff",
         };
       } else if (tempSelectedDate && marked[tempSelectedDate]) {
-        // Manter a cor original mas adicionar borda para indicar seleção
         marked[tempSelectedDate] = {
           ...marked[tempSelectedDate],
           selected: true,
@@ -74,8 +70,6 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
 
       return marked;
     }
-
-    // Fallback para o comportamento padrão
     const marked: { [key: string]: any } = {};
 
     if (tempSelectedDate) {

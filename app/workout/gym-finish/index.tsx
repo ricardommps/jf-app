@@ -1,5 +1,9 @@
+import { useContext, useEffect, useState, useMemo } from "react";
+import { Modal, ScrollView, TouchableWithoutFeedback } from "react-native";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
 import HeaderNavigation from "@/components/shared/header-navigation";
-import { useContext, useState } from "react";
 import { ThemeContext } from "@/contexts/theme-context";
 import { VStack } from "@/components/ui/vstack";
 import { Box } from "@/components/ui/box";
@@ -14,25 +18,133 @@ import {
   SadIcon,
   VerySadIcon,
 } from "@/components/ui/icon";
-import { Modal, ScrollView, TouchableWithoutFeedback } from "react-native";
-import { Calendar } from "react-native-calendars";
-import dayjs from "dayjs";
 import { Input, InputField, InputSlot } from "@/components/ui/input";
 import { Button, ButtonText } from "@/components/ui/button";
 import { CalendarDays } from "lucide-react-native";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
+import { Calendar } from "react-native-calendars";
+import dayjs from "dayjs";
+import { convertDate } from "@/utils/format-time";
+import { useRouter } from "expo-router";
+import Loading from "@/components/shared/loading";
+
+import {
+  useToast,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+} from "@/components/ui/toast";
+import { finishedWorkout } from "@/services/finished.service";
+import { calendarBaseTheme } from "@/utils/calendar-base-theme";
+import { useLocalSearchParams as useExpoLocalSearchParams } from "expo-router";
+
+const workoutSchema = z.object({
+  workoutsId: z.string(),
+  rpe: z.number(),
+  comments: z.string(),
+  executionDay: z
+    .string()
+    .min(1, "Data de realização do treino obrigatório")
+    .refine((val) => val !== null && val !== "", {
+      message: "Data de realização do treino obrigatório",
+    }),
+});
+
+type WorkoutFormData = z.infer<typeof workoutSchema>;
+
+interface Params {
+  id?: string;
+}
+
+function useLocalSearchParams(): Params {
+  return useExpoLocalSearchParams() as Params;
+}
 
 const GymFinishView = () => {
-  const [selected, setSelected] = useState<number | null>(null);
+  const { id } = useLocalSearchParams();
+  const safeId = id ?? "";
+  const router = useRouter();
+  const toast = useToast();
+
   const { colorMode }: any = useContext(ThemeContext);
   const isDarkMode = colorMode === "dark";
 
-  const [selectedDate, setSelectedDate] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [toastId, setToastId] = useState<string>("");
+
+  const defaultValues = useMemo(
+    () => ({
+      rpe: 0,
+      comments: "",
+      workoutsId: safeId,
+      executionDay: "",
+    }),
+    [safeId]
+  );
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<WorkoutFormData>({
+    resolver: zodResolver(workoutSchema),
+    defaultValues,
+  });
+
+  const watchedExecutionDay = watch("executionDay");
+  const watchedRpe = watch("rpe");
+
+  const calendarProps = useMemo(() => {
+    const baseTheme = { ...calendarBaseTheme };
+    return {
+      theme: { ...baseTheme },
+    };
+  }, []);
 
   const handleDayPress = (day: { dateString: string }) => {
-    setSelectedDate(day.dateString);
+    setValue("executionDay", day.dateString);
     setModalVisible(false);
+  };
+
+  async function onSubmit(data: WorkoutFormData) {
+    setIsLoading(true);
+    try {
+      const payload = Object.assign({}, data);
+      payload.workoutsId = safeId;
+      payload.rpe = Number(payload.rpe);
+      payload.executionDay = convertDate(payload.executionDay);
+      await finishedWorkout(payload);
+      router.push(`/finished`);
+    } catch (err) {
+      const parsedError = err as Error;
+      if (!toast.isActive(toastId)) {
+        showNewToast(parsedError.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const showNewToast = (message: string) => {
+    const newId = Math.random().toString();
+    setToastId(newId);
+    toast.show({
+      id: newId,
+      placement: "top",
+      duration: 9000,
+      render: ({ id }) => {
+        const uniqueToastId = "toast-" + id;
+        return (
+          <Toast nativeID={uniqueToastId} action="error" variant="solid">
+            <ToastTitle>Erro ao finalizar treino</ToastTitle>
+            <ToastDescription>{message}</ToastDescription>
+          </Toast>
+        );
+      },
+    });
   };
 
   const colors = [
@@ -73,28 +185,34 @@ const GymFinishView = () => {
       icon: VeryHappyIcon,
     },
   ];
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
   return (
     <VStack space="md" className="flex-1 bg-background-0">
-      <HeaderNavigation
-        variant="search"
-        title="Finalizar treino"
-        label="Search for a city"
-      />
+      <HeaderNavigation title="Finalizar treino indoor" />
       <ScrollView>
         <Box className="px-4 pt-2">
           <Pressable onPress={() => setModalVisible(true)} className="w-full">
             <Box pointerEvents="none">
+              <Text className="text-typography-600 text-base">
+                Data de realização do treino
+              </Text>
               <Input
                 variant="rounded"
-                className="border-0 bg-background-50 rounded-md mt-2 mb-5 w-full"
+                className="border-0 bg-[#2b2b2b9d] rounded-md mt-1 mb-1 w-full"
                 size="lg"
               >
                 <InputField
                   editable={false}
                   value={
-                    selectedDate ? dayjs(selectedDate).format("DD/MM/YYYY") : ""
+                    watchedExecutionDay
+                      ? dayjs(watchedExecutionDay).format("DD/MM/YYYY")
+                      : ""
                   }
-                  placeholder="Data de realização do treino"
+                  placeholder="DD/MM/YYYY"
                   className="placeholder:text-typography-400"
                 />
                 <InputSlot className="pr-3">
@@ -103,86 +221,52 @@ const GymFinishView = () => {
               </Input>
             </Box>
           </Pressable>
-
-          <Modal visible={modalVisible} transparent animationType="fade">
-            <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-              <Box className="flex-1 bg-black/40 justify-center items-center px-4">
-                <TouchableWithoutFeedback>
-                  <Box className="bg-white rounded-2xl w-full p-4">
-                    <Calendar
-                      onDayPress={handleDayPress}
-                      markedDates={{
-                        [selectedDate]: {
-                          selected: true,
-                          marked: true,
-                          selectedColor: "#22c55e", // green-500
-                        },
-                      }}
-                      theme={{
-                        todayTextColor: "#22c55e",
-                      }}
-                    />
-
-                    <VStack className="flex-row justify-end mt-4 gap-8">
-                      <Button
-                        onPress={() => {
-                          setSelectedDate("");
-                          setModalVisible(false);
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="bg-red-500"
-                      >
-                        <Text className="text-white">Limpar</Text>
-                      </Button>
-
-                      <Button
-                        onPress={() => setModalVisible(false)}
-                        className="bg-green-500"
-                        size="sm"
-                      >
-                        <Text className="text-white">Fechar</Text>
-                      </Button>
-                    </VStack>
-                  </Box>
-                </TouchableWithoutFeedback>
-              </Box>
-            </TouchableWithoutFeedback>
-          </Modal>
+          {errors.executionDay && (
+            <Text className="text-red-500 text-sm mt-1">
+              {errors.executionDay.message}
+            </Text>
+          )}
         </Box>
-        <Box className="px-4 mb-5">
-          <Textarea
-            size="md"
-            isReadOnly={false}
-            isInvalid={false}
-            isDisabled={false}
-            className="border-0 bg-background-50 rounded-md  w-full"
-          >
-            <TextareaInput
-              placeholder="Comentários"
-              className="pt-2 text-left align-top"
-            />
-          </Textarea>
+        {/* Comentários */}
+        <Box className="px-4 pt-2">
+          <Text className="text-typography-600 text-base mb-1">
+            Comentários
+          </Text>
+          <Controller
+            control={control}
+            name="comments"
+            render={({ field: { onChange, value } }) => (
+              <Textarea className="border-0 bg-[#2b2b2b9d] rounded-md mt-1 mb-1 w-full">
+                <TextareaInput
+                  value={value}
+                  onChangeText={onChange}
+                  placeholder="Adicione suas observações sobre o treino..."
+                  className="placeholder:text-typography-400"
+                />
+              </Textarea>
+            )}
+          />
         </Box>
-        <VStack className="justify-center items-center">
+        {/* Escala de esforço */}
+        <VStack className="justify-center items-center pt-6">
           <VStack className="items-center mb-5 gap-2">
             <Text className="text-typography-700 font-semibold">
-              Escala CR-10 de borg
+              Escala CR-10
             </Text>
             <Text className="text-typography-700 font-semibold">
-              Percepção de esforço
+              Percepção Subjetiva de Esforço(PSE)
             </Text>
           </VStack>
           <VStack space="sm" className="items-start gap-1">
             {colors.map(({ value, color, label, icon }) => {
-              const isSelected = selected === value;
+              const isSelected = watchedRpe === value;
               const baseStyle = `${color}/60 rounded-md w-16 h-10 justify-center items-center`;
               const selectedStyle = isSelected
                 ? "border-2 border-black dark:border-white p-1"
                 : "";
 
               return (
-                <Pressable key={value} onPress={() => setSelected(value)}>
+                <Pressable key={value} onPress={() => setValue("rpe", value)}>
                   <HStack
                     className={`items-center gap-2 ${selectedStyle} ${color}`}
                   >
@@ -218,11 +302,49 @@ const GymFinishView = () => {
           <Button variant="outline" size="md">
             <ButtonText>Fechar</ButtonText>
           </Button>
-          <Button action="positive" size="md">
+          <Button action="primary" size="md" onPress={handleSubmit(onSubmit)}>
             <ButtonText>Salvar</ButtonText>
           </Button>
         </HStack>
       </ScrollView>
+
+      {/* Modal do calendário */}
+      <Modal visible={modalVisible} transparent animationType="fade">
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <Box className="flex-1 justify-center items-center bg-black/70">
+            <TouchableWithoutFeedback>
+              <Box className="bg-slate-700 m-6 rounded-2xl w-11/12 max-w-md shadow-2xl">
+                <Calendar
+                  onDayPress={handleDayPress}
+                  markedDates={{
+                    [watchedExecutionDay]: {
+                      selected: true,
+                      marked: true,
+                      selectedColor: "#22c55e",
+                    },
+                  }}
+                  {...calendarProps}
+                />
+                <HStack className="justify-end mt-4 gap-2 p-5">
+                  <Button
+                    onPress={() => {
+                      setValue("executionDay", "");
+                      setModalVisible(false);
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <ButtonText className="text-white">Limpar</ButtonText>
+                  </Button>
+                  <Button onPress={() => setModalVisible(false)} size="sm">
+                    <ButtonText className="text-white">Fechar</ButtonText>
+                  </Button>
+                </HStack>
+              </Box>
+            </TouchableWithoutFeedback>
+          </Box>
+        </TouchableWithoutFeedback>
+      </Modal>
     </VStack>
   );
 };
