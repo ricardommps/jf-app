@@ -45,7 +45,7 @@ const WorkoutGroup = ({ media, exerciseInfo, isWorkoutLoad }: Props) => {
 
     return (
       <Alert
-        className="bg-blue-400 rounded-lg flex-row items-center gap-x-2 p-4"
+        className="bg-background-200 rounded-lg flex-row items-center gap-x-2 p-4"
         variant="solid"
       >
         <AlertIcon as={InfoIcon} className="text-white font-dm-sans-bold" />

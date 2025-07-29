@@ -175,6 +175,10 @@ const GymView = ({ workouts, programId }: Props) => {
       case "info":
         setShowActionsheet(true);
         return;
+
+      case "home":
+        router.replace("/(tabs)/(home)");
+        return;
     }
   }, [activeTab]);
 

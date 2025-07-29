@@ -5,6 +5,7 @@ import { ProfileType, UserType } from "@/types/ProfileType";
 import { removeAccessToken, setAccessToken } from "@/utils/token";
 import * as SecureStore from "expo-secure-store";
 import axiosInstance from "@/config/axios";
+import { registerLogoutCallback } from "@/auth/authEvents";
 
 interface LoginResponseApi {
   accessToken: string;
@@ -69,6 +70,7 @@ function useProtectedRoute(session: SessionData | null) {
 
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, sessionStr], setSessionStr] = useStorageState("session");
+  const router = useRouter();
 
   let session: SessionData | null = null;
   try {
@@ -81,8 +83,13 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   const signOut = () => {
     setSessionStr(null);
-    removeAccessToken(); // <- limpa o token do SecureStore
+    removeAccessToken();
+    router.replace("/(auth)");
   };
+
+  useEffect(() => {
+    registerLogoutCallback(signOut);
+  }, []);
 
   const login = async ({ cpf, password }: LoginProps): Promise<any> => {
     try {
@@ -99,8 +106,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
         user: data.user,
       };
       const sessionString = JSON.stringify(sessionData);
-      await SecureStore.setItemAsync("session", sessionString); // <-- add isto
-      setSessionStr(sessionString); // AsyncStorage, usado pelo useStorageState
+      await SecureStore.setItemAsync("session", sessionString);
+      setSessionStr(sessionString);
 
       return data.user;
     } catch (error) {

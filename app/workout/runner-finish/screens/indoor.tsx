@@ -256,21 +256,12 @@ const IndoorScreen = ({ safeId }: Props) => {
     return 0;
   };
 
-  const calculateAverage = (itens: number[]) => {
-    if (itens.length > 0) {
-      const intensitiesValues = itens.map((it: number) => it);
-      const noEmptyValues = intensitiesValues.filter(
-        (str: any) => str !== "" && str > 0
-      );
-      const average =
-        noEmptyValues.reduce((p: number, c: number) => p + c, 0) /
-        noEmptyValues.length;
-      if (isNaN(average)) {
-        return 0;
-      }
-      return Math.floor(average * 100) / 100;
-    }
-    return 0;
+  const calculateAverage = (items: number[]): number => {
+    const validItems = items.filter((num) => num > 0);
+    if (validItems.length === 0) return 0;
+    const sum = validItems.reduce((acc, curr) => acc + curr, 0);
+    const average = sum / validItems.length;
+    return Math.floor(average * 100) / 100;
   };
 
   const handleArraySizeChange = (size: string) => {
@@ -300,28 +291,19 @@ const IndoorScreen = ({ safeId }: Props) => {
                 keyboardType="numeric"
                 value={String(value || "")}
                 onChangeText={(text) => {
-                  // Permite apenas números, pontos e vírgulas
                   const cleanText = text.replace(/[^0-9.,]/g, "");
-
-                  // Substitui vírgula por ponto
                   const normalizedText = cleanText.replace(",", ".");
-
-                  // Valida formato
                   const isValid = /^\d*\.?\d*$/.test(normalizedText);
-
                   if (isValid) {
-                    // Sempre mantém como string para preservar a formatação durante a digitação
                     onChange(normalizedText);
                   }
                 }}
                 onBlur={() => {
-                  // Só converte para número quando perde o foco
                   const parsed = parseFloat(String(value));
                   if (!isNaN(parsed) && String(value) !== "") {
                     onChange(parsed);
                   }
                 }}
-                placeholder="Intensidade"
                 className="text-white"
               />
               <InputSlot className="pr-3">
@@ -666,7 +648,6 @@ const IndoorScreen = ({ safeId }: Props) => {
                   editable
                   value={String(value.length)}
                   onChangeText={handleArraySizeChange}
-                  placeholder="intensities"
                   className="placeholder:text-typography-400"
                   autoComplete="off"
                   autoCapitalize="none"

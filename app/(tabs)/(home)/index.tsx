@@ -10,11 +10,11 @@ import Animated, { FadeInUp } from "react-native-reanimated";
 
 import ProgramCard from "@/components/screens/program/program-card";
 import { useQuery } from "@tanstack/react-query";
-import { useSession } from "@/contexts/Authentication";
 import { getPrograms } from "@/services/program.services";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import Loading from "@/components/shared/loading";
 import { useRouter } from "expo-router";
+import { AxiosError } from "axios";
 
 // Definir o tipo do item do programa baseado no retorno da API
 interface ProgramItem {
@@ -33,7 +33,10 @@ const Home = () => {
 
   const { handleError } = useErrorHandler();
 
-  const { data, isLoading, refetch, error } = useQuery({
+  const { data, isLoading, refetch, error } = useQuery<
+    ProgramItem[],
+    AxiosError
+  >({
     queryKey: ["programs"],
     queryFn: async () => await getPrograms(),
     retry: 3,
@@ -75,7 +78,9 @@ const Home = () => {
   }
 
   if (error) {
-    router.push(`/error/view`);
+    if (error?.status !== 403) {
+      router.push(`/error/view`);
+    }
   }
 
   return (
@@ -94,8 +99,8 @@ const Home = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          colors={["#0066cc"]} // Cor do loading no Android
-          tintColor="#0066cc" // Cor do loading no iOS
+          colors={["#2b2b2b9d"]} // Cor do loading no Android
+          tintColor="#2b2b2b9d" // Cor do loading no iOS
         />
       }
       ListEmptyComponent={() => (

@@ -85,7 +85,7 @@ const ProgramCard = ({
             <Text size="lg" className="font-bold text-gray-50 dark:text-white">
               {name}
             </Text>
-            {type === 2 && startDate && endDate && (
+            {startDate && endDate && (
               <Text
                 size="sm"
                 className="font-medium text-gray-50 dark:text-white"

@@ -17,8 +17,17 @@ import * as TaskManager from "expo-task-manager";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as SplashScreen from "expo-splash-screen";
-import { View, Text, Animated, Dimensions, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Animated,
+  Dimensions,
+  StyleSheet,
+  SafeAreaView,
+  Platform,
+} from "react-native";
 import { Image } from "@/components/ui/image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface AnimatedSplashScreenProps {
   onFinish: () => void;
@@ -57,6 +66,7 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({
   onFinish,
 }) => {
   const { width, height } = Dimensions.get("window");
+  const insets = useSafeAreaInsets();
   const fadeAnim = new Animated.Value(0);
   const scaleAnim = new Animated.Value(0.3);
   const slideAnim = new Animated.Value(50);
@@ -104,28 +114,33 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({
   }, []);
 
   return (
-    <View className="container px-7 bg-black h-full">
+    <View style={styles.splashContainer}>
+      <StatusBar style="light" backgroundColor="#000000" translucent />
+
       <Animated.View
         style={[
           styles.splashContent,
           {
+            paddingTop: insets.top + 20,
+            paddingBottom: insets.bottom + 20,
+            paddingLeft: Math.max(insets.left, 28),
+            paddingRight: Math.max(insets.right, 28),
             opacity: fadeAnim,
             transform: [{ scale: scaleAnim }, { translateY: slideAnim }],
           },
         ]}
       >
-        {/* Substitua por sua logo/imagem */}
-        <View className="flex justify-center items-center mt-32">
+        {/* Logo container com espaçamento seguro */}
+        <View style={styles.logoContainer}>
           <Image
             source={require("@/assets/images/jf_logo_full.png")}
             alt="logo"
             contentFit="contain"
-            className="w-[500px] h-[300px]"
+            style={styles.logoImage}
           />
         </View>
-        <Text className="text-3xl font-extrabold text-white text-center pt-20">
-          Carregando...
-        </Text>
+
+        <Text style={styles.loadingText}>Carregando...</Text>
 
         {/* Loading indicator animado */}
         <Animated.View
@@ -237,51 +252,44 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   splashContainer: {
     flex: 1,
-    backgroundColor: "#ffffff", // Ajuste para sua cor de marca
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "#000000",
   },
   splashContent: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
   logoContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 80,
+  },
+  logoImage: {
+    width: Math.min(Dimensions.get("window").width * 0.8, 400),
+    height: Math.min(Dimensions.get("window").height * 0.25, 200),
+    maxWidth: 400,
+    maxHeight: 200,
+  },
+  loadingText: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    textAlign: "center",
     marginBottom: 30,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  logoText: {
-    fontSize: 48,
-  },
-  appName: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  tagline: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    marginBottom: 40,
+    ...Platform.select({
+      ios: {
+        fontFamily: "System",
+      },
+      android: {
+        fontFamily: "Roboto",
+      },
+    }),
   },
   loadingDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#3b3b3b",
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FFFFFF",
+    opacity: 0.7,
   },
 });

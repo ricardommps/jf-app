@@ -1,5 +1,6 @@
 export type Media = {
   id: string;
+  mediaId: string;
   userId: number;
   title: string;
   thumbnail: string;

@@ -1,11 +1,11 @@
-import { ExerciseInfo, Media, MediaInfo } from "@/types/workout";
-import { useState } from "react";
+import { MediaInfo } from "@/types/workout";
 import { VStack } from "@/components/ui/vstack";
 import { Text } from "@/components/ui/text";
 import { HStack } from "@/components/ui/hstack";
 import { WebView } from "react-native-webview";
-import { Image, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
+import { Media } from "@/types/media";
 
 interface Props {
   media: Media;
@@ -104,10 +104,10 @@ const WorkoutItemGroup = ({ media, exerciseInfo }: Props) => {
 
 const InfoItem = ({ label, value }: { label: string; value: string }) => (
   <VStack className="items-start">
-    <Text className="text-typography-700 font-dm-sans-bold" size="md">
+    <Text className="font-dm-sans-bold" size="sm">
       {label}
     </Text>
-    <Text className="text-typography-700 font-dm-sans-medium" size="md">
+    <Text className="font-dm-sans-medium" size="sm">
       {value}
     </Text>
   </VStack>

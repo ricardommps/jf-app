@@ -1,13 +1,14 @@
 import { VStack } from "@/components/ui/vstack";
+import { HStack } from "@/components/ui/hstack";
+import { Box } from "@/components/ui/box";
+import { Text } from "@/components/ui/text";
 import { Button, ButtonText } from "@/components/ui/button";
 import WorkoutSection from "../components/workout-section";
-import { workoutGym } from "@/data/screens/workouts";
-import { useCallback, useEffect, useState } from "react";
+
 import { FlatList } from "react-native";
-import { HStack } from "@/components/ui/hstack";
 import { useRouter } from "expo-router";
 import { Workout, WorkoutItem } from "@/types/workout";
-import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 interface Props {
   workout: Workout;
@@ -18,6 +19,14 @@ const GymView = ({ workout }: Props) => {
   function handleNavigate() {
     router.push(`/workout/gym-finish?id=${workout.id}`);
   }
+
+  const ListHeader = () => (
+    <Box className="rounded-2xl px-4 py-3 bg-[#2b2b2bbe] mt-3">
+      <Text className="text-xl font-bold text-gray-800 dark:text-white">
+        {workout.subtitle}
+      </Text>
+    </Box>
+  );
 
   const renderWorkoutSection = ({ item }: { item: WorkoutItem }) => {
     return (
@@ -43,6 +52,7 @@ const GymView = ({ workout }: Props) => {
           gap: 16,
           paddingBottom: 50,
         }}
+        ListHeaderComponent={ListHeader}
         ListFooterComponent={() => (
           <HStack className="gap-4 pt-2 justify-end w-full px-4">
             <Button variant="outline" size="md" onPress={() => router.back()}>

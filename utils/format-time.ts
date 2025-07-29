@@ -61,6 +61,5 @@ export function convertDate(inputDate: string | number | Date): string {
   const milliseconds = "00";
 
   const dataFormated = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
-  console.log("-dataFormated---", dataFormated);
   return dataFormated;
 }

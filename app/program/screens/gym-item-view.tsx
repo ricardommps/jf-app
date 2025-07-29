@@ -5,7 +5,6 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
 import { useRouter } from "expo-router";
 import { Box } from "@/components/ui/box";
 import { Workout } from "@/types/workout";
@@ -32,7 +31,6 @@ const GymItemView = ({ item }: Props) => {
       const day = format(parsedDate, "dd");
       const monthYear = format(parsedDate, "MMMM", { locale: ptBR });
 
-      // Só retorna se ambos os valores são válidos (não vazios)
       if (day && monthYear) {
         return { day, monthYear };
       }
@@ -46,18 +44,32 @@ const GymItemView = ({ item }: Props) => {
   const lastWorkoutInfo = getLastWorkoutInfo();
 
   return (
-    <Box className="bg-[#2b2b2b9d] rounded-xl p-4 mb-2 flex-row justify-between min-h-[100px]">
-      <VStack className="p-2">
-        <Text className="text-typography-900 text-base font-semibold mt-1">
-          {item?.subtitle || ""}
-        </Text>
-        <HStack className="gap-6 pt-2">
-          {item?.history?.length > 0 && (
-            <Box>
-              <VStack>
+    <Box className="bg-[#2b2b2b9d] rounded-xl p-4 mb-2 min-h-[100px]">
+      <HStack
+        className="w-full"
+        style={{
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
+        {/* Esquerda: título + botões */}
+        <VStack style={{ flex: 1 }}>
+          <Text
+            numberOfLines={3}
+            ellipsizeMode="tail"
+            className="text-typography-900 text-base font-semibold"
+          >
+            {item?.subtitle || ""}
+          </Text>
+
+          <HStack className="gap-6 pt-8 flex-wrap">
+            {item?.history?.length > 0 && (
+              <Box className="relative">
                 <Badge
                   variant="solid"
-                  className="absolute -top-2 -right-3 bg-blue-500 rounded-full flex items-center justify-center z-10"
+                  className="absolute -top-2 -right-2 bg-red-500 rounded-full z-10 px-[6px] py-[2px]"
                 >
                   <BadgeText className="text-white text-[10px] font-semibold">
                     {item.history.length}
@@ -66,29 +78,35 @@ const GymItemView = ({ item }: Props) => {
                 <Button variant="outline" size="sm">
                   <ButtonText>Histórico</ButtonText>
                 </Button>
-              </VStack>
-            </Box>
-          )}
-          <Button
-            action="primary"
-            onPress={() => handleNavigate(item.id)}
-            size="sm"
+              </Box>
+            )}
+
+            <Button
+              action="primary"
+              onPress={() => handleNavigate(item.id)}
+              size="sm"
+            >
+              <ButtonText>Ver treino</ButtonText>
+            </Button>
+          </HStack>
+        </VStack>
+
+        {/* Direita: Último treino */}
+        {lastWorkoutInfo && (
+          <VStack
+            className="items-center justify-center"
+            style={{ minWidth: 100 }}
           >
-            <ButtonText>Ver treino</ButtonText>
-          </Button>
-        </HStack>
-      </VStack>
-      {lastWorkoutInfo && (
-        <Box className="items-center mt-1">
-          <Text className="text-center text-lg">Último treino</Text>
-          <Text className="text-typography-900 text-sm text-center capitalize">
-            {lastWorkoutInfo.monthYear}
-          </Text>
-          <Text className="text-typography-900 text-2xl font-bold text-center">
-            {lastWorkoutInfo.day}
-          </Text>
-        </Box>
-      )}
+            <Text className="text-center text-sm">Último treino</Text>
+            <Text className="text-typography-900 text-sm text-center capitalize">
+              {lastWorkoutInfo.monthYear}
+            </Text>
+            <Text className="text-typography-900 text-xl font-bold text-center">
+              {lastWorkoutInfo.day}
+            </Text>
+          </VStack>
+        )}
+      </HStack>
     </Box>
   );
 };

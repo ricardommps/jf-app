@@ -4,9 +4,16 @@ import { Text } from "@/components/ui/text";
 import { HStack } from "@/components/ui/hstack";
 import { WebView } from "react-native-webview";
 import { StyleSheet, View } from "react-native";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Button, ButtonText } from "@/components/ui/button";
 import { Media } from "@/types/media";
+import { useEffect, useState } from "react";
+import {
+  getWorkoutLoad,
+  saveWorkoutLoad,
+} from "@/services/workout-load.service";
+import { Textarea, TextareaInput } from "@/components/ui/textarea";
 
 interface Props {
   media: Media;
@@ -21,10 +28,60 @@ const getYoutubeId = (url?: string) => {
 };
 
 const WorkoutItem = ({ media, exerciseInfo, isWorkoutLoad }: Props) => {
+  const queryClient = useQueryClient();
   const exerciseInfoById: MediaInfo = exerciseInfo?.filter(
     (item) => item.mediaId === media.id
   )[0];
   const videoId = getYoutubeId(media.videoUrl);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [carga, setCarga] = useState("");
+
+  const {
+    data: workoutLoad,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["workoutLoad", media.id],
+    queryFn: async () => await getWorkoutLoad(media.id),
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    enabled: !!media.id,
+  });
+
+  // Mutation para salvar a carga
+  const saveLoadMutation = useMutation({
+    mutationFn: async (load: string) => await saveWorkoutLoad(media.id, load),
+    onSuccess: () => {
+      // Atualiza o cache do React Query após salvar
+      queryClient.invalidateQueries({
+        queryKey: ["workoutLoad", media.id],
+      });
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      console.error("Erro ao salvar carga:", error);
+      // Aqui você pode adicionar um toast ou alert para mostrar o erro
+    },
+  });
+
+  useEffect(() => {
+    if (workoutLoad?.length > 0) {
+      setCarga(workoutLoad[0].load);
+    }
+  }, [workoutLoad]);
+
+  const handleSave = () => {
+    saveLoadMutation.mutate(carga);
+  };
+
+  const handleCancel = () => {
+    // Reverte para o valor original caso cancele
+    if (workoutLoad?.length > 0) {
+      setCarga(workoutLoad[0].load);
+    }
+    setIsEditing(false);
+  };
 
   const renderWebView = () => {
     if (videoId) {
@@ -63,100 +120,109 @@ const WorkoutItem = ({ media, exerciseInfo, isWorkoutLoad }: Props) => {
         <VStack className="px-2 gap-3">
           {isWorkoutLoad && (
             <HStack className="rounded-2xl bg-background-300 flex-row justify-between items-center p-2">
-              <Text
-                className="text-typography-700 font-dm-sans-bold flex-1"
-                size="md"
-              >
-                Carga: não definida
-              </Text>
-              <Button variant="outline" size="sm">
-                <ButtonText>Editar</ButtonText>
-              </Button>
+              {error ? (
+                <Text
+                  className="text-typography-700 font-dm-sans-bold flex-1"
+                  size="md"
+                >
+                  Erro ao carregar carga
+                </Text>
+              ) : (
+                <>
+                  {isEditing ? (
+                    <VStack className="w-full">
+                      <Text className="text-typography-600 text-base mb-1">
+                        Digite a carga
+                      </Text>
+                      <Textarea className="h-24 border-0 bg-[#2b2b2b9d] rounded-md mt-1 mb-1 w-full">
+                        <TextareaInput
+                          value={carga}
+                          onChangeText={setCarga}
+                          placeholder="Adicione a carga do exercício..."
+                          className="placeholder:text-typography-400"
+                        />
+                      </Textarea>
+                      <HStack className="gap-2 mt-2">
+                        <Button
+                          size="sm"
+                          onPress={handleSave}
+                          disabled={saveLoadMutation.isPending}
+                          className="flex-1"
+                          action="primary"
+                        >
+                          <ButtonText>
+                            {saveLoadMutation.isPending
+                              ? "Salvando..."
+                              : "Salvar"}
+                          </ButtonText>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onPress={handleCancel}
+                          disabled={saveLoadMutation.isPending}
+                          className="flex-1"
+                        >
+                          <ButtonText>Cancelar</ButtonText>
+                        </Button>
+                      </HStack>
+                    </VStack>
+                  ) : (
+                    <>
+                      <Text
+                        className="text-typography-700 font-dm-sans-bold flex-1"
+                        size="md"
+                      >
+                        Carga:{" "}
+                        {isLoading
+                          ? "Carregando..."
+                          : carga
+                          ? carga
+                          : "não definida"}
+                      </Text>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onPress={() => setIsEditing(true)}
+                      >
+                        <ButtonText>Editar</ButtonText>
+                      </Button>
+                    </>
+                  )}
+                </>
+              )}
             </HStack>
           )}
 
-          {exerciseInfoById?.method && exerciseInfoById?.method.length > 0 && (
-            <VStack className="items-start">
-              <Text className="text-typography-700 font-dm-sans-bold" size="md">
-                MÉTODO:
-              </Text>
-              <Text
-                className="text-typography-900 font-dm-sans-medium"
-                size="md"
-              >
-                {exerciseInfoById?.method}
-              </Text>
-            </VStack>
+          {exerciseInfoById?.method && (
+            <InfoItem label="MÉTODO:" value={exerciseInfoById.method} />
           )}
-
-          {exerciseInfoById?.reps && exerciseInfoById?.reps.length > 0 && (
-            <VStack className="items-start">
-              <Text className="text-typography-700 font-dm-sans-bold" size="md">
-                RANGE DE REPETIÇÕES:
-              </Text>
-              <Text
-                className="text-typography-900 font-dm-sans-medium"
-                size="md"
-              >
-                {exerciseInfoById?.reps}
-              </Text>
-            </VStack>
+          {exerciseInfoById?.reps && (
+            <InfoItem
+              label="RANGE DE REPETIÇÕES:"
+              value={exerciseInfoById.reps}
+            />
           )}
-
           {exerciseInfoById?.reset && (
-            <VStack className="items-start">
-              <Text className="text-typography-700 font-dm-sans-bold" size="md">
-                INTERVALO DE RECUPERAÇÃO:
-              </Text>
-              <Text
-                className="text-typography-700 font-dm-sans-medium"
-                size="md"
-              >
-                {exerciseInfoById?.reset}
-              </Text>
-            </VStack>
+            <InfoItem
+              label="INTERVALO DE RECUPERAÇÃO:"
+              value={exerciseInfoById.reset}
+            />
           )}
-
           {exerciseInfoById?.rir && (
-            <VStack className="items-start">
-              <Text className="text-typography-700 font-dm-sans-bold" size="md">
-                REPETIÇÕES DE RESERVA:
-              </Text>
-              <Text
-                className="text-typography-700 font-dm-sans-medium"
-                size="md"
-              >
-                {exerciseInfoById?.rir}
-              </Text>
-            </VStack>
+            <InfoItem
+              label="REPETIÇÕES DE RESERVA:"
+              value={exerciseInfoById.rir}
+            />
           )}
-
           {exerciseInfoById?.cadence && (
-            <VStack className="items-start">
-              <Text className="text-typography-700 font-dm-sans-bold" size="md">
-                CADÊNCIA / VEL. DE MOV.:
-              </Text>
-              <Text
-                className="text-typography-700 font-dm-sans-medium"
-                size="md"
-              >
-                {exerciseInfoById?.cadence}
-              </Text>
-            </VStack>
+            <InfoItem
+              label="CADÊNCIA / VEL. DE MOV.:"
+              value={exerciseInfoById.cadence}
+            />
           )}
-
           {exerciseInfoById?.comments && (
-            <VStack className="items-start">
-              <Text className="text-typography-700 font-dm-sans-bold" size="md">
-                OBSERVAÇÕES:
-              </Text>
-              <Text
-                className="text-typography-700 font-dm-sans-medium"
-                size="md"
-              >
-                {exerciseInfoById?.comments}
-              </Text>
-            </VStack>
+            <InfoItem label="OBSERVAÇÕES:" value={exerciseInfoById.comments} />
           )}
         </VStack>
       </VStack>
@@ -164,10 +230,21 @@ const WorkoutItem = ({ media, exerciseInfo, isWorkoutLoad }: Props) => {
   );
 };
 
+const InfoItem = ({ label, value }: { label: string; value: string }) => (
+  <VStack className="items-start">
+    <Text className="font-dm-sans-bold" size="sm">
+      {label}
+    </Text>
+    <Text className="font-dm-sans-medium" size="sm">
+      {value}
+    </Text>
+  </VStack>
+);
+
 const styles = StyleSheet.create({
   webviewContainer: {
     width: "100%",
-    height: 400, // Altura fixa para o container
+    height: 400,
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 8,
