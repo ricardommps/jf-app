@@ -17,6 +17,10 @@ const WorkoutView = () => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["workoutData", id, type],
     queryFn: async () => await getWorkout(safeId),
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     enabled: !!id,
   });
 

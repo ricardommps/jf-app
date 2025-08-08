@@ -7,6 +7,10 @@ import * as SecureStore from "expo-secure-store";
 import axiosInstance from "@/config/axios";
 import { registerLogoutCallback } from "@/auth/authEvents";
 
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
+import { Platform } from "react-native";
+
 interface LoginResponseApi {
   accessToken: string;
   user: UserType;
@@ -68,6 +72,49 @@ function useProtectedRoute(session: SessionData | null) {
   }, [session, segments, navigationState]);
 }
 
+// ✅ Função para registrar o Push Token
+async function registerPushToken(userId: string) {
+  try {
+    if (!Device.isDevice) return;
+
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== "granted") return;
+
+    const token = (await Notifications.getExpoPushTokenAsync()).data;
+
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+      });
+    }
+
+    // Envia o token para sua API
+    // await fetch("http://192.168.15.59:8000/registerPushToken", {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({
+    //     token,
+    //     userId,
+    //   }),
+    // });
+
+    console.log("✅ Push token registrado com sucesso:", token);
+  } catch (error) {
+    console.error("Erro ao registrar push token:", error);
+  }
+}
+
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, sessionStr], setSessionStr] = useStorageState("session");
   const router = useRouter();
@@ -100,14 +147,20 @@ export function SessionProvider({ children }: PropsWithChildren) {
           password,
         }
       );
+
       await setAccessToken(data.accessToken);
+
       const sessionData: SessionData = {
         accessToken: data.accessToken,
         user: data.user,
       };
+
       const sessionString = JSON.stringify(sessionData);
       await SecureStore.setItemAsync("session", sessionString);
       setSessionStr(sessionString);
+
+      // ✅ REGISTRA O PUSH TOKEN APÓS LOGIN
+      await registerPushToken(String(data.user.id));
 
       return data.user;
     } catch (error) {

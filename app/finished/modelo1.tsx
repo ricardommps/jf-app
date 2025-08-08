@@ -8,15 +8,10 @@ import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { HStack } from "@/components/ui/hstack";
-import { Button, ButtonText, ButtonIcon } from "@/components/ui/button";
+import { Button, ButtonText } from "@/components/ui/button";
 import { Divider } from "@/components/ui/divider";
 import { Icon } from "@/components/ui/icon";
-import {
-  Clock10Icon,
-  FootprintsIcon,
-  RouteIcon,
-  Share2,
-} from "lucide-react-native";
+import { Clock10Icon, FootprintsIcon, RouteIcon } from "lucide-react-native";
 import {
   convertMetersToKilometersFormat,
   convertPaceToSpeed,
@@ -96,7 +91,6 @@ export default function CongratulationScreen() {
                   className="flex-1"
                   onPress={handleShare}
                 >
-                  <ButtonIcon as={Share2} />
                   <ButtonText>Compartilhar</ButtonText>
                 </Button>
               </HStack>

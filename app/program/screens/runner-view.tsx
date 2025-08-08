@@ -374,7 +374,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
 
           <HStack className="items-center w-full mt-5 gap-3">
             <Text size="lg" className="font-semibold">
-              Tabela Pace km-h
+              Tabela - Pace X Km/h
             </Text>
             <Pressable onPress={() => setShowTablePace(true)}>
               <Icon as={InfoIcon} size="lg" />

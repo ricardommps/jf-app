@@ -17,3 +17,12 @@ export async function history() {
     throw error;
   }
 }
+
+export async function getFinishedById(id: string) {
+  try {
+    const response = await axiosInstance.get(`/api/v2/finished/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}

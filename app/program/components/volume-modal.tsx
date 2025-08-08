@@ -97,6 +97,10 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
       }
       return await getVolume(programId, formattedStartDate, formattedEndDate);
     },
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     enabled: false, // DESABILITADO - só executa manualmente
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),

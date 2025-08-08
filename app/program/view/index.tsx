@@ -14,6 +14,10 @@ const ProgramView = () => {
   const router = useRouter();
   const { data, isLoading, error } = useQuery({
     queryKey: ["workoutsData", id, type],
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     queryFn: async () => await getWorkouts(Number(safeId), Number(type)),
     enabled: !!id,
   });

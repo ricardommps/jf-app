@@ -62,7 +62,7 @@ const TablePace: React.FC<Props> = ({ visible, onRequestClose }) => {
           {/* Header */}
           <HStack className="justify-between items-center mb-4">
             <Heading size="lg" className="text-white">
-              Tabela Pace km/h
+              Tabela - Pace X Km/h
             </Heading>
             <TouchableOpacity
               onPress={onRequestClose}

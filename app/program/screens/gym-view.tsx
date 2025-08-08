@@ -113,6 +113,10 @@ const GymView = ({ workouts, programId }: Props) => {
     error,
   } = useQuery({
     queryKey: ["programData", programId],
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     queryFn: async () => await getProgram(programId),
     enabled: !!programId,
   });

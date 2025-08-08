@@ -4,7 +4,7 @@ import { SafeAreaView } from "@/components/ui/safe-area-view";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
-import { Icon, SadIcon } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import {
   Clock10Icon,
   FootprintsIcon,
@@ -35,6 +35,8 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import TreadmillIcon from "@/components/ui/treadmill-icon";
 import { AxiosError } from "axios";
+import { HistoryGymItem } from "@/components/history-gym-item";
+import { RpeDisplay } from "@/components/rpe-display";
 
 const renderCardGym = (
   setComments: (comments: {
@@ -47,73 +49,13 @@ const renderCardGym = (
   day: string,
   month: string
 ) => {
-  const feedback = typeof item?.feedback === "string" ? item.feedback : null;
-
   return (
-    <Box className="bg-[#2b2b2b9d] rounded-xl p-4 mb-2 min-h-[100px]">
-      <HStack
-        className="w-full"
-        style={{
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <VStack style={{ flex: 1 }}>
-          <Text
-            numberOfLines={2}
-            ellipsizeMode="tail"
-            className="text-typography-900 text-base font-semibold"
-          >
-            {item?.trainingSubtitle || ""}
-          </Text>
-
-          {feedback ? (
-            <HStack className="gap-6 pt-2 flex-wrap">
-              <Pressable
-                onPress={() =>
-                  setComments({
-                    feedback: item.feedback || "",
-                    comments: item.comments || "",
-                    executionDay: item.executionDay || "",
-                    updatedAt: item.updatedAt || "",
-                  })
-                }
-              >
-                <Box className="relative">
-                  <Icon
-                    as={MessageCircleIcon}
-                    className="text-typography-700"
-                    size="xl"
-                  />
-                  <Box className="absolute -right-1 -top-1 bg-success-500 rounded-full w-5 h-5 items-center justify-center">
-                    <Text className="text-white text-xs font-bold">1</Text>
-                  </Box>
-                </Box>
-              </Pressable>
-            </HStack>
-          ) : (
-            <Text className="pt-5 text-[#e96b10]">Aguardando feedback</Text>
-          )}
-        </VStack>
-
-        {day && month && (
-          <VStack
-            className="items-center justify-center"
-            style={{ minWidth: 100 }}
-          >
-            <Text className="text-center text-sm">Realizado em</Text>
-            <Text className="text-typography-900 text-sm text-center capitalize">
-              {month}
-            </Text>
-            <Text className="text-typography-900 text-xl font-bold text-center">
-              {day}
-            </Text>
-          </VStack>
-        )}
-      </HStack>
-    </Box>
+    <HistoryGymItem
+      item={item}
+      setComments={setComments}
+      day={day}
+      month={month}
+    />
   );
 };
 
@@ -191,7 +133,9 @@ const renderCardRunner = (
             className="items-center justify-center"
             style={{ minWidth: 100 }}
           >
-            <Text className="text-center text-sm">Realizado em</Text>
+            <Text className="text-center text-sm">
+              {item.unrealized ? "Finalizado em" : "Realizado em"}
+            </Text>
             <Text className="text-typography-900 text-sm text-center capitalize">
               {month}
             </Text>
@@ -201,53 +145,69 @@ const renderCardRunner = (
           </VStack>
         )}
       </HStack>
+      {item.unrealized ? (
+        <Box>
+          <Text className="text-red-700 font-bold">Treino não realizado</Text>
+        </Box>
+      ) : (
+        <HStack className="justify-around items-center pt-2">
+          <VStack className="items-center">
+            <Icon as={RouteIcon} size="xl" className="text-background-700" />
+            <Text className="text-xs text-typography-700 mt-1">Distância</Text>
+            <Text className="text-xs text-typography-900">
+              {convertMetersToKilometersFormat(item?.distanceInMeters || 0)}
+            </Text>
+          </VStack>
 
-      <HStack className="justify-around items-center pt-2">
-        <VStack className="items-center">
-          <Icon as={RouteIcon} size="xl" className="text-background-700" />
-          <Text className="text-xs text-typography-700 mt-1">Distância</Text>
-          <Text className="text-xs text-typography-900">
-            {convertMetersToKilometersFormat(item?.distanceInMeters || 0)}
-          </Text>
-        </VStack>
+          <Divider
+            orientation="vertical"
+            className="bg-gray-300 rounded h-12"
+          />
 
-        <Divider orientation="vertical" className="bg-gray-300 rounded h-12" />
+          <VStack className="items-center">
+            <Icon
+              as={FootprintsIcon}
+              size="xl"
+              className="text-background-700"
+            />
+            <Text className="text-xs text-typography-700 mt-1">Pace Médio</Text>
+            <Text className="text-xs text-typography-900">
+              {convertPaceToSpeed(item?.paceInSeconds || 0, true)}
+            </Text>
+          </VStack>
 
-        <VStack className="items-center">
-          <Icon as={FootprintsIcon} size="xl" className="text-background-700" />
-          <Text className="text-xs text-typography-700 mt-1">Pace Médio</Text>
-          <Text className="text-xs text-typography-900">
-            {convertPaceToSpeed(item?.paceInSeconds || 0, true)}
-          </Text>
-        </VStack>
+          <Divider
+            orientation="vertical"
+            className="bg-gray-300 rounded h-12"
+          />
 
-        <Divider orientation="vertical" className="bg-gray-300 rounded h-12" />
+          <VStack className="items-center">
+            <Icon as={Clock10Icon} size="xl" className="text-background-700" />
+            <Text className="text-xs text-typography-700 mt-1">Tempo</Text>
+            <Text className="text-xs text-typography-900">
+              {convertSecondsToHourMinuteFormat(item?.durationInSeconds || 0)}
+            </Text>
+          </VStack>
 
-        <VStack className="items-center">
-          <Icon as={Clock10Icon} size="xl" className="text-background-700" />
-          <Text className="text-xs text-typography-700 mt-1">Tempo</Text>
-          <Text className="text-xs text-typography-900">
-            {convertSecondsToHourMinuteFormat(item?.durationInSeconds || 0)}
-          </Text>
-        </VStack>
+          <Divider
+            orientation="vertical"
+            className="bg-gray-300 rounded h-12"
+          />
 
-        <Divider orientation="vertical" className="bg-gray-300 rounded h-12" />
+          <VStack className="items-center">
+            <RpeDisplay rpe={item.rpe || 0} />
+          </VStack>
 
-        <VStack className="items-center">
-          <Icon as={SadIcon} size="xl" className="text-background-700" />
-          <Text className="text-xs text-typography-700 mt-1">Esforço</Text>
-          <Text className="text-xs text-typography-900">8</Text>
-        </VStack>
+          <Divider orientation="vertical" className="bg-gray-300 rounded" />
 
-        <Divider orientation="vertical" className="bg-gray-300 rounded" />
-
-        <VStack className="items-center">
-          {renderIconType()}
-          <Text className="text-xs text-typography-700 mt-1">
-            {item?.outdoor ? "Outdoor" : "Indoor"}
-          </Text>
-        </VStack>
-      </HStack>
+          <VStack className="items-center">
+            {renderIconType()}
+            <Text className="text-xs text-typography-700 mt-1">
+              {item?.outdoor ? "Outdoor" : "Indoor"}
+            </Text>
+          </VStack>
+        </HStack>
+      )}
     </Box>
   );
 };
@@ -301,7 +261,6 @@ const History = () => {
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
-
   const onRefresh = async () => {
     try {
       queryClient.removeQueries({ queryKey: ["history"] });
@@ -327,15 +286,15 @@ const History = () => {
     <SafeAreaView className="flex-1 bg-background-0">
       <Text
         size="2xl"
-        className="text-typography-900 font-roboto text-center mt-6"
+        className="text-typography-900 font-roboto text-center mt-6 mb-5"
       >
-        Histórico do mês atual
+        Histórico dos últimos 30 dias
       </Text>
 
       <FlashList<FinishedHistory>
         data={data || []}
         renderItem={createRenderItem(setComments)}
-        keyExtractor={(item, index) => `item-${index}`}
+        keyExtractor={(item) => String(item.id)}
         estimatedItemSize={120}
         refreshControl={
           <RefreshControl

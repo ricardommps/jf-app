@@ -174,7 +174,7 @@ const IndoorScreen = ({ safeId }: Props) => {
       payload.executionDay = convertDate(payload.executionDay);
       await finishedWorkout(payload);
       router.push(
-        `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}`
+        `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}&rpe=${payload.rpe}`
       );
     } catch (err) {
       const parsedError = err as Error;
@@ -256,12 +256,15 @@ const IndoorScreen = ({ safeId }: Props) => {
     return 0;
   };
 
-  const calculateAverage = (items: number[]): number => {
-    const validItems = items.filter((num) => num > 0);
+  const calculateAverage = (items: (number | string)[]): number => {
+    const validItems = items
+      .map((num) => Number(num))
+      .filter((num) => num > 0 && !isNaN(num));
     if (validItems.length === 0) return 0;
     const sum = validItems.reduce((acc, curr) => acc + curr, 0);
     const average = sum / validItems.length;
-    return Math.floor(average * 100) / 100;
+    const result = Math.floor(average * 100) / 100;
+    return result;
   };
 
   const handleArraySizeChange = (size: string) => {

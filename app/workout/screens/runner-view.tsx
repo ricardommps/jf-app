@@ -15,6 +15,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { TrashIcon } from "lucide-react-native";
 import TreadmillIcon from "@/components/ui/treadmill-icon";
+import TablePace from "@/components/table-pace";
 
 interface Props {
   workout: Workout;
@@ -23,8 +24,9 @@ interface Props {
 const RunnerView = ({ workout }: Props) => {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
+  const [showTablePace, setShowTablePace] = useState(false);
   const [selected, setSelected] = useState<"indoor" | "outdoor" | null>(
-    "indoor"
+    "outdoor"
   );
   function handleFinish() {
     const intensities =
@@ -43,6 +45,12 @@ const RunnerView = ({ workout }: Props) => {
       );
     }
   }
+
+  const handleUnrealizedTraining = () => {
+    router.push(
+      `/workout/runner-finish?id=${workout.id}&outdoor=false&unrealizedTraining=true`
+    );
+  };
   const renderWorkoutSection = ({ item }: { item: WorkoutItem }) => {
     return (
       <WorkoutSection
@@ -60,10 +68,10 @@ const RunnerView = ({ workout }: Props) => {
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <Box className="px-4 pb-4">
-          <Pressable>
+          <Pressable onPress={() => setShowTablePace(true)}>
             <HStack className="items-center justify-start" space="sm">
               <Text className="text-white text-base font-bold">
-                Tabela Pace km-h
+                Tabela - Pace X Km/h
               </Text>
               <Icon as={InfoIcon} className="text-white" size="lg" />
             </HStack>
@@ -80,18 +88,32 @@ const RunnerView = ({ workout }: Props) => {
             paddingBottom: 50,
           }}
           ListFooterComponent={() => (
-            <HStack className="gap-4 pt-2 justify-end w-full px-4">
-              <Button variant="outline" size="md" onPress={() => router.back()}>
-                <ButtonText>Fechar</ButtonText>
-              </Button>
+            <VStack space="md" className="w-full px-4">
               <Button
-                action="primary"
+                action="negative"
                 size="md"
-                onPress={() => setModalVisible(true)}
+                onPress={handleUnrealizedTraining}
+                style={{ alignSelf: "flex-end", paddingHorizontal: 16 }}
               >
-                <ButtonText>Finalizar treino</ButtonText>
+                <ButtonText className="text-white">Não realizado</ButtonText>
               </Button>
-            </HStack>
+              <HStack className="gap-4 pt-2 justify-end w-full ">
+                <Button
+                  variant="outline"
+                  size="md"
+                  onPress={() => router.back()}
+                >
+                  <ButtonText>Fechar</ButtonText>
+                </Button>
+                <Button
+                  action="primary"
+                  size="md"
+                  onPress={() => setModalVisible(true)}
+                >
+                  <ButtonText>Finalizar treino</ButtonText>
+                </Button>
+              </HStack>
+            </VStack>
           )}
         />
       </SafeAreaView>
@@ -155,6 +177,10 @@ const RunnerView = ({ workout }: Props) => {
           </Box>
         </HStack>
       </Modal>
+      <TablePace
+        visible={showTablePace}
+        onRequestClose={() => setShowTablePace(false)}
+      />
     </SafeAreaProvider>
   );
 };

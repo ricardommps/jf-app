@@ -14,18 +14,29 @@ import { CloseIcon } from "@/components/ui/icon";
 import { Pressable } from "@/components/ui/pressable";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import useANotifications from "@/hooks/useNotification";
+import { Notification } from "@/types/notification";
 import { FileWarning, FileWarningIcon, MailIcon } from "lucide-react-native";
+import NotificationItem from "./notification-item";
+import { FlatList, View } from "react-native";
+import { ProfileType } from "@/types/ProfileType";
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  profile: ProfileType | null;
 }
 
-const Notifications = ({ open, onClose }: Props) => {
+const Notifications = ({ open, onClose, profile }: Props) => {
+  const { notifications } = useANotifications();
+  const renderNotification = ({ item }: { item: Notification }) => {
+    return <NotificationItem notification={item} profile={profile} />;
+  };
+  const Separator = () => <Divider />;
   return (
     <Actionsheet isOpen={open} onClose={onClose}>
       <ActionsheetBackdrop />
-      <ActionsheetContent className="px-5 min-h-[60%]">
+      <ActionsheetContent className="px-5 min-h-[60%] max-h-[60%]">
         <ActionsheetDragIndicatorWrapper>
           <ActionsheetDragIndicator />
         </ActionsheetDragIndicatorWrapper>
@@ -40,55 +51,19 @@ const Notifications = ({ open, onClose }: Props) => {
           </Pressable>
         </HStack>
 
-        <VStack className="w-full mt-5 gap-3 px-3 mr-3">
-          <Divider orientation="horizontal" />
-          <HStack className="items-start w-full gap-3">
-            <Icon
-              as={MailIcon}
-              size="lg"
-              className="stroke-background-500 my-1"
-            />
-            <VStack className="w-full">
-              <Text size="lg" className="font-semibold">
-                Olá, Ricardo
-              </Text>
-              <Text size="sm">há 10 minutos</Text>
-              <Box className="w-[95%] rounded-2xl bg-gray-900 gap-3 p-3 my-3">
-                <Text size="md" className="font-semibold">
-                  O feedback do seu último treino está disponível
-                </Text>
-                <Pressable>
-                  <Text size="sm" className="font-bold">
-                    Clique aqui para conferir
-                  </Text>
-                </Pressable>
-              </Box>
-            </VStack>
-          </HStack>
-          <Divider orientation="horizontal" />
-          <HStack className="items-start w-full gap-3">
-            <Icon
-              as={FileWarningIcon}
-              size="lg"
-              className="stroke-background-500 my-1"
-            />
-            <VStack className="w-full">
-              <Text size="lg" className="font-semibold">
-                Olá, Ricardo
-              </Text>
-              <Text size="sm">há 10 minutos</Text>
-              <Box className="w-[95%] rounded-2xl bg-gray-900 gap-3 p-3 my-3">
-                <Text size="md" className="font-semibold">
-                  Você possui mensalidade atrasada!
-                </Text>
-                <Pressable>
-                  <Text size="sm" className="font-bold">
-                    Clique aqui para conferir
-                  </Text>
-                </Pressable>
-              </Box>
-            </VStack>
-          </HStack>
+        <VStack className="w-full mt-5 gap-3 px-3 pb-10">
+          <FlatList
+            data={notifications}
+            renderItem={renderNotification}
+            scrollEnabled={true}
+            nestedScrollEnabled={true}
+            keyExtractor={(item, index) => index.toString()}
+            contentContainerStyle={{
+              paddingBottom: 10,
+              gap: 10,
+            }}
+            ItemSeparatorComponent={Separator}
+          />
         </VStack>
       </ActionsheetContent>
     </Actionsheet>

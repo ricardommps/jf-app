@@ -8,7 +8,7 @@ export const getTimePassedText = (executionDay: string): string => {
   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
   if (diffInMinutes < 60) {
-    return diffInMinutes <= 1 ? "Hoje" : `${diffInMinutes}m`;
+    return diffInMinutes <= 1 ? "Agora" : `${diffInMinutes}m`;
   } else if (diffInHours < 24) {
     return `${diffInHours}h`;
   } else if (diffInDays < 7) {

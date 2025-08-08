@@ -45,6 +45,10 @@ const WorkoutItem = ({ media, exerciseInfo, isWorkoutLoad }: Props) => {
     queryKey: ["workoutLoad", media.id],
     queryFn: async () => await getWorkoutLoad(media.id),
     retry: 3,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     enabled: !!media.id,
   });

@@ -14,13 +14,7 @@ import { CloseIcon } from "@/components/ui/icon";
 import { Pressable } from "@/components/ui/pressable";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import {
-  Avatar,
-  AvatarFallbackText,
-  AvatarImage,
-} from "@/components/ui/avatar";
-import { useState } from "react";
-import { Image } from "@/components/ui/image";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "@/contexts/Authentication";
 import { FinishedHistory } from "@/types/finished";
 import { getTimePassedText } from "@/utils/get-time-passed";
