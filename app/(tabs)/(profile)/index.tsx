@@ -92,15 +92,15 @@ const MainContent = ({
                   size="2xl"
                   className="bg-[#2b2b2b9d] items-center justify-center"
                 >
-                  {profile?.user.avatar ? (
+                  {profile?.avatar ? (
                     <AvatarImage
                       source={{
-                        uri: profile.user.avatar,
+                        uri: profile.avatar,
                       }}
                     />
                   ) : (
                     <Text className="text-white font-bold text-3xl">
-                      {(profile?.user.name || profile?.user.email || "User")
+                      {(profile?.name || profile?.email || "User")
                         .split(" ")
                         .map((n) => n.charAt(0))
                         .join("")
@@ -118,10 +118,10 @@ const MainContent = ({
               </Box>
               <VStack className="gap-1 w-full items-center">
                 <Text size="2xl" className="font-roboto text-white">
-                  {profile?.user.name}
+                  {profile?.name}
                 </Text>
                 <Text className="font-roboto text-sm text-typograpphy-700 text-white">
-                  {profile?.user.email}
+                  {profile?.email}
                 </Text>
               </VStack>
             </VStack>

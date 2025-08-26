@@ -42,7 +42,7 @@ const CustomHeader = ({
               isDarkMode ? "text-gray-300" : "text-black"
             } font-dm-sans-medium text-lg`}
           >
-            Olá {profile?.user.name}!
+            Olá {profile?.name}!
           </Text>
         </HStack>
         <HStack className="items-center gap-3">

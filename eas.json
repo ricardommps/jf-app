@@ -6,6 +6,9 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "APP_ENV": "dev",
         "EXPO_PUBLIC_API_URL": "http://192.168.15.59:8001",

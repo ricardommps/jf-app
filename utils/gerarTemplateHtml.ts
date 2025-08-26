@@ -225,9 +225,9 @@ export async function gerarTemplateHtml(
           </div>
           <div class="col6">
             <div class="subtitle2 mb4">Para</div>
-            <div class="body2">${profile?.user.name}</div>
-            <div class="email">${profile?.user.email || "-"}</div>
-            <div class="body2">${profile?.user.phone || "-"}</div>
+            <div class="body2">${profile?.name}</div>
+            <div class="email">${profile?.email || "-"}</div>
+            <div class="body2">${profile?.phone || "-"}</div>
           </div>
         </div>
 

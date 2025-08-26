@@ -1,5 +1,11 @@
 export type ProfileType = {
-  user: UserType;
+  id: number;
+  name: string;
+  email: string;
+  avatar: string;
+  temporaryPassword: boolean;
+  isYoungLife: boolean;
+  phone: string;
 };
 
 export type UserType = {

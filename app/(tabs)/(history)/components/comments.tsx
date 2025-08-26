@@ -57,15 +57,15 @@ const Comments = ({ open, onClose, content }: Props) => {
           {content?.comments && (
             <HStack space="lg" className="w-full px-4 py-2">
               <Avatar className="h-10 w-10 bg-blue-500 items-center justify-center">
-                {profile?.user.avatar ? (
+                {profile?.avatar ? (
                   <AvatarImage
                     source={{
-                      uri: profile.user.avatar,
+                      uri: profile.avatar,
                     }}
                   />
                 ) : (
                   <Text className="text-white font-bold text-sm">
-                    {(profile?.user.name || profile?.user.email || "User")
+                    {(profile?.name || profile?.email || "User")
                       .split(" ")
                       .map((n) => n.charAt(0))
                       .join("")
@@ -77,7 +77,7 @@ const Comments = ({ open, onClose, content }: Props) => {
               <VStack className="flex-1">
                 <HStack className="justify-between w-full">
                   <Text className="text-typography-900 font-roboto line-clamp-1">
-                    {profile?.user.name}
+                    {profile?.name}
                   </Text>
                   {content.executionDay && (
                     <Text className="text-sm font-roboto line-clamp-1">

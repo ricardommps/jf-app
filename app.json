@@ -6,7 +6,7 @@
     "version": "0.0.10",
     "orientation": "portrait",
     "icon": "./assets/images/jf_icone_app.png",
-    "scheme": "jfapp-dev", // mudar no build jfapp
+    "scheme": "jfapp-dev",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "assetBundlePatterns": ["assets/images/*"],
@@ -37,13 +37,16 @@
       "associatedDomains": [
         "applinks:connect.garmin.com",
         "applinks:www.strava.com"
-      ]
+      ],
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "adaptiveIcon": {},
       "softwareKeyboardLayoutMode": "pan",
       "package": "com.jftreinos.jfapp",
-      "googleServicesFile": "./google-services.json",
+      "googleServicesFile": "google-services.json",
       "compileSdkVersion": 34,
       "targetSdkVersion": 34,
       "buildToolsVersion": "34.0.0",
@@ -98,7 +101,9 @@
             "pathPrefix": "/activities"
           }
         }
-      ]
+      ],
+      "permissions": ["android.permission.RECORD_AUDIO"],
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -148,6 +153,9 @@
     "notification": {
       "icon": "./assets/images/jf_logo_icone_push.png",
       "color": "#ffffff"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6ddb8b5c-3423-408e-b94b-f7dd9b7b14f7"
     }
   }
 }

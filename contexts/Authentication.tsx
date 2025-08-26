@@ -1,10 +1,10 @@
-// Authentication.tsx - Context atualizado com as mesmas chaves
+// Authentication.tsx
 
 import { useRootNavigationState, useRouter, useSegments } from "expo-router";
 import { createContext, PropsWithChildren, useContext, useEffect } from "react";
 import { useStorageState } from "./useStorageState";
-import { ProfileType, UserType } from "@/types/ProfileType";
-import { removeAccessToken, setAccessToken } from "@/utils/token";
+import { UserType } from "@/types/ProfileType";
+import { removeTokens, saveTokens } from "@/utils/token";
 import * as SecureStore from "expo-secure-store";
 import axiosInstance from "@/config/axios";
 import { registerLogoutCallback } from "@/auth/authEvents";
@@ -15,6 +15,7 @@ import { Platform } from "react-native";
 
 interface LoginResponseApi {
   accessToken: string;
+  refreshToken?: string; // caso backend retorne
   user: UserType;
 }
 
@@ -25,6 +26,7 @@ interface LoginProps {
 
 type SessionData = {
   accessToken: string;
+  refreshToken?: string;
   user: UserType;
 };
 
@@ -33,7 +35,7 @@ type AuthType = {
   signOutResetPassword: () => void;
   session: SessionData | null;
   isLoading: boolean;
-  getProfile: () => ProfileType | null;
+  getProfile: () => UserType | null;
   login: (props: LoginProps) => Promise<UserType>;
   updateProfile: (updatedUser: Partial<UserType>) => Promise<void>;
   loginWithBiometrics: () => Promise<UserType | null>;
@@ -51,15 +53,7 @@ const AuthContext = createContext<AuthType>({
 });
 
 export function useSession() {
-  const value = useContext(AuthContext);
-
-  if (process.env.NODE_ENV !== "production") {
-    if (!value) {
-      throw new Error("useSession must be wrapped in a <SessionProvider />");
-    }
-  }
-
-  return value;
+  return useContext(AuthContext);
 }
 
 function useProtectedRoute(session: SessionData | null) {
@@ -71,7 +65,6 @@ function useProtectedRoute(session: SessionData | null) {
     if (!navigationState?.key) return;
 
     const inAuthGroup = segments[0] === "(auth)";
-
     if (!session && !inAuthGroup) {
       router.replace("/(auth)");
     } else if (session && inAuthGroup) {
@@ -80,7 +73,7 @@ function useProtectedRoute(session: SessionData | null) {
   }, [session, segments, navigationState]);
 }
 
-// Função para registrar o Push Token
+// Função para registrar push token
 async function registerPushToken() {
   try {
     if (!Device.isDevice) return;
@@ -110,7 +103,6 @@ async function registerPushToken() {
   }
 }
 
-// Chaves padronizadas (mesmas do LoginScreen)
 const BIOMETRIC_TOKEN_KEY = "biometric_access_token";
 const BIOMETRIC_CPF_KEY = "biometric_cpf";
 
@@ -130,8 +122,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const signOut = async () => {
     try {
       setSessionStr(null);
-      removeAccessToken();
-
+      await removeTokens();
       router.replace("/(auth)");
     } catch (error) {
       console.error("Erro no signOut:", error);
@@ -141,7 +132,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   const signOutResetPassword = async () => {
     setSessionStr(null);
-    removeAccessToken();
+    await removeTokens();
     await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY);
     await SecureStore.deleteItemAsync(BIOMETRIC_CPF_KEY);
   };
@@ -150,27 +141,25 @@ export function SessionProvider({ children }: PropsWithChildren) {
     registerLogoutCallback(signOut);
   }, []);
 
-  // Login tradicional com API e salvar sessão + biometria
+  // Login tradicional
   const login = async ({ cpf, password }: LoginProps): Promise<UserType> => {
     try {
       const pushToken = await registerPushToken();
       const { data } = await axiosInstance.post<LoginResponseApi>(
         "/api/v2/auth/login-customer",
-        {
-          cpf,
-          password,
-          ...(pushToken && { pushToken }),
-        }
+        { cpf, password, ...(pushToken && { pushToken }) }
       );
 
-      if (typeof data.accessToken !== "string") {
-        throw new Error("Token recebido do backend não é uma string válida");
+      if (!data.accessToken) {
+        throw new Error("Token recebido inválido");
       }
 
-      await setAccessToken(data.accessToken);
+      // salva no SecureStore e headers
+      await saveTokens(data.accessToken, data.refreshToken ?? "");
 
       const sessionData: SessionData = {
         accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
         user: data.user,
       };
 
@@ -178,7 +167,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       await SecureStore.setItemAsync("session", sessionString);
       setSessionStr(sessionString);
 
-      // Salva token e cpf para login biométrico futuro
+      // para biometria
       await SecureStore.setItemAsync(BIOMETRIC_TOKEN_KEY, data.accessToken);
       await SecureStore.setItemAsync(BIOMETRIC_CPF_KEY, cpf);
 
@@ -188,21 +177,17 @@ export function SessionProvider({ children }: PropsWithChildren) {
     }
   };
 
-  // Login via biometria: valida token salvo e restaura sessão
   const loginWithBiometrics = async (): Promise<UserType | null> => {
     try {
-      // Recupera token e cpf salvos
       const storedToken = await SecureStore.getItemAsync(BIOMETRIC_TOKEN_KEY);
       const storedCpf = await SecureStore.getItemAsync(BIOMETRIC_CPF_KEY);
 
       if (!storedToken || !storedCpf) {
-        console.warn("Credenciais biométricas não encontradas");
         return null;
       }
-      // Busca usuário com token salvo para validar se ainda é válido
+
       const user = await fetchUserProfileWithToken(storedToken);
       if (user) {
-        // Token válido, restaura sessão
         const sessionData: SessionData = {
           accessToken: storedToken,
           user,
@@ -211,36 +196,33 @@ export function SessionProvider({ children }: PropsWithChildren) {
         const sessionString = JSON.stringify(sessionData);
         await SecureStore.setItemAsync("session", sessionString);
         setSessionStr(sessionString);
-        await setAccessToken(storedToken);
+        await saveTokens(storedToken, "");
 
         return user;
       } else {
-        // Token inválido, limpa credenciais
         await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY);
         await SecureStore.deleteItemAsync(BIOMETRIC_CPF_KEY);
         return null;
       }
-    } catch (error) {
-      // Em caso de erro, limpa credenciais para evitar loops
+    } catch {
       await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY);
       await SecureStore.deleteItemAsync(BIOMETRIC_CPF_KEY);
       return null;
     }
   };
 
-  // Função para buscar perfil do usuário no backend usando token salvo
   async function fetchUserProfileWithToken(
     token: string
   ): Promise<UserType | null> {
     try {
-      // Temporariamente define o token no axios para fazer a requisição
       const originalAuth =
         axiosInstance.defaults.headers.common["Authorization"];
       axiosInstance.defaults.headers.common["Authorization"] = `${token}`;
+
       const { data } = await axiosInstance.get<{ user: UserType }>(
         "/api/v2/auth/login-biometrics"
       );
-      // Restaura o header original
+
       if (originalAuth) {
         axiosInstance.defaults.headers.common["Authorization"] = originalAuth;
       } else {
@@ -249,45 +231,32 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
       return data.user;
     } catch (error) {
-      // Restaura o header original em caso de erro
       delete axiosInstance.defaults.headers.common["Authorization"];
-      console.error("Erro ao validar token biométrico:", error);
       return null;
     }
   }
 
-  // Atualiza perfil local e opcionalmente no backend
   const updateProfile = async (
     updatedUser: Partial<UserType>
   ): Promise<void> => {
-    try {
-      if (!session) {
-        throw new Error("Usuário não autenticado");
-      }
+    if (!session) throw new Error("Usuário não autenticado");
 
-      const updatedUserData: UserType = {
-        ...session.user,
-        ...updatedUser,
-      };
+    const updatedUserData: UserType = {
+      ...session.user,
+      ...updatedUser,
+    };
 
-      const updatedSessionData: SessionData = {
-        ...session,
-        user: updatedUserData,
-      };
+    const updatedSessionData: SessionData = {
+      ...session,
+      user: updatedUserData,
+    };
 
-      const sessionString = JSON.stringify(updatedSessionData);
-      await SecureStore.setItemAsync("session", sessionString);
-      setSessionStr(sessionString);
-
-      // Atualizar backend se necessário
-      // await axiosInstance.put("/api/v2/user/profile", updatedUser);
-    } catch (error) {
-      console.error("Erro ao atualizar perfil:", error);
-      throw error;
-    }
+    const sessionString = JSON.stringify(updatedSessionData);
+    await SecureStore.setItemAsync("session", sessionString);
+    setSessionStr(sessionString);
   };
 
-  const getProfile = () => (session ? { user: session.user } : null);
+  const getProfile = () => (session ? session.user : null);
 
   return (
     <AuthContext.Provider
