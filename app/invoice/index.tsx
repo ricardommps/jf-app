@@ -1,13 +1,7 @@
-import { Box } from "@/components/ui/box";
-import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { useLocalSearchParams } from "expo-router";
-import { Button, ButtonText } from "@/components/ui/button";
 import { FlatList } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import HeaderNavigation from "@/components/shared/header-navigation";
 import Loading from "@/components/shared/loading";
-import { B } from "@expo/html-elements";
 import { useQuery } from "@tanstack/react-query";
 import { getMyInvoices } from "@/services/invoice.service";
 import { Invoice } from "@/types/invoice";
@@ -21,9 +15,6 @@ export default function InvoiceScreen() {
     queryFn: async () => await getMyInvoices(),
     staleTime: 0,
     gcTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 

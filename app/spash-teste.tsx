@@ -41,13 +41,7 @@ const BACKGROUND_NOTIFICATION_TASK = "BACKGROUND-NOTIFICATION-TASK";
 
 TaskManager.defineTask(
   BACKGROUND_NOTIFICATION_TASK,
-  async ({ data, error, executionInfo }) => {
-    console.log("✅ Received a notification in the background!", {
-      data,
-      error,
-      executionInfo,
-    });
-  }
+  async ({ data, error, executionInfo }) => {}
 );
 
 Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK);

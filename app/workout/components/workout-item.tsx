@@ -2,6 +2,7 @@ import { MediaInfo } from "@/types/workout";
 import { VStack } from "@/components/ui/vstack";
 import { Text } from "@/components/ui/text";
 import { HStack } from "@/components/ui/hstack";
+import { Box } from "@/components/ui/box";
 import { WebView } from "react-native-webview";
 import { StyleSheet, View } from "react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +15,7 @@ import {
   saveWorkoutLoad,
 } from "@/services/workout-load.service";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
+import { useWorkouut } from "@/contexts/WorkoutContext";
 
 interface Props {
   media: Media;
@@ -29,6 +31,7 @@ const getYoutubeId = (url?: string) => {
 
 const WorkoutItem = ({ media, exerciseInfo, isWorkoutLoad }: Props) => {
   const queryClient = useQueryClient();
+  const { checkList, handleCheckList } = useWorkouut();
   const exerciseInfoById: MediaInfo = exerciseInfo?.filter(
     (item) => item.mediaId === media.id
   )[0];
@@ -109,128 +112,145 @@ const WorkoutItem = ({ media, exerciseInfo, isWorkoutLoad }: Props) => {
     }
     return null;
   };
-
   return (
-    <VStack className="px-0" space="md">
-      <VStack className="rounded-2xl bg-background-200 gap-3 p-2 py-3 px-3">
-        <HStack className="gap-2 items-start">
-          <Text className="text-typography-900 font-dm-sans-bold text-base">
-            {media.title}
-          </Text>
-        </HStack>
+    <Box
+      className={`rounded-2xl bg-background-200 p-2 py-3 px-3 ${
+        checkList.includes(Number(media.id)) && "border border-green-300"
+      }`}
+    >
+      <VStack className="px-0" space="md">
+        <VStack className="gap-3 ">
+          <HStack className="gap-2 items-start">
+            <Text className="text-typography-900 font-dm-sans-bold text-base">
+              {media.title}
+            </Text>
+          </HStack>
 
-        {renderWebView()}
+          {renderWebView()}
 
-        <VStack className="px-2 gap-3">
-          {isWorkoutLoad && (
-            <HStack className="rounded-2xl bg-background-300 flex-row justify-between items-center p-2">
-              {error ? (
-                <Text
-                  className="text-typography-700 font-dm-sans-bold flex-1"
-                  size="md"
-                >
-                  Erro ao carregar carga
-                </Text>
-              ) : (
-                <>
-                  {isEditing ? (
-                    <VStack className="w-full">
-                      <Text className="text-typography-600 text-base mb-1">
-                        Digite a carga
-                      </Text>
-                      <Textarea className="h-24 border-0 bg-[#2b2b2b9d] rounded-md mt-1 mb-1 w-full">
-                        <TextareaInput
-                          value={carga}
-                          onChangeText={setCarga}
-                          placeholder="Adicione a carga do exercício..."
-                          className="placeholder:text-typography-400"
-                        />
-                      </Textarea>
-                      <HStack className="gap-2 mt-2">
-                        <Button
-                          size="sm"
-                          onPress={handleSave}
-                          disabled={saveLoadMutation.isPending}
-                          className="flex-1"
-                          action="primary"
+          <VStack className="px-2 gap-3">
+            {isWorkoutLoad && (
+              <HStack className="rounded-2xl bg-background-300 flex-row justify-between items-center p-2">
+                {error ? (
+                  <Text
+                    className="text-typography-700 font-dm-sans-bold flex-1"
+                    size="md"
+                  >
+                    Erro ao carregar carga
+                  </Text>
+                ) : (
+                  <>
+                    {isEditing ? (
+                      <VStack className="w-full">
+                        <Text className="text-typography-600 text-base mb-1">
+                          Digite a carga
+                        </Text>
+                        <Textarea className="h-24 border-0 bg-[#2b2b2b9d] rounded-md mt-1 mb-1 w-full">
+                          <TextareaInput
+                            value={carga}
+                            onChangeText={setCarga}
+                            placeholder="Adicione a carga do exercício..."
+                            className="placeholder:text-typography-400"
+                          />
+                        </Textarea>
+                        <HStack className="gap-2 mt-2">
+                          <Button
+                            size="sm"
+                            onPress={handleSave}
+                            disabled={saveLoadMutation.isPending}
+                            className="flex-1"
+                            action="primary"
+                          >
+                            <ButtonText>
+                              {saveLoadMutation.isPending
+                                ? "Salvando..."
+                                : "Salvar"}
+                            </ButtonText>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onPress={handleCancel}
+                            disabled={saveLoadMutation.isPending}
+                            className="flex-1"
+                          >
+                            <ButtonText>Cancelar</ButtonText>
+                          </Button>
+                        </HStack>
+                      </VStack>
+                    ) : (
+                      <>
+                        <Text
+                          className="text-typography-700 font-dm-sans-bold flex-1"
+                          size="md"
                         >
-                          <ButtonText>
-                            {saveLoadMutation.isPending
-                              ? "Salvando..."
-                              : "Salvar"}
-                          </ButtonText>
-                        </Button>
+                          Carga:{" "}
+                          {isLoading
+                            ? "Carregando..."
+                            : carga
+                            ? carga
+                            : "não definida"}
+                        </Text>
                         <Button
                           variant="outline"
                           size="sm"
-                          onPress={handleCancel}
-                          disabled={saveLoadMutation.isPending}
-                          className="flex-1"
+                          onPress={() => setIsEditing(true)}
                         >
-                          <ButtonText>Cancelar</ButtonText>
+                          <ButtonText>Editar</ButtonText>
                         </Button>
-                      </HStack>
-                    </VStack>
-                  ) : (
-                    <>
-                      <Text
-                        className="text-typography-700 font-dm-sans-bold flex-1"
-                        size="md"
-                      >
-                        Carga:{" "}
-                        {isLoading
-                          ? "Carregando..."
-                          : carga
-                          ? carga
-                          : "não definida"}
-                      </Text>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onPress={() => setIsEditing(true)}
-                      >
-                        <ButtonText>Editar</ButtonText>
-                      </Button>
-                    </>
-                  )}
-                </>
-              )}
-            </HStack>
-          )}
+                      </>
+                    )}
+                  </>
+                )}
+              </HStack>
+            )}
 
-          {exerciseInfoById?.method && (
-            <InfoItem label="MÉTODO:" value={exerciseInfoById.method} />
-          )}
-          {exerciseInfoById?.reps && (
-            <InfoItem
-              label="RANGE DE REPETIÇÕES:"
-              value={exerciseInfoById.reps}
-            />
-          )}
-          {exerciseInfoById?.reset && (
-            <InfoItem
-              label="INTERVALO DE RECUPERAÇÃO:"
-              value={exerciseInfoById.reset}
-            />
-          )}
-          {exerciseInfoById?.rir && (
-            <InfoItem
-              label="REPETIÇÕES DE RESERVA:"
-              value={exerciseInfoById.rir}
-            />
-          )}
-          {exerciseInfoById?.cadence && (
-            <InfoItem
-              label="CADÊNCIA / VEL. DE MOV.:"
-              value={exerciseInfoById.cadence}
-            />
-          )}
-          {exerciseInfoById?.comments && (
-            <InfoItem label="OBSERVAÇÕES:" value={exerciseInfoById.comments} />
-          )}
+            {exerciseInfoById?.method && (
+              <InfoItem label="MÉTODO:" value={exerciseInfoById.method} />
+            )}
+            {exerciseInfoById?.reps && (
+              <InfoItem
+                label="RANGE DE REPETIÇÕES:"
+                value={exerciseInfoById.reps}
+              />
+            )}
+            {exerciseInfoById?.reset && (
+              <InfoItem
+                label="INTERVALO DE RECUPERAÇÃO:"
+                value={exerciseInfoById.reset}
+              />
+            )}
+            {exerciseInfoById?.rir && (
+              <InfoItem
+                label="REPETIÇÕES DE RESERVA:"
+                value={exerciseInfoById.rir}
+              />
+            )}
+            {exerciseInfoById?.cadence && (
+              <InfoItem
+                label="CADÊNCIA / VEL. DE MOV.:"
+                value={exerciseInfoById.cadence}
+              />
+            )}
+            {exerciseInfoById?.comments && (
+              <InfoItem
+                label="OBSERVAÇÕES:"
+                value={exerciseInfoById.comments}
+              />
+            )}
+          </VStack>
         </VStack>
       </VStack>
-    </VStack>
+      <Box className="mt-3 items-start">
+        <Button size="sm" onPress={() => handleCheckList(Number(media.id))}>
+          <ButtonText>
+            {!checkList.includes(Number(media.id))
+              ? "Marcar como feito"
+              : "Desmarcar como feito"}
+          </ButtonText>
+        </Button>
+      </Box>
+    </Box>
   );
 };
 

@@ -115,8 +115,6 @@ const GymView = ({ workouts, programId }: Props) => {
     queryKey: ["programData", programId],
     staleTime: 0,
     gcTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
     queryFn: async () => await getProgram(programId),
     enabled: !!programId,
   });
@@ -287,7 +285,7 @@ const GymView = ({ workouts, programId }: Props) => {
 
       <Actionsheet isOpen={showActionsheet} onClose={handleClose}>
         <ActionsheetBackdrop />
-        <ActionsheetContent className="px-5">
+        <ActionsheetContent className="px-5 bg-[#2b2b2b]">
           <ActionsheetDragIndicatorWrapper>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
@@ -295,7 +293,7 @@ const GymView = ({ workouts, programId }: Props) => {
           <HStack className="justify-between w-full mt-3">
             <VStack>
               <Heading size="sm" className="font-semibold">
-                Informações Adicionais
+                Informações adicionais
               </Heading>
             </VStack>
             <Pressable onPress={handleClose}>

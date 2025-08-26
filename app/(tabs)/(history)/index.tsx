@@ -102,6 +102,7 @@ const renderCardRunner = (
           {feedback ? (
             <HStack className="gap-6 pt-2 flex-wrap">
               <Pressable
+                hitSlop={10}
                 onPress={() =>
                   setComments({
                     feedback: item.feedback || "",

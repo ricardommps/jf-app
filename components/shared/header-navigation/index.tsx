@@ -7,11 +7,19 @@ import { Image } from "@/components/ui/image";
 import { ArrowLeftCircleIcon } from "lucide-react-native";
 import { ThemeContext } from "@/contexts/theme-context";
 import GoBackButton from "../go-back-button";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 
 const HeaderNavigation = ({ title }: { title?: string }) => {
   const { colorMode }: any = useContext(ThemeContext);
+  const navigation = useNavigation();
   const isDarkMode = colorMode === "dark";
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/(home)");
+    }
+  };
   return (
     <Box
       className={
@@ -33,7 +41,7 @@ const HeaderNavigation = ({ title }: { title?: string }) => {
             <GoBackButton
               title="Voltar"
               icon={ArrowLeftCircleIcon}
-              onPress={() => router.back()}
+              onPress={handleBack}
               active={colorMode === "light"}
             />
           </HStack>

@@ -4,6 +4,7 @@ import {
   StatusBar,
   ListRenderItem,
   FlatList,
+  Platform,
 } from "react-native";
 import { Box } from "@/components/ui/box";
 import { HStack } from "@/components/ui/hstack";
@@ -17,13 +18,18 @@ import { Finished } from "@/types/finished";
 import { MessageCircleIcon } from "lucide-react-native";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useState } from "react";
+import Comments from "@/components/comments";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 interface Props {
   visible: boolean;
   onRequestClose: () => void;
   history: Finished[];
   subtitle: string;
-  toggleComments: (item: Finished) => void;
 }
 
 const HistoryModal: React.FC<Props> = ({
@@ -31,8 +37,23 @@ const HistoryModal: React.FC<Props> = ({
   onRequestClose,
   history,
   subtitle,
-  toggleComments,
 }) => {
+  const [selectedItem, setSelectedItem] = useState<Finished | null>(null);
+  const [openCommentsIds, setOpenCommentsIds] = useState<Set<number>>(
+    new Set()
+  );
+  const insets = useSafeAreaInsets();
+
+  const toggleComments = (item: Finished) => {
+    setSelectedItem(item);
+    setOpenCommentsIds((prev) => new Set([item.id])); // Só mantém um aberto por vez
+  };
+
+  const closeComments = () => {
+    setSelectedItem(null);
+    setOpenCommentsIds(new Set());
+  };
+
   const getLastWorkoutInfo = (executionDay: string) => {
     if (!executionDay) {
       return null;
@@ -130,8 +151,21 @@ const HistoryModal: React.FC<Props> = ({
       visible={visible}
       onRequestClose={onRequestClose}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-      <Box className="flex-1 bg-background-0 px-1">
+      {/* Configuração do StatusBar específica para o modal */}
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#000"
+        translucent={false}
+      />
+
+      <SafeAreaView
+        edges={["right", "bottom", "left"]}
+        style={{
+          flex: 1,
+          backgroundColor: "#000",
+          paddingTop: 50,
+        }}
+      >
         <VStack className="flex-1 p-2">
           {/* Header */}
           <HStack className="justify-between items-center mb-6">
@@ -148,6 +182,7 @@ const HistoryModal: React.FC<Props> = ({
               <Text className="text-2xl text-white">✕</Text>
             </TouchableOpacity>
           </HStack>
+
           {/* Conteúdo principal */}
           <Box>
             <FlatList<Finished>
@@ -166,7 +201,24 @@ const HistoryModal: React.FC<Props> = ({
             />
           </Box>
         </VStack>
-      </Box>
+      </SafeAreaView>
+
+      {selectedItem && (
+        <Comments
+          open={openCommentsIds.has(selectedItem.id)}
+          onClose={closeComments}
+          content={{
+            feedback: selectedItem.feedback || "",
+            comments: selectedItem.comments || "",
+            executionDay: selectedItem.executionDay,
+            updatedAt: selectedItem.updatedAt
+              ? selectedItem.updatedAt instanceof Date
+                ? selectedItem.updatedAt.toDateString()
+                : new Date(selectedItem.updatedAt).toDateString()
+              : new Date().toDateString(),
+          }}
+        />
+      )}
     </Modal>
   );
 };

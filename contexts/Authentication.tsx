@@ -1,3 +1,5 @@
+// Authentication.tsx - Context atualizado com as mesmas chaves
+
 import { useRootNavigationState, useRouter, useSegments } from "expo-router";
 import { createContext, PropsWithChildren, useContext, useEffect } from "react";
 import { useStorageState } from "./useStorageState";
@@ -28,18 +30,24 @@ type SessionData = {
 
 type AuthType = {
   signOut: () => void;
+  signOutResetPassword: () => void;
   session: SessionData | null;
   isLoading: boolean;
   getProfile: () => ProfileType | null;
-  login: (props: LoginProps) => Promise<any>;
+  login: (props: LoginProps) => Promise<UserType>;
+  updateProfile: (updatedUser: Partial<UserType>) => Promise<void>;
+  loginWithBiometrics: () => Promise<UserType | null>;
 };
 
 const AuthContext = createContext<AuthType>({
   signOut: () => null,
+  signOutResetPassword: () => null,
   session: null,
   isLoading: false,
   getProfile: () => null,
-  login: () => Promise.resolve(null),
+  login: () => Promise.resolve(null as any),
+  updateProfile: () => Promise.resolve(),
+  loginWithBiometrics: async () => null,
 });
 
 export function useSession() {
@@ -72,8 +80,8 @@ function useProtectedRoute(session: SessionData | null) {
   }, [session, segments, navigationState]);
 }
 
-// ✅ Função para registrar o Push Token
-async function registerPushToken(userId: string) {
+// Função para registrar o Push Token
+async function registerPushToken() {
   try {
     if (!Device.isDevice) return;
 
@@ -96,24 +104,15 @@ async function registerPushToken(userId: string) {
         importance: Notifications.AndroidImportance.MAX,
       });
     }
-
-    // Envia o token para sua API
-    // await fetch("http://192.168.15.59:8000/registerPushToken", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify({
-    //     token,
-    //     userId,
-    //   }),
-    // });
-
-    console.log("✅ Push token registrado com sucesso:", token);
+    return token;
   } catch (error) {
-    console.error("Erro ao registrar push token:", error);
+    throw error;
   }
 }
+
+// Chaves padronizadas (mesmas do LoginScreen)
+const BIOMETRIC_TOKEN_KEY = "biometric_access_token";
+const BIOMETRIC_CPF_KEY = "biometric_cpf";
 
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, sessionStr], setSessionStr] = useStorageState("session");
@@ -128,25 +127,45 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   useProtectedRoute(session);
 
-  const signOut = () => {
+  const signOut = async () => {
+    try {
+      setSessionStr(null);
+      removeAccessToken();
+
+      router.replace("/(auth)");
+    } catch (error) {
+      console.error("Erro no signOut:", error);
+      router.replace("/(auth)");
+    }
+  };
+
+  const signOutResetPassword = async () => {
     setSessionStr(null);
     removeAccessToken();
-    router.replace("/(auth)");
+    await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY);
+    await SecureStore.deleteItemAsync(BIOMETRIC_CPF_KEY);
   };
 
   useEffect(() => {
     registerLogoutCallback(signOut);
   }, []);
 
-  const login = async ({ cpf, password }: LoginProps): Promise<any> => {
+  // Login tradicional com API e salvar sessão + biometria
+  const login = async ({ cpf, password }: LoginProps): Promise<UserType> => {
     try {
+      const pushToken = await registerPushToken();
       const { data } = await axiosInstance.post<LoginResponseApi>(
         "/api/v2/auth/login-customer",
         {
           cpf,
           password,
+          ...(pushToken && { pushToken }),
         }
       );
+
+      if (typeof data.accessToken !== "string") {
+        throw new Error("Token recebido do backend não é uma string válida");
+      }
 
       await setAccessToken(data.accessToken);
 
@@ -159,11 +178,111 @@ export function SessionProvider({ children }: PropsWithChildren) {
       await SecureStore.setItemAsync("session", sessionString);
       setSessionStr(sessionString);
 
-      // ✅ REGISTRA O PUSH TOKEN APÓS LOGIN
-      await registerPushToken(String(data.user.id));
+      // Salva token e cpf para login biométrico futuro
+      await SecureStore.setItemAsync(BIOMETRIC_TOKEN_KEY, data.accessToken);
+      await SecureStore.setItemAsync(BIOMETRIC_CPF_KEY, cpf);
 
       return data.user;
     } catch (error) {
+      throw error;
+    }
+  };
+
+  // Login via biometria: valida token salvo e restaura sessão
+  const loginWithBiometrics = async (): Promise<UserType | null> => {
+    try {
+      // Recupera token e cpf salvos
+      const storedToken = await SecureStore.getItemAsync(BIOMETRIC_TOKEN_KEY);
+      const storedCpf = await SecureStore.getItemAsync(BIOMETRIC_CPF_KEY);
+
+      if (!storedToken || !storedCpf) {
+        console.warn("Credenciais biométricas não encontradas");
+        return null;
+      }
+      // Busca usuário com token salvo para validar se ainda é válido
+      const user = await fetchUserProfileWithToken(storedToken);
+      if (user) {
+        // Token válido, restaura sessão
+        const sessionData: SessionData = {
+          accessToken: storedToken,
+          user,
+        };
+
+        const sessionString = JSON.stringify(sessionData);
+        await SecureStore.setItemAsync("session", sessionString);
+        setSessionStr(sessionString);
+        await setAccessToken(storedToken);
+
+        return user;
+      } else {
+        // Token inválido, limpa credenciais
+        await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY);
+        await SecureStore.deleteItemAsync(BIOMETRIC_CPF_KEY);
+        return null;
+      }
+    } catch (error) {
+      // Em caso de erro, limpa credenciais para evitar loops
+      await SecureStore.deleteItemAsync(BIOMETRIC_TOKEN_KEY);
+      await SecureStore.deleteItemAsync(BIOMETRIC_CPF_KEY);
+      return null;
+    }
+  };
+
+  // Função para buscar perfil do usuário no backend usando token salvo
+  async function fetchUserProfileWithToken(
+    token: string
+  ): Promise<UserType | null> {
+    try {
+      // Temporariamente define o token no axios para fazer a requisição
+      const originalAuth =
+        axiosInstance.defaults.headers.common["Authorization"];
+      axiosInstance.defaults.headers.common["Authorization"] = `${token}`;
+      const { data } = await axiosInstance.get<{ user: UserType }>(
+        "/api/v2/auth/login-biometrics"
+      );
+      // Restaura o header original
+      if (originalAuth) {
+        axiosInstance.defaults.headers.common["Authorization"] = originalAuth;
+      } else {
+        delete axiosInstance.defaults.headers.common["Authorization"];
+      }
+
+      return data.user;
+    } catch (error) {
+      // Restaura o header original em caso de erro
+      delete axiosInstance.defaults.headers.common["Authorization"];
+      console.error("Erro ao validar token biométrico:", error);
+      return null;
+    }
+  }
+
+  // Atualiza perfil local e opcionalmente no backend
+  const updateProfile = async (
+    updatedUser: Partial<UserType>
+  ): Promise<void> => {
+    try {
+      if (!session) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      const updatedUserData: UserType = {
+        ...session.user,
+        ...updatedUser,
+      };
+
+      const updatedSessionData: SessionData = {
+        ...session,
+        user: updatedUserData,
+      };
+
+      const sessionString = JSON.stringify(updatedSessionData);
+      await SecureStore.setItemAsync("session", sessionString);
+      setSessionStr(sessionString);
+
+      // Atualizar backend se necessário
+      // await axiosInstance.put("/api/v2/user/profile", updatedUser);
+    } catch (error) {
+      console.error("Erro ao atualizar perfil:", error);
       throw error;
     }
   };
@@ -174,10 +293,13 @@ export function SessionProvider({ children }: PropsWithChildren) {
     <AuthContext.Provider
       value={{
         signOut,
+        signOutResetPassword,
         session,
         isLoading,
         getProfile,
         login,
+        updateProfile,
+        loginWithBiometrics,
       }}
     >
       {children}

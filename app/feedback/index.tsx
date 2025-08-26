@@ -9,22 +9,20 @@ import Loading from "@/components/shared/loading";
 
 export default function FeedbackView() {
   const router = useRouter();
-  const { link, id } = useLocalSearchParams();
-
+  const { feedbackId, notificationId } = useLocalSearchParams();
+  const feedbackIdStr = feedbackId ?? "";
+  const notificationIdStr = notificationId ?? "";
   const {
     data: finishedItem,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["finished", link],
-    queryFn: async () => await getFinishedById(link as string),
+    queryKey: ["finished", feedbackIdStr],
+    queryFn: async () => await getFinishedById(feedbackIdStr as string),
     staleTime: 0,
     gcTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    enabled: !!link,
+    enabled: !!feedbackIdStr,
   });
   if (error) {
     router.push(`/error/view`);
@@ -36,10 +34,10 @@ export default function FeedbackView() {
         <Loading />
       ) : (
         <>
-          {finishedItem.length > 0 && (
+          {finishedItem?.length > 0 && (
             <FeedbackViewScreen
               finishedItem={finishedItem[0]}
-              id={Number(id)}
+              id={Number(notificationIdStr)}
             />
           )}
         </>

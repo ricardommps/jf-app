@@ -47,8 +47,6 @@ import {
 } from "@/components/ui/toast";
 import { finishedWorkout } from "@/services/finished.service";
 
-import * as Linking from "expo-linking";
-import { useSharedLink } from "@/hooks/useSharedLink";
 import { calendarBaseTheme } from "@/utils/calendar-base-theme";
 
 interface FormData {
@@ -86,13 +84,12 @@ type WorkoutFormData = z.infer<typeof workoutSchema>;
 
 interface Props {
   safeId: string;
+  titleStr?: string;
 }
 
-const OutdoorScreen = ({ safeId }: Props) => {
+const OutdoorScreen = ({ safeId, titleStr }: Props) => {
   const router = useRouter();
   const toast = useToast();
-
-  const url = Linking.useURL();
 
   const { colorMode }: any = useContext(ThemeContext);
   const isDarkMode = colorMode === "dark";
@@ -167,7 +164,7 @@ const OutdoorScreen = ({ safeId }: Props) => {
       await finishedWorkout(payload);
       router.push(
         `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}
-        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}`
+        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}`
       );
     } catch (err) {
       const parsedError = err as Error;
@@ -189,10 +186,12 @@ const OutdoorScreen = ({ safeId }: Props) => {
       render: ({ id }) => {
         const uniqueToastId = "toast-" + id;
         return (
-          <Toast nativeID={uniqueToastId} action="error" variant="solid">
-            <ToastTitle>Erro ao finalizar treino</ToastTitle>
-            <ToastDescription>{message}</ToastDescription>
-          </Toast>
+          <Box className="mt-12">
+            <Toast nativeID={uniqueToastId} action="error" variant="solid">
+              <ToastTitle>Erro ao finalizar treino</ToastTitle>
+              <ToastDescription>{message}</ToastDescription>
+            </Toast>
+          </Box>
         );
       },
     });
@@ -498,7 +497,7 @@ const OutdoorScreen = ({ safeId }: Props) => {
           </Input>
         </Box>
         <HStack className="gap-4 py-10 justify-end w-full px-4">
-          <Button variant="outline" size="md">
+          <Button variant="outline" size="md" onPress={() => router.back()}>
             <ButtonText>Fechar</ButtonText>
           </Button>
           <Button action="primary" size="md" onPress={handleSubmit(onSubmit)}>

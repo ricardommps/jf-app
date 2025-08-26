@@ -13,7 +13,6 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Icon, InfoIcon } from "@/components/ui/icon";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
-import { TrashIcon } from "lucide-react-native";
 import TreadmillIcon from "@/components/ui/treadmill-icon";
 import TablePace from "@/components/table-pace";
 
@@ -38,10 +37,12 @@ const RunnerView = ({ workout }: Props) => {
     setModalVisible(false);
     setSelected("indoor");
     if (selected === "outdoor") {
-      router.push(`/workout/runner-finish?id=${workout.id}&outdoor=true`);
+      router.push(
+        `/workout/runner-finish?id=${workout.id}&outdoor=true&title=${workout.title}`
+      );
     } else {
       router.push(
-        `/workout/runner-finish?id=${workout.id}&intensities=${intensities}`
+        `/workout/runner-finish?id=${workout.id}&intensities=${intensities}&title=${workout.title}`
       );
     }
   }

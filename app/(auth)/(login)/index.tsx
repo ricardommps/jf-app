@@ -1,11 +1,24 @@
+import * as SecureStore from "expo-secure-store";
+import * as LocalAuthentication from "expo-local-authentication";
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Keyboard,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
+  TouchableWithoutFeedback,
+} from "react-native";
+
 import { View } from "@/components/ui/view";
+import { Box } from "@/components/ui/box";
 import { Input, InputField } from "@/components/ui/input";
 import { Button, ButtonText } from "@/components/ui/button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSession } from "@/contexts/Authentication";
-import Logo from "@/assets/images/logo.svg";
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
 import {
   useToast,
   Toast,
@@ -13,17 +26,7 @@ import {
   ToastDescription,
 } from "@/components/ui/toast";
 import { Spinner } from "@/components/ui/spinner";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "@/components/ui/image";
-import {
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Dimensions,
-  TouchableWithoutFeedback,
-  Keyboard,
-} from "react-native";
 
 const schema = z.object({
   cpf: z.string().min(1, "CPF é obrigatório"),
@@ -32,26 +35,23 @@ const schema = z.object({
 
 type SchemaFieldsType = z.infer<typeof schema>;
 
-export type Error = {
-  message: string;
-  status: number;
-};
+const TOKEN_KEY = "biometric_access_token";
+const CPF_KEY = "biometric_cpf";
 
 export default function LoginScreen() {
   const toast = useToast();
-  const { login } = useSession();
+  const { login, loginWithBiometrics } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [toastId, setToastId] = useState<string>("");
+  const [isBiometricSupported, setIsBiometricSupported] = useState(false);
+  const [savedCpf, setSavedCpf] = useState<string | null>(null);
+  const [hasBiometricCredentials, setHasBiometricCredentials] = useState(false);
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
 
   const { height } = Dimensions.get("window");
   const isSmallDevice = height < 700;
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    formState: { isValid },
-  } = useForm({
+  const { control, handleSubmit, setValue } = useForm<SchemaFieldsType>({
     mode: "onBlur",
     resolver: zodResolver(schema),
     defaultValues: {
@@ -60,21 +60,109 @@ export default function LoginScreen() {
     },
   });
 
+  useEffect(() => {
+    async function prepare() {
+      try {
+        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+        const biometricSupported = hasHardware && isEnrolled;
+        setIsBiometricSupported(biometricSupported);
+
+        const savedToken = await SecureStore.getItemAsync(TOKEN_KEY);
+        const savedCpfValue = await SecureStore.getItemAsync(CPF_KEY);
+
+        if (savedCpfValue) {
+          setSavedCpf(savedCpfValue);
+          setValue("cpf", savedCpfValue);
+        }
+
+        const hasCredentials = !!(
+          savedToken &&
+          savedCpfValue &&
+          biometricSupported
+        );
+        setHasBiometricCredentials(hasCredentials);
+
+        if (hasCredentials && !autoLoginAttempted) {
+          setAutoLoginAttempted(true);
+          await attemptAutoLogin();
+        }
+      } catch (error) {
+        console.error("Erro ao preparar login:", error);
+      }
+    }
+
+    prepare();
+  }, [setValue, loginWithBiometrics, autoLoginAttempted]);
+
+  async function attemptAutoLogin() {
+    try {
+      setIsLoading(true);
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Use sua digital ou Face ID para entrar rapidamente",
+        fallbackLabel: "Inserir senha manualmente",
+        disableDeviceFallback: false,
+        cancelLabel: "Cancelar",
+      });
+
+      if (result.success) {
+        const user = await loginWithBiometrics();
+        if (user) {
+          return;
+        } else {
+          await clearBiometricCredentials();
+          showNewToast("Credenciais expiradas. Faça login novamente.");
+        }
+      }
+    } catch (error) {
+      console.error("Erro no auto-login biométrico:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   async function handleLogin(data: SchemaFieldsType) {
-    // Fechar teclado antes de fazer login
     Keyboard.dismiss();
     setIsLoading(true);
     try {
-      await login(data);
+      const user = await login(data);
+      setSavedCpf(data.cpf);
+      setHasBiometricCredentials(true);
     } catch (err) {
-      const parsedError = err as Error;
-
-      // Mostrar toast apenas se ainda não está visível
+      const parsedError = err as { message: string };
       if (!toast.isActive(toastId)) {
         showNewToast(parsedError.message);
       }
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleAccessWithOtherAccount() {
+    try {
+      await SecureStore.deleteItemAsync(TOKEN_KEY);
+      await SecureStore.deleteItemAsync(CPF_KEY);
+      await SecureStore.deleteItemAsync("session"); // Remove a sessão salva
+      setHasBiometricCredentials(false);
+      setSavedCpf(null);
+      setValue("cpf", "");
+      showNewToast("Digite os dados para acessar com outra conta.");
+    } catch (error) {
+      console.error("Erro ao limpar credenciais:", error);
+      showNewToast("Erro ao tentar acessar com outra conta.");
+    }
+  }
+
+  async function clearBiometricCredentials() {
+    try {
+      await SecureStore.deleteItemAsync(TOKEN_KEY);
+      await SecureStore.deleteItemAsync(CPF_KEY);
+      setHasBiometricCredentials(false);
+      setSavedCpf(null);
+      setValue("cpf", "");
+    } catch (error) {
+      console.error("Erro ao limpar credenciais:", error);
     }
   }
 
@@ -88,10 +176,12 @@ export default function LoginScreen() {
       render: ({ id }) => {
         const uniqueToastId = "toast-" + id;
         return (
-          <Toast nativeID={uniqueToastId} action="error" variant="solid">
-            <ToastTitle>Erro ao fazer login</ToastTitle>
-            <ToastDescription>{message}</ToastDescription>
-          </Toast>
+          <Box className="mt-12">
+            <Toast nativeID={uniqueToastId} action="error" variant="solid">
+              <ToastTitle>Aviso</ToastTitle>
+              <ToastDescription>{message}</ToastDescription>
+            </Toast>
+          </Box>
         );
       },
     });
@@ -115,7 +205,6 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             bounces={false}
           >
-            {/* Logo Section */}
             <View
               className={`flex justify-center items-center ${
                 isSmallDevice ? "mt-16" : "mt-32"
@@ -133,7 +222,6 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* Form Section */}
             <View className={`${isSmallDevice ? "mt-8" : "mt-12"}`}>
               <Controller
                 name="cpf"
@@ -156,7 +244,6 @@ export default function LoginScreen() {
                       autoCapitalize="none"
                       autoCorrect={false}
                       returnKeyType="next"
-                      blurOnSubmit={false}
                     />
                   </Input>
                 )}
@@ -191,7 +278,6 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* Button Section */}
             <View
               className={`flex justify-center items-center ${
                 isSmallDevice ? "pt-6" : "pt-10"
@@ -210,9 +296,20 @@ export default function LoginScreen() {
                   <ButtonText>Login</ButtonText>
                 )}
               </Button>
+
+              {isBiometricSupported && hasBiometricCredentials && (
+                <Button
+                  action="secondary"
+                  size="md"
+                  className="mt-4 w-full"
+                  disabled={isLoading}
+                  onPress={handleAccessWithOtherAccount}
+                >
+                  <ButtonText>Acessar com outra conta</ButtonText>
+                </Button>
+              )}
             </View>
 
-            {/* Espaço extra para o teclado */}
             <View style={{ height: 100 }} />
           </ScrollView>
         </TouchableWithoutFeedback>

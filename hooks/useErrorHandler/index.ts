@@ -94,7 +94,7 @@ export const useErrorHandler = (options: UseErrorHandlerOptions = {}) => {
       return await asyncFn();
     } catch (error) {
       const message = handleError(error as ErrorResponse, customMessage);
-      throw new Error(message);
+      throw new Error(String(message));
     }
   };
 

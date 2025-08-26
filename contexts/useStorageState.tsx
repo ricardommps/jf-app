@@ -28,7 +28,7 @@ export function useStorageState(key: string): UseStateHook<string> {
         setState(value);
       })
       .catch((error: any) => {
-        console.log("Error: ", error);
+        throw error;
       });
   }, [key]);
 

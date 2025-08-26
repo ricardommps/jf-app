@@ -1,4 +1,11 @@
 import React, { useEffect, useState } from "react";
+import {
+  Modal,
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Text as RNText,
+} from "react-native";
 import { VStack } from "@/components/ui/vstack";
 import { ScrollView } from "@/components/ui/scroll-view";
 import { Text } from "@/components/ui/text";
@@ -8,7 +15,7 @@ import {
   ChevronRightIcon,
   CircleDollarSignIcon,
   SquareAsteriskIcon,
-  type LucideIcon,
+  CameraIcon,
 } from "lucide-react-native";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
@@ -16,7 +23,6 @@ import { Pressable } from "@/components/ui/pressable";
 import { MailIcon } from "lucide-react-native";
 import { SafeAreaView } from "@/components/ui/safe-area-view";
 import { Divider } from "@/components/ui/divider";
-import { Image as RNImage } from "react-native";
 import { Center } from "@/components/ui/center";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import Notifications from "./components/notifications";
@@ -24,16 +30,16 @@ import { useSession } from "@/contexts/Authentication";
 import { ProfileType } from "@/types/ProfileType";
 import useANotifications from "@/hooks/useNotification";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+import { uploadFile } from "@/services/upload.service";
+import {
+  useToast,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+} from "@/components/ui/toast";
 
 const DashboardLayout = (props: any) => {
-  const [isSidebarVisible, setIsSidebarVisible] = useState(
-    props.isSidebarVisible
-  );
-
-  function toggleSidebar() {
-    setIsSidebarVisible(!isSidebarVisible);
-  }
-
   return (
     <VStack className="h-full w-full bg-background-0">
       <Box className="md:hidden"></Box>
@@ -50,12 +56,16 @@ interface MainContentProps {
   setShowNotifications: (show: boolean) => void;
   profile: ProfileType | null;
   handleInvoice: () => void;
+  handleAvatarUpload: () => void;
+  handlePassword: () => void;
 }
 
 const MainContent = ({
   setShowNotifications,
   profile,
   handleInvoice,
+  handleAvatarUpload,
+  handlePassword,
 }: MainContentProps) => {
   const { notifications } = useANotifications();
   return (
@@ -77,27 +87,35 @@ const MainContent = ({
           </HStack>
           <Center className="absolute md:mt-14 mt-6 w-full md:px-10 md:pt-6 pb-4">
             <VStack space="lg" className="items-center">
-              <Avatar
-                size="2xl"
-                className="bg-[#2b2b2b9d] items-center justify-center"
-              >
-                {profile?.user.avatar ? (
-                  <AvatarImage
-                    source={{
-                      uri: profile.user.avatar,
-                    }}
-                  />
-                ) : (
-                  <Text className="text-white font-bold text-3xl">
-                    {(profile?.user.name || profile?.user.email || "User")
-                      .split(" ")
-                      .map((n) => n.charAt(0))
-                      .join("")
-                      .substring(0, 2)
-                      .toUpperCase()}
-                  </Text>
-                )}
-              </Avatar>
+              <Box className="relative">
+                <Avatar
+                  size="2xl"
+                  className="bg-[#2b2b2b9d] items-center justify-center"
+                >
+                  {profile?.user.avatar ? (
+                    <AvatarImage
+                      source={{
+                        uri: profile.user.avatar,
+                      }}
+                    />
+                  ) : (
+                    <Text className="text-white font-bold text-3xl">
+                      {(profile?.user.name || profile?.user.email || "User")
+                        .split(" ")
+                        .map((n) => n.charAt(0))
+                        .join("")
+                        .substring(0, 2)
+                        .toUpperCase()}
+                    </Text>
+                  )}
+                </Avatar>
+                <Pressable
+                  onPress={handleAvatarUpload}
+                  className="absolute -bottom-2 -right-2 bg-primary-500 rounded-full p-2 border-2 border-white"
+                >
+                  <Icon as={CameraIcon} className="text-white" size="sm" />
+                </Pressable>
+              </Box>
               <VStack className="gap-1 w-full items-center">
                 <Text size="2xl" className="font-roboto text-white">
                   {profile?.user.name}
@@ -140,21 +158,23 @@ const MainContent = ({
                 </HStack>
               </Pressable>
               <Divider orientation="horizontal" />
-              <HStack
-                space="2xl"
-                className="justify-between items-center w-full flex-1 py-3 px-2"
-              >
-                <HStack className="items-center" space="md">
-                  <Icon
-                    as={SquareAsteriskIcon}
-                    className="text-typography-700"
-                  />
-                  <Text size="lg" className="text-typography-700">
-                    Senha
-                  </Text>
+              <Pressable onPress={handlePassword} className="w-full">
+                <HStack
+                  space="2xl"
+                  className="justify-between items-center w-full flex-1 py-3 px-2"
+                >
+                  <HStack className="items-center" space="md">
+                    <Icon
+                      as={SquareAsteriskIcon}
+                      className="text-typography-700"
+                    />
+                    <Text size="lg" className="text-typography-700">
+                      Senha
+                    </Text>
+                  </HStack>
+                  <Icon as={ChevronRightIcon} className="text-typography-700" />
                 </HStack>
-                <Icon as={ChevronRightIcon} className="text-typography-700" />
-              </HStack>
+              </Pressable>
               <Divider orientation="horizontal" />
               <Pressable onPress={handleInvoice} className="w-full">
                 <HStack
@@ -183,17 +203,137 @@ const MainContent = ({
 
 const Profile = () => {
   const router = useRouter();
+  const toast = useToast();
   const [showNotifications, setShowNotifications] = useState(false);
-  const { getProfile } = useSession();
+  const [toastId, setToastId] = useState<string>("");
+  const { getProfile, updateProfile } = useSession();
   const { onGetNotifications } = useANotifications();
   const profile = getProfile();
 
+  const [modalVisible, setModalVisible] = useState(false);
+
   useEffect(() => {
     onGetNotifications();
+    requestPermissions();
   }, []);
+
+  const showNewToast = (
+    message: string,
+    type: "success" | "error" = "error"
+  ) => {
+    const newId = Math.random().toString();
+    setToastId(newId);
+    toast.show({
+      id: newId,
+      placement: "top",
+      duration: 9000,
+      render: ({ id }) => {
+        const uniqueToastId = "toast-" + id;
+        return (
+          <Toast nativeID={uniqueToastId} action={type} variant="solid">
+            <ToastTitle>{type === "success" ? "Sucesso" : "Erro"}</ToastTitle>
+            <ToastDescription>{message}</ToastDescription>
+          </Toast>
+        );
+      },
+    });
+  };
+
+  const requestPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      showNewToast(
+        "Precisamos de acesso à sua galeria para alterar a foto do perfil.",
+        "error"
+      );
+    }
+  };
+
+  // Abrir modal para escolha
+  const handleAvatarUpload = () => {
+    setModalVisible(true);
+  };
+
+  // Escolher galeria
+  const pickImageFromGallery = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images", // <- minúsculo
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        await uploadAvatar(result.assets[0]);
+      }
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Erro ao selecionar da galeria:", error);
+      showNewToast("Não foi possível selecionar a imagem.", "error");
+    }
+  };
+
+  // Escolher câmera
+  const pickImageFromCamera = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        showNewToast(
+          "Precisamos de acesso à câmera para tirar uma foto.",
+          "error"
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: "images", // <- minúsculo
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.[0]) {
+        await uploadAvatar(result.assets[0]);
+      }
+      setModalVisible(false);
+    } catch (error) {
+      console.error("Erro ao tirar foto:", error);
+      showNewToast("Não foi possível tirar a foto.", "error");
+    }
+  };
+
+  const uploadAvatar = async (imageAsset: ImagePicker.ImagePickerAsset) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", {
+        uri: imageAsset.uri,
+        type: imageAsset.mimeType || "image/jpeg",
+        name: "avatar.jpg",
+      } as any);
+
+      const data = await uploadFile(formData);
+
+      await updateProfile({
+        avatar: data.url || data.avatar || data.imageUrl,
+      });
+
+      showNewToast("Foto do perfil atualizada com sucesso!", "success");
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      showNewToast(
+        `Não foi possível atualizar a foto do perfil. ${error}`,
+        "error"
+      );
+    }
+  };
 
   const handleInvoice = () => {
     router.push(`/invoice`);
+  };
+
+  const handlePassword = () => {
+    router.push("/password" as any);
   };
 
   return (
@@ -203,6 +343,8 @@ const Profile = () => {
           setShowNotifications={setShowNotifications}
           profile={profile}
           handleInvoice={handleInvoice}
+          handleAvatarUpload={handleAvatarUpload}
+          handlePassword={handlePassword}
         />
       </DashboardLayout>
       <Notifications
@@ -210,8 +352,74 @@ const Profile = () => {
         onClose={() => setShowNotifications(false)}
         profile={profile}
       />
+
+      {/* Modal customizado para escolher foto */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={pickImageFromGallery}
+            >
+              <RNText style={styles.optionText}>Galeria</RNText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={pickImageFromCamera}
+            >
+              <RNText style={styles.optionText}>Câmera</RNText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.optionButton, styles.cancelButton]}
+              onPress={() => setModalVisible(false)}
+            >
+              <RNText style={[styles.optionText, styles.cancelText]}>
+                Cancelar
+              </RNText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: 280,
+    paddingVertical: 16,
+  },
+  optionButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: "center",
+  },
+  optionText: {
+    fontSize: 18,
+    color: "#007AFF",
+  },
+  cancelButton: {
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+    marginTop: 8,
+  },
+  cancelText: {
+    color: "#FF3B30",
+    fontWeight: "600",
+  },
+});
 
 export default Profile;

@@ -71,9 +71,10 @@ type WorkoutFormData = z.infer<typeof workoutSchema>;
 
 interface Props {
   safeId: string;
+  titleStr?: string;
 }
 
-const IndoorSimpleScreen = ({ safeId }: Props) => {
+const IndoorSimpleScreen = ({ safeId, titleStr }: Props) => {
   const router = useRouter();
   const toast = useToast();
 
@@ -150,7 +151,7 @@ const IndoorSimpleScreen = ({ safeId }: Props) => {
       await finishedWorkout(payload);
       router.push(
         `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}
-        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}`
+        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}`
       );
     } catch (err) {
       const parsedError = err as Error;
@@ -481,7 +482,7 @@ const IndoorSimpleScreen = ({ safeId }: Props) => {
           </Input>
         </Box>
         <HStack className="gap-4 py-10 justify-end w-full px-4">
-          <Button variant="outline" size="md">
+          <Button variant="outline" size="md" onPress={() => router.back()}>
             <ButtonText>Fechar</ButtonText>
           </Button>
           <Button action="primary" size="md" onPress={handleSubmit(onSubmit)}>

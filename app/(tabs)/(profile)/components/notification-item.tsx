@@ -7,7 +7,7 @@ import { VStack } from "@/components/ui/vstack";
 import useANotifications from "@/hooks/useNotification";
 import { Notification } from "@/types/notification";
 import { getTimePassedText } from "@/utils/get-time-passed";
-import { FileWarning, Receipt, MailIcon } from "lucide-react-native";
+import { FileWarning, Receipt, MailIcon, BellRing } from "lucide-react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -35,9 +35,15 @@ const NotificationItem = ({ notification, profile }: Props) => {
   const [toastId, setToastId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const showNewToast = () => {
+  const showNewToast = (error?: unknown) => {
+    const errorMessage =
+      (error as { message?: string })?.message ||
+      String(error) ||
+      "Ocorreu um erro inesperado.";
+
     const newId = Math.random().toString();
     setToastId(newId);
+
     toast.show({
       id: newId,
       placement: "top",
@@ -45,13 +51,12 @@ const NotificationItem = ({ notification, profile }: Props) => {
       render: ({ id }) => {
         const uniqueToastId = "toast-" + id;
         return (
-          <Toast nativeID={uniqueToastId} action="error" variant="solid">
-            <ToastTitle>Erro ao baixar comprovante</ToastTitle>
-            <ToastDescription>
-              Não foi possível baixar seu comprovante. Tente novamente mais
-              tarde.{" "}
-            </ToastDescription>
-          </Toast>
+          <Box className="mt-12">
+            <Toast nativeID={uniqueToastId} action="error" variant="solid">
+              <ToastTitle>Erro ao baixar comprovante</ToastTitle>
+              <ToastDescription>{errorMessage}</ToastDescription>
+            </Toast>
+          </Box>
         );
       },
     });
@@ -94,12 +99,12 @@ const NotificationItem = ({ notification, profile }: Props) => {
         }
       } catch (erro1: any) {
         if (!toast.isActive(toastId)) {
-          showNewToast();
+          showNewToast(erro1);
         }
       }
     } catch (erroGeral: any) {
       if (!toast.isActive(toastId)) {
-        showNewToast();
+        showNewToast(erroGeral);
       }
     } finally {
       setIsLoading(false);
@@ -111,7 +116,9 @@ const NotificationItem = ({ notification, profile }: Props) => {
   };
 
   const handleFeedback = () => {
-    router.push(`/feedback?link=${notification.link}&id=${notification.id}`);
+    router.push(
+      `/feedback?feedbackId=${notification.link}&notificationId=${notification.id}`
+    );
   };
 
   const renderIcon = (type: string) => {
@@ -133,8 +140,19 @@ const NotificationItem = ({ notification, profile }: Props) => {
         return (
           <FileWarning
             size={24}
-            color="#ef4444" // red-500
-            className="my-1"
+            color="#22c55e" // cor equivalente ao Tailwind 'text-success'
+            strokeWidth={2}
+            style={{ marginVertical: 4 }}
+          />
+        );
+
+      case "training":
+        return (
+          <BellRing
+            size={24}
+            color="#22c55e" // cor equivalente ao Tailwind 'text-success'
+            strokeWidth={2}
+            style={{ marginVertical: 4 }}
           />
         );
 

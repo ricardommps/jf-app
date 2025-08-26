@@ -4,14 +4,13 @@ import { Text } from "@/components/ui/text";
 import { ImageBackground } from "@/components/ui/image-background";
 import { VStack } from "@/components/ui/vstack";
 import { View } from "@/components/ui/view";
+import { Box } from "@/components/ui/box";
 import { Pressable } from "@/components/ui/pressable";
 import { useRouter } from "expo-router";
 import { format } from "date-fns";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSequence,
-  withSpring,
 } from "react-native-reanimated";
 
 const getImageSource = (type: number) => {
@@ -53,17 +52,37 @@ const ProgramCard = ({
     router.push(`/program/view?id=${id}&type=${type}`);
   };
 
+  const renderType = () => {
+    if (type === 1) {
+      return (
+        <Box className="pb-5">
+          <Text size="lg" className="font-bold text-gray-50 dark:text-white">
+            Treinos de corrida
+          </Text>
+        </Box>
+      );
+    }
+
+    return (
+      <Box className="pb-5">
+        <Text size="lg" className="font-bold text-gray-50 dark:text-white">
+          Treinos de força
+        </Text>
+      </Box>
+    );
+  };
+
   return (
     <AnimatedPressable
       style={[animatedStyle, { overflow: "hidden", borderRadius: 18 }]} // Garante bordas arredondadas
-      className="flex-1 min-h-[120px]" // Garante que tenha altura suficiente
+      className="flex-1 min-h-[180px]" // Garante que tenha altura suficiente
       onPress={() => handleNavigate(id)}
     >
       <ImageBackground
         source={getImageSource(type)}
         style={{
           flex: 1,
-          justifyContent: "space-between",
+          justifyContent: "flex-start",
           position: "relative",
         }}
         className="p-4 rounded-[18px]"
@@ -80,8 +99,9 @@ const ProgramCard = ({
             opacity: 0.6, // Ajuste a intensidade do escurecimento
           }}
         />
-        <HStack className="items-center">
-          <VStack className="flex-1">
+        {renderType()}
+        <HStack className="pb-5">
+          <VStack>
             <Text size="lg" className="font-bold text-gray-50 dark:text-white">
               {name}
             </Text>
@@ -104,7 +124,7 @@ const ProgramCard = ({
             <HStack space="xs">
               <Text
                 className="text-gray-50 dark:text-white font-medium"
-                size="md"
+                size="lg"
               >
                 PV: {pv}
               </Text>
@@ -113,7 +133,7 @@ const ProgramCard = ({
             <HStack space="xs">
               <Text
                 className="text-gray-50 dark:text-white font-medium"
-                size="md"
+                size="lg"
               >
                 Pace do PV: {pace}
               </Text>

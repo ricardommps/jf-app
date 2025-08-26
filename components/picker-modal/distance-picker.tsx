@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, View, TouchableOpacity } from "react-native";
+import { Modal, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import WheelPickerExpo from "react-native-wheel-picker-expo";
 import { Heading } from "@/components/ui/heading";

@@ -1,6 +1,6 @@
 import "@/global.css";
-import { useContext, useEffect, useState } from "react";
-import { Slot } from "expo-router";
+import { useContext, useEffect, useState, useRef } from "react";
+import { Slot, useRouter, usePathname } from "expo-router";
 import { useFonts } from "expo-font";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { StatusBar } from "expo-status-bar";
@@ -23,11 +23,83 @@ import {
   Animated,
   Dimensions,
   StyleSheet,
-  SafeAreaView,
   Platform,
+  SafeAreaView,
 } from "react-native";
 import { Image } from "@/components/ui/image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+function IntegratedNotificationHandler() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const hasProcessedInitial = useRef(false);
+
+  const safeNavigate = (path: string, delay: number = 300) => {
+    setTimeout(() => {
+      try {
+        if (pathname !== undefined) {
+          router.replace(path as any);
+        } else {
+          if (delay < 3000) {
+            safeNavigate(path, delay + 300);
+          }
+        }
+      } catch (error) {
+        throw error;
+      }
+    }, delay);
+  };
+
+  const handleNotificationData = (data: any) => {
+    if (!data) return;
+
+    if (data.url && typeof data.url === "string") {
+      const url = data.url;
+      const prefix = "jfapp://";
+
+      if (url.startsWith(prefix)) {
+        const path = url.slice(prefix.length);
+        safeNavigate(`/${path}` as any);
+        return;
+      }
+    }
+  };
+
+  useEffect(() => {
+    const checkInitialNotification = async () => {
+      if (hasProcessedInitial.current) return;
+      hasProcessedInitial.current = true;
+
+      try {
+        const lastNotification =
+          await Notifications.getLastNotificationResponseAsync();
+
+        if (lastNotification?.notification?.request?.content?.data) {
+          handleNotificationData(
+            lastNotification.notification.request.content.data
+          );
+        }
+      } catch (error) {
+        throw error;
+      }
+    };
+
+    const timer = setTimeout(checkInitialNotification, 2000);
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        handleNotificationData(response.notification.request.content.data);
+      }
+    );
+
+    return () => {
+      clearTimeout(timer);
+      subscription.remove();
+    };
+  }, []); // Sem dependências para executar apenas uma vez
+
+  return null;
+}
 
 interface AnimatedSplashScreenProps {
   onFinish: () => void;
@@ -50,13 +122,7 @@ const BACKGROUND_NOTIFICATION_TASK = "BACKGROUND-NOTIFICATION-TASK";
 
 TaskManager.defineTask(
   BACKGROUND_NOTIFICATION_TASK,
-  async ({ data, error, executionInfo }) => {
-    console.log("✅ Received a notification in the background!", {
-      data,
-      error,
-      executionInfo,
-    });
-  }
+  async ({ data, error, executionInfo }) => {}
 );
 
 Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK);
@@ -65,7 +131,6 @@ Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK);
 const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({
   onFinish,
 }) => {
-  const { width, height } = Dimensions.get("window");
   const insets = useSafeAreaInsets();
   const fadeAnim = new Animated.Value(0);
   const scaleAnim = new Animated.Value(0.3);
@@ -73,31 +138,25 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({
 
   useEffect(() => {
     const startAnimation = async () => {
-      // Esconde a splash screen nativa
       await SplashScreen.hideAsync();
 
-      // Sequência de animações
       Animated.parallel([
-        // Fade in
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 800,
           useNativeDriver: true,
         }),
-        // Scale up
         Animated.timing(scaleAnim, {
           toValue: 1,
           duration: 800,
           useNativeDriver: true,
         }),
-        // Slide up
         Animated.timing(slideAnim, {
           toValue: 0,
           duration: 800,
           useNativeDriver: true,
         }),
       ]).start(() => {
-        // Após 2 segundos, fade out
         setTimeout(() => {
           Animated.timing(fadeAnim, {
             toValue: 0,
@@ -130,7 +189,6 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({
           },
         ]}
       >
-        {/* Logo container com espaçamento seguro */}
         <View style={styles.logoContainer}>
           <Image
             source={require("@/assets/images/jf_logo_full.png")}
@@ -142,7 +200,6 @@ const AnimatedSplashScreen: React.FC<AnimatedSplashScreenProps> = ({
 
         <Text style={styles.loadingText}>Carregando...</Text>
 
-        {/* Loading indicator animado */}
         <Animated.View
           style={[
             styles.loadingDot,
@@ -212,10 +269,10 @@ const MainLayout = () => {
 
   useEffect(() => {
     if (fontsLoaded) {
-      // Simula carregamento adicional se necessário
+      // Delay maior para garantir que tudo está carregado
       setTimeout(() => {
         setAppReady(true);
-      }, 100);
+      }, 800); // Aumentei para 800ms
     }
   }, [fontsLoaded]);
 
@@ -233,6 +290,7 @@ const MainLayout = () => {
         <SessionProvider>
           <StatusBar translucent />
           <Slot />
+          <IntegratedNotificationHandler />
         </SessionProvider>
       </GluestackUIProvider>
     </NotificationProvider>

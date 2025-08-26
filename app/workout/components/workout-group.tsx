@@ -1,6 +1,6 @@
 import { MediaInfo } from "@/types/workout";
 import { useState, useRef } from "react";
-import { Dimensions, LayoutChangeEvent, View } from "react-native";
+import { LayoutChangeEvent, View } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { Alert, AlertText, AlertIcon } from "@/components/ui/alert";

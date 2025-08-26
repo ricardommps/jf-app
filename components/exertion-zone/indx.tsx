@@ -5,6 +5,7 @@ import { Box } from "@/components/ui/box";
 import { HStack } from "@/components/ui/hstack";
 import { Heading } from "@/components/ui/heading";
 import { VStack } from "@/components/ui/vstack";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface ZoneData {
   pv: number;
@@ -70,157 +71,177 @@ const ExertionZone: React.FC<Props> = ({ visible, onRequestClose, data }) => {
       visible={visible}
       onRequestClose={onRequestClose}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-      <Box className="flex-1 bg-background-0 px-1">
-        <VStack className="flex-1 p-1">
-          {/* Header */}
-          <HStack className="justify-between items-center mb-6 p-3">
-            <Heading size="lg" className="text-white">
-              Validade Extrapolativa
-            </Heading>
-            <TouchableOpacity
-              onPress={onRequestClose}
-              activeOpacity={0.7}
-              accessible={true}
-              accessibilityLabel="Fechar modal"
-              accessibilityRole="button"
-            >
-              <Text className="text-2xl text-white">✕</Text>
-            </TouchableOpacity>
-          </HStack>
-          <View style={{ flex: 1, backgroundColor: "#2b2b2b9d", padding: 24 }}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#000"
+        translucent={false}
+      />
+
+      <SafeAreaView
+        edges={["right", "bottom", "left"]}
+        style={{
+          flex: 1,
+          backgroundColor: "#000",
+          paddingTop: 50,
+        }}
+      >
+        <Box className="flex-1 bg-background-0 px-1">
+          <VStack className="flex-1 p-1">
             {/* Header */}
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginBottom: 24,
-              }}
-            >
-              <Text
-                style={{ color: "#fff", fontWeight: "600", marginLeft: 50 }}
+            <HStack className="justify-between items-center mb-6 p-3">
+              <Heading size="lg" className="text-white">
+                Zona de esforço
+              </Heading>
+              <TouchableOpacity
+                onPress={onRequestClose}
+                activeOpacity={0.7}
+                accessible={true}
+                accessibilityLabel="Fechar modal"
+                accessibilityRole="button"
               >
-                Limiar
-              </Text>
-              <Text style={{ color: "#fff", fontWeight: "600" }}>Zona</Text>
-              <Text
+                <Text className="text-2xl text-white">✕</Text>
+              </TouchableOpacity>
+            </HStack>
+            <View
+              style={{ flex: 1, backgroundColor: "#2b2b2b9d", padding: 24 }}
+            >
+              {/* Header */}
+              <View
                 style={{
-                  color: "#fff",
-                  fontWeight: "600",
-                  textAlign: "right",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  marginBottom: 24,
                 }}
               >
-                Domínio de {"\n"}intensidade
-              </Text>
-            </View>
-
-            {/* Lista de zonas */}
-            {zones.map((zone, index) => (
-              <View
-                key={zone.id}
-                style={{ position: "relative", marginBottom: 48 }}
-              >
-                {/* Linha vertical */}
-                {index < zones.length - 1 && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      left: "50%",
-                      marginLeft: -15, // half of width (1px)
-                      top: 20,
-                      height: 80,
-                      width: 1,
-                      backgroundColor: "#475569",
-                      zIndex: 0,
-                    }}
-                  />
-                )}
-                <View
+                <Text
+                  style={{ color: "#fff", fontWeight: "600", marginLeft: 50 }}
+                >
+                  Limiar
+                </Text>
+                <Text style={{ color: "#fff", fontWeight: "600" }}>Zona</Text>
+                <Text
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
+                    color: "#fff",
+                    fontWeight: "600",
+                    textAlign: "right",
                   }}
                 >
-                  {/* Limiar */}
-                  <View
-                    style={{
-                      flex: 1,
-                      alignItems: "flex-end",
-                      paddingRight: 25,
-                    }}
-                  >
-                    {zone.values && (
-                      <View style={{ alignItems: "flex-end" }}>
-                        <Text
-                          style={{
-                            color: "#fff",
-                            fontWeight: "600",
-                            fontSize: 15,
-                          }}
-                        >
-                          {zone.values.main}
-                        </Text>
-                        <Text
-                          style={{
-                            color: "#94a3b8",
-                            fontSize: 13,
-                            marginTop: 2,
-                          }}
-                        >
-                          {zone.values.pace}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
+                  Domínio de {"\n"}intensidade
+                </Text>
+              </View>
 
-                  {/* Zona */}
-                  <View
-                    style={{
-                      alignItems: "center",
-                      flexDirection: "row",
-                      gap: 8,
-                    }}
-                  >
+              {/* Lista de zonas */}
+              {zones.map((zone, index) => (
+                <View
+                  key={zone.id}
+                  style={{ position: "relative", marginBottom: 48 }}
+                >
+                  {/* Linha vertical */}
+                  {index < zones.length - 1 && (
                     <View
                       style={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: 8,
-                        backgroundColor: zone.color,
+                        position: "absolute",
+                        left: "50%",
+                        marginLeft: -15, // half of width (1px)
+                        top: 20,
+                        height: 80,
+                        width: 1,
+                        backgroundColor: "#475569",
+                        zIndex: 0,
                       }}
                     />
-                    <Text
-                      style={{
-                        fontSize: 17,
-                        fontWeight: "700",
-                        color: "#fff",
-                      }}
-                    >
-                      {zone.id}
-                    </Text>
-                  </View>
-
-                  {/* Intensidade */}
+                  )}
                   <View
-                    style={{ flex: 1, paddingLeft: 25, alignItems: "flex-end" }}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
                   >
-                    <Text
+                    {/* Limiar */}
+                    <View
                       style={{
-                        fontSize: 17,
-                        fontWeight: "700",
-                        color: "#fff",
+                        flex: 1,
+                        alignItems: "flex-end",
+                        paddingRight: 25,
                       }}
                     >
-                      {zone.label}
-                    </Text>
+                      {zone.values && (
+                        <View style={{ alignItems: "flex-end" }}>
+                          <Text
+                            style={{
+                              color: "#fff",
+                              fontWeight: "600",
+                              fontSize: 15,
+                            }}
+                          >
+                            {zone.values.main}
+                          </Text>
+                          <Text
+                            style={{
+                              color: "#94a3b8",
+                              fontSize: 13,
+                              marginTop: 2,
+                            }}
+                          >
+                            {zone.values.pace}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Zona */}
+                    <View
+                      style={{
+                        alignItems: "center",
+                        flexDirection: "row",
+                        gap: 8,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: 8,
+                          backgroundColor: zone.color,
+                        }}
+                      />
+                      <Text
+                        style={{
+                          fontSize: 17,
+                          fontWeight: "700",
+                          color: "#fff",
+                        }}
+                      >
+                        {zone.id}
+                      </Text>
+                    </View>
+
+                    {/* Intensidade */}
+                    <View
+                      style={{
+                        flex: 1,
+                        paddingLeft: 25,
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 17,
+                          fontWeight: "700",
+                          color: "#fff",
+                        }}
+                      >
+                        {zone.label}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-            ))}
-          </View>
-        </VStack>
-      </Box>
+              ))}
+            </View>
+          </VStack>
+        </Box>
+      </SafeAreaView>
     </Modal>
   );
 };

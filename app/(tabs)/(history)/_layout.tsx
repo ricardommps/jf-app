@@ -15,7 +15,6 @@ const Layout = () => {
   const scrollY = useSharedValue(0);
   const animatedHeight = useSharedValue(340);
   const isHeaderShrunk = useSharedValue(false);
-  const { signOut } = useSession();
 
   const handleScrollWithPosition = (event: any) => {
     const y = event.nativeEvent.contentOffset.y;
@@ -56,7 +55,6 @@ const Layout = () => {
         showsVerticalScrollIndicator={false}
       >
         <Slot />
-        {/* consider it like a {children} */}
       </ScrollView>
     </View>
   );

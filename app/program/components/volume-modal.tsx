@@ -23,6 +23,10 @@ import { format, isAfter, isBefore, isEqual } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getVolume } from "@/services/volume.service";
 import { Divider } from "@/components/ui/divider";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 // Tipos
 interface MarkedDates {
@@ -69,7 +73,6 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
   const [selectedInputType, setSelectedInputType] =
     useState<DateInputType>("start");
 
-  // Formatação das datas para a API (formato: yyyy-MM-dd)
   const formattedStartDate = useMemo(
     () => (startDate ? format(startDate, ISO_DATE_FORMAT) : ""),
     [startDate]
@@ -80,7 +83,6 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
     [endDate]
   );
 
-  // React Query para buscar dados do volume - DESABILITADO por padrão
   const {
     data: volumeData,
     isLoading,
@@ -99,14 +101,10 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
     },
     staleTime: 0,
     gcTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
     enabled: false, // DESABILITADO - só executa manualmente
-    retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // Efeito para lidar com erro da query
   useEffect(() => {
     if (isError && queryError) {
       console.error("Erro ao buscar volume:", queryError);
@@ -189,13 +187,8 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
       return;
     }
 
-    // Limpa erros anteriores
     setError("");
-
-    // Chama o callback se fornecido
     onDateRangeSelected?.(startDate, endDate);
-
-    // Executa a busca manualmente
     refetch();
   }, [startDate, endDate, onDateRangeSelected, refetch]);
 
@@ -211,12 +204,10 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
     onRequestClose();
   }, [onRequestClose]);
 
-  // Formatação de data
   const formatDate = useCallback((date: Date | null): string => {
     return date ? format(date, DATE_FORMAT, { locale: ptBR }) : "";
   }, []);
 
-  // Configuração do calendário
   const calendarProps = useMemo(() => {
     const baseTheme = {
       backgroundColor: "#334155",
@@ -325,11 +316,9 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
     }
   }, [selectedInputType, todayString, startDate]);
 
-  // Datas marcadas no calendário
   const markedDates = useMemo((): MarkedDates => {
     const marked: MarkedDates = {};
 
-    // Marca apenas a data correspondente ao tipo selecionado
     if (selectedInputType === "start" && startDate) {
       marked[format(startDate, ISO_DATE_FORMAT)] = {
         selected: true,
@@ -347,7 +336,6 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
     return marked;
   }, [selectedInputType, startDate, endDate]);
 
-  // Verificação se formulário está válido
   const isFormValid = useMemo(() => {
     return startDate && endDate && !error;
   }, [startDate, endDate, error]);
@@ -360,8 +348,20 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
       visible={visible}
       onRequestClose={handleModalCloseVolume}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-      <Box className="flex-1 bg-background-0 px-1">
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#000"
+        translucent={false}
+      />
+
+      <SafeAreaView
+        edges={["right", "bottom", "left"]}
+        style={{
+          flex: 1,
+          backgroundColor: "#000",
+          paddingTop: 50,
+        }}
+      >
         <VStack className="flex-1 p-6">
           {/* Header */}
           <HStack className="justify-between items-center mb-6">
@@ -382,13 +382,13 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
           {/* Conteúdo principal */}
           <VStack space="lg" className="mt-8">
             <Text className="text-2xl font-bold text-white text-center">
-              Selecionar Período
+              Selecionar período
             </Text>
 
             {/* Inputs de data */}
             <VStack space="sm">
               <Text className="text-base font-medium text-white">
-                Data Inicial
+                Data inicial
               </Text>
               <Pressable
                 onPress={() => handleDatePickerOpen("start")}
@@ -418,7 +418,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
 
             <VStack space="sm">
               <Text className="text-base font-medium text-white">
-                Data Final
+                Data final
               </Text>
               <Pressable
                 onPress={() => handleDatePickerOpen("end")}
@@ -532,7 +532,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
             )}
           </VStack>
         </VStack>
-      </Box>
+      </SafeAreaView>
 
       {/* Modal do calendário */}
       <Modal

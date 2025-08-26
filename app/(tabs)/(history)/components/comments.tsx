@@ -5,7 +5,6 @@ import {
   ActionsheetDragIndicatorWrapper,
 } from "@/components/ui/actionsheet";
 import { Actionsheet } from "@/components/ui/actionsheet";
-import { Box } from "@/components/ui/box";
 import { Divider } from "@/components/ui/divider";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
@@ -16,7 +15,6 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { useSession } from "@/contexts/Authentication";
-import { FinishedHistory } from "@/types/finished";
 import { getTimePassedText } from "@/utils/get-time-passed";
 
 interface Props {
@@ -39,7 +37,7 @@ const Comments = ({ open, onClose, content }: Props) => {
   return (
     <Actionsheet isOpen={open} onClose={onClose}>
       <ActionsheetBackdrop />
-      <ActionsheetContent className="px-5 min-h-[60%] flex-col">
+      <ActionsheetContent className="px-5 min-h-[60%] flex-col bg-[#2b2b2b]">
         <ActionsheetDragIndicatorWrapper>
           <ActionsheetDragIndicator />
         </ActionsheetDragIndicatorWrapper>
@@ -125,24 +123,6 @@ const Comments = ({ open, onClose, content }: Props) => {
               <Text className="text-sm font-roboto">{content?.feedback}</Text>
             </VStack>
           </HStack>
-          {/* <HStack space="lg" className="w-full px-9 py-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage
-                source={{
-                  uri: "https://res.cloudinary.com/dtjwulffm/image/upload/v1739747120/hcxfxm5bvgvufqkkekiw.jpg",
-                }}
-              />
-            </Avatar>
-            <VStack className="flex-1">
-              <HStack className="justify-between w-full">
-                <Text className="text-typography-900 font-roboto line-clamp-1">
-                  Ricardo Matta
-                </Text>
-                <Text className="text-sm font-roboto line-clamp-1">2min</Text>
-              </HStack>
-              <Text className="text-sm font-roboto">Estava cansado.</Text>
-            </VStack>
-          </HStack> */}
         </VStack>
 
         {/* Input fixado no rodapé */}

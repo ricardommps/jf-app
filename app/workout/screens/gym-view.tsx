@@ -1,11 +1,10 @@
-import { VStack } from "@/components/ui/vstack";
 import { HStack } from "@/components/ui/hstack";
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { Button, ButtonText } from "@/components/ui/button";
 import WorkoutSection from "../components/workout-section";
 
-import { FlatList } from "react-native";
+import { FlatList, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Workout, WorkoutItem } from "@/types/workout";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -48,13 +47,12 @@ const GymView = ({ workout }: Props) => {
         renderItem={renderWorkoutSection}
         keyExtractor={(item: WorkoutItem) => item.id}
         contentContainerStyle={{
-          flexGrow: 1,
-          gap: 16,
-          paddingBottom: 50,
+          paddingBottom: 80, // aumenta para compensar botões no final
+          paddingTop: 16,
         }}
         ListHeaderComponent={ListHeader}
         ListFooterComponent={() => (
-          <HStack className="gap-4 pt-2 justify-end w-full px-4">
+          <HStack className="gap-4 pt-2 justify-end w-full px-4 mb-1">
             <Button variant="outline" size="md" onPress={() => router.back()}>
               <ButtonText>Fechar</ButtonText>
             </Button>
@@ -63,6 +61,12 @@ const GymView = ({ workout }: Props) => {
             </Button>
           </HStack>
         )}
+        ListEmptyComponent={() => (
+          <View style={{ marginTop: 48, alignItems: "center" }}>
+            <Text style={{ color: "#999" }}>Nenhum item encontrado</Text>
+          </View>
+        )}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaProvider>
   );

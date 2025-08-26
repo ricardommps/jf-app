@@ -91,7 +91,7 @@ const WorkoutView = ({
         contentContainerStyle={{
           flexGrow: 1,
           gap: 16,
-          paddingBottom: 16,
+          paddingBottom: 100,
           width: "100%",
         }}
         scrollEnabled={true}

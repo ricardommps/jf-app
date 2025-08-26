@@ -5,7 +5,6 @@ import {
   ActionsheetDragIndicatorWrapper,
 } from "@/components/ui/actionsheet";
 import { Actionsheet } from "@/components/ui/actionsheet";
-import { Box } from "@/components/ui/box";
 import { Divider } from "@/components/ui/divider";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
@@ -16,7 +15,6 @@ import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import useANotifications from "@/hooks/useNotification";
 import { Notification } from "@/types/notification";
-import { FileWarning, FileWarningIcon, MailIcon } from "lucide-react-native";
 import NotificationItem from "./notification-item";
 import { FlatList, View } from "react-native";
 import { ProfileType } from "@/types/ProfileType";
@@ -36,7 +34,7 @@ const Notifications = ({ open, onClose, profile }: Props) => {
   return (
     <Actionsheet isOpen={open} onClose={onClose}>
       <ActionsheetBackdrop />
-      <ActionsheetContent className="px-5 min-h-[60%] max-h-[60%]">
+      <ActionsheetContent className="px-5 min-h-[60%] max-h-[60%] bg-[#2b2b2b]">
         <ActionsheetDragIndicatorWrapper>
           <ActionsheetDragIndicator />
         </ActionsheetDragIndicatorWrapper>
@@ -63,6 +61,11 @@ const Notifications = ({ open, onClose, profile }: Props) => {
               gap: 10,
             }}
             ItemSeparatorComponent={Separator}
+            ListEmptyComponent={() => (
+              <View style={{ marginTop: 48, alignItems: "center" }}>
+                <Text style={{ color: "#fff" }}>Nenhum item encontrado</Text>
+              </View>
+            )}
           />
         </VStack>
       </ActionsheetContent>

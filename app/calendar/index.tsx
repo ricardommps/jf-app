@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Button,
   View,
@@ -7,11 +7,17 @@ import {
   Platform,
   StyleSheet,
   Alert,
-} from 'react-native';
-import * as Calendar from 'expo-calendar';
+} from "react-native";
+import * as Calendar from "expo-calendar";
 
-// Tipo para eventos de calendário
-type CalendarEvent = Calendar.CalendarEvent;
+type CalendarEvent = {
+  id: string;
+  title: string;
+  startDate: string | Date;
+  endDate: string | Date;
+  location?: string;
+  notes?: string;
+};
 
 export default function App() {
   const [calendarId, setCalendarId] = useState<string | null>(null);
@@ -20,12 +26,12 @@ export default function App() {
   useEffect(() => {
     (async () => {
       const { status } = await Calendar.requestCalendarPermissionsAsync();
-      if (status === 'granted') {
+      if (status === "granted") {
         const id = await createOrGetCalendar();
         setCalendarId(id);
         loadEvents(id);
       } else {
-        Alert.alert('Permissão negada para acessar o calendário.');
+        Alert.alert("Permissão negada para acessar o calendário.");
       }
     })();
   }, []);
@@ -33,26 +39,53 @@ export default function App() {
   const createOrGetCalendar = async (): Promise<string> => {
     const calendars = await Calendar.getCalendarsAsync();
 
-    const existing = calendars.find((cal) => cal.title === 'Agenda App');
+    const existing = calendars.find((cal) => cal.title === "Agenda App");
     if (existing) return existing.id;
 
-    const defaultSource =
-      Platform.OS === 'ios'
-        ? await Calendar.getDefaultCalendarAsync()
-        : { isLocalAccount: true, name: 'Agenda App' };
+    if (Platform.OS === "ios") {
+      const defaultCalendar = await Calendar.getDefaultCalendarAsync();
 
-    const newCalendarId = await Calendar.createCalendarAsync({
-      title: 'Agenda App',
-      color: '#2196F3',
-      entityType: Calendar.EntityTypes.EVENT,
-      sourceId: defaultSource.id,
-      source: defaultSource,
-      name: 'Agenda App',
-      ownerAccount: 'personal',
-      accessLevel: Calendar.CalendarAccessLevel.OWNER,
-    });
+      const source = {
+        id: defaultCalendar.id,
+        name: defaultCalendar.title,
+        type: defaultCalendar.source
+          ? String(defaultCalendar.source.type)
+          : "default",
+      };
 
-    return newCalendarId;
+      const newCalendarId = await Calendar.createCalendarAsync({
+        title: "Agenda App",
+        color: "#2196F3",
+        entityType: Calendar.EntityTypes.EVENT,
+        sourceId: source.id,
+        source: source,
+        name: "Agenda App",
+        ownerAccount: "personal",
+        accessLevel: Calendar.CalendarAccessLevel.OWNER,
+      });
+
+      return newCalendarId;
+    } else {
+      // Android e outros
+      const source = {
+        isLocalAccount: true,
+        name: "Agenda App",
+        type: "local",
+      };
+
+      const newCalendarId = await Calendar.createCalendarAsync({
+        title: "Agenda App",
+        color: "#2196F3",
+        entityType: Calendar.EntityTypes.EVENT,
+        sourceId: undefined,
+        source: source,
+        name: "Agenda App",
+        ownerAccount: "personal",
+        accessLevel: Calendar.CalendarAccessLevel.OWNER,
+      });
+
+      return newCalendarId;
+    }
   };
 
   const addEvent = async () => {
@@ -63,12 +96,12 @@ export default function App() {
     const endDate = new Date(startDate.getTime() + 30 * 60 * 1000);
 
     await Calendar.createEventAsync(calendarId, {
-      title: 'Compromisso Teste',
+      title: "Compromisso Teste",
       startDate,
       endDate,
-      location: 'Online',
-      notes: 'Criado via app React Native',
-      timeZone: 'GMT-3',
+      location: "Online",
+      notes: "Criado via app React Native",
+      timeZone: "America/Sao_Paulo",
     });
 
     loadEvents(calendarId);
@@ -92,7 +125,7 @@ export default function App() {
     <View style={styles.event}>
       <Text style={styles.eventTitle}>📝 {item.title}</Text>
       <Text>
-        ⏰ {new Date(item.startDate).toLocaleString()} até{' '}
+        ⏰ {new Date(item.startDate).toLocaleString()} até{" "}
         {new Date(item.endDate).toLocaleTimeString()}
       </Text>
     </View>
@@ -120,25 +153,25 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 60,
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
   },
   event: {
     marginVertical: 10,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     padding: 10,
     borderRadius: 6,
   },
   eventTitle: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   empty: {
     marginTop: 20,
-    fontStyle: 'italic',
-    textAlign: 'center',
+    fontStyle: "italic",
+    textAlign: "center",
   },
 });

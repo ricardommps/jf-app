@@ -3,28 +3,44 @@ import { ProfileType } from "@/types/ProfileType";
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system";
 
+async function loadAssetAsBase64(module: number) {
+  const asset = Asset.fromModule(module);
+  await asset.downloadAsync();
+
+  // Se já for file:// podemos ler direto
+  if (asset.localUri && asset.localUri.startsWith("file://")) {
+    return await FileSystem.readAsStringAsync(asset.localUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+  }
+
+  // Caso seja asset:// ou outro esquema, copiamos para o cache
+  const destPath = FileSystem.cacheDirectory + asset.name;
+  await FileSystem.copyAsync({
+    from: asset.uri,
+    to: destPath,
+  });
+
+  return await FileSystem.readAsStringAsync(destPath, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
+}
+
 export async function gerarTemplateHtml(
   invoice: Invoice,
   profile: ProfileType | null
 ): Promise<string> {
-  const asset = Asset.fromModule(require("@/assets/images/jf_icone_v1.png"));
-  await asset.downloadAsync();
-
-  if (!asset.localUri) {
-    throw new Error("Não foi possível obter a URI local do asset.");
-  }
-
   let logoDataUri_ = "";
+
   try {
-    const logoBase64 = await FileSystem.readAsStringAsync(asset.localUri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    const logoBase64 = await loadAssetAsBase64(
+      require("@/assets/images/jf_logo_full.png")
+    );
     logoDataUri_ = `data:image/png;base64,${logoBase64}`;
   } catch (error) {
-    throw error;
+    console.error("Erro ao carregar logo em Base64:", error);
   }
 
-  // Função para obter status em português
   const getStatus = (status: string) => {
     switch (status) {
       case "paid":
@@ -40,7 +56,6 @@ export async function gerarTemplateHtml(
     }
   };
 
-  // Função para formatar data (assumindo formato brasileiro)
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString("pt-BR");
   };
@@ -105,8 +120,8 @@ export async function gerarTemplateHtml(
         
         /* Header section */
         .header-logo {
-          width: 80px;
-          height: 80px;
+          width: 60px;
+          height: 60px;
           object-fit: contain;
         }
         

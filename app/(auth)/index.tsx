@@ -58,14 +58,12 @@ export default function Authentication() {
             />
           </View>
 
-          {/* Welcome Text */}
           <Text
             className={`${currentClasses.text} font-extrabold text-white text-center tracking-wide`}
           >
             BEM-VINDO!
           </Text>
 
-          {/* Button */}
           <View className="w-full max-w-sm pt-12">
             <Button
               action="primary"

@@ -1,3 +1,4 @@
+// src/contexts/NotificationContext.tsx
 import React, {
   createContext,
   useContext,
@@ -8,6 +9,7 @@ import React, {
 } from "react";
 import * as Notifications from "expo-notifications";
 import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
+import { useSession } from "./Authentication";
 
 interface NotificationContextType {
   expoPushToken: string | null;
@@ -41,30 +43,26 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     useState<Notifications.Notification | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
-  const notificationListener = useRef<Notifications.EventSubscription>();
-  const responseListener = useRef<Notifications.EventSubscription>();
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(
-      (token) => setExpoPushToken(token),
-      (error) => setError(error)
-    );
+    // Registrar token
+    registerForPushNotificationsAsync()
+      .then(async (token) => {
+        setExpoPushToken(token);
+      })
+      .catch((err) => setError(err));
 
+    // Listener quando notificação chega com app aberto
     notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        console.log("🔔 Notification Received: ", notification);
-        setNotification(notification);
+      Notifications.addNotificationReceivedListener((notif) => {
+        setNotification(notif);
       });
 
+    // Listener quando usuário interage com notificação (background ou fechado)
     responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(
-          "🔔 Notification Response: ",
-          JSON.stringify(response, null, 2),
-          JSON.stringify(response.notification.request.content.data, null, 2)
-        );
-        // Handle the notification response here
-      });
+      Notifications.addNotificationResponseReceivedListener((response) => {});
 
     return () => {
       if (notificationListener.current) {

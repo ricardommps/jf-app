@@ -28,9 +28,15 @@ const InvoiceItemView = ({ item }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [toastId, setToastId] = useState<string>("");
 
-  const showNewToast = () => {
+  const showNewToast = (error?: unknown) => {
+    const errorMessage =
+      (error as { message?: string })?.message ||
+      String(error) ||
+      "Ocorreu um erro inesperado.";
+
     const newId = Math.random().toString();
     setToastId(newId);
+
     toast.show({
       id: newId,
       placement: "top",
@@ -38,13 +44,12 @@ const InvoiceItemView = ({ item }: Props) => {
       render: ({ id }) => {
         const uniqueToastId = "toast-" + id;
         return (
-          <Toast nativeID={uniqueToastId} action="error" variant="solid">
-            <ToastTitle>Erro ao baixar comprovante</ToastTitle>
-            <ToastDescription>
-              Não foi possível baixar seu comprovante. Tente novamente mais
-              tarde.{" "}
-            </ToastDescription>
-          </Toast>
+          <Box className="mt-12">
+            <Toast nativeID={uniqueToastId} action="error" variant="solid">
+              <ToastTitle>Erro ao baixar comprovante</ToastTitle>
+              <ToastDescription>{errorMessage}</ToastDescription>
+            </Toast>
+          </Box>
         );
       },
     });
@@ -74,12 +79,12 @@ const InvoiceItemView = ({ item }: Props) => {
         }
       } catch (erro1: any) {
         if (!toast.isActive(toastId)) {
-          showNewToast();
+          showNewToast(erro1);
         }
       }
     } catch (erroGeral: any) {
       if (!toast.isActive(toastId)) {
-        showNewToast();
+        showNewToast(erroGeral);
       }
     } finally {
       setIsLoading(false);

@@ -86,9 +86,10 @@ type WorkoutFormData = z.infer<typeof workoutSchema>;
 
 interface Props {
   safeId: string;
+  titleStr?: string;
 }
 
-const IndoorScreen = ({ safeId }: Props) => {
+const IndoorScreen = ({ safeId, titleStr }: Props) => {
   const router = useRouter();
   const toast = useToast();
   const { colorMode }: any = useContext(ThemeContext);
@@ -174,7 +175,7 @@ const IndoorScreen = ({ safeId }: Props) => {
       payload.executionDay = convertDate(payload.executionDay);
       await finishedWorkout(payload);
       router.push(
-        `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}&rpe=${payload.rpe}`
+        `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}&rpe=${payload.rpe}&title=${titleStr}`
       );
     } catch (err) {
       const parsedError = err as Error;
@@ -196,10 +197,12 @@ const IndoorScreen = ({ safeId }: Props) => {
       render: ({ id }) => {
         const uniqueToastId = "toast-" + id;
         return (
-          <Toast nativeID={uniqueToastId} action="error" variant="solid">
-            <ToastTitle>Erro ao finalizar treino</ToastTitle>
-            <ToastDescription>{message}</ToastDescription>
-          </Toast>
+          <Box className="mt-12">
+            <Toast nativeID={uniqueToastId} action="error" variant="solid">
+              <ToastTitle>Erro ao finalizar treino</ToastTitle>
+              <ToastDescription>{message}</ToastDescription>
+            </Toast>
+          </Box>
         );
       },
     });
@@ -864,7 +867,7 @@ const IndoorScreen = ({ safeId }: Props) => {
         </Box>
 
         <HStack className="gap-4 py-10 justify-end w-full px-4">
-          <Button variant="outline" size="md">
+          <Button variant="outline" size="md" onPress={() => router.back()}>
             <ButtonText>Fechar</ButtonText>
           </Button>
           <Button action="primary" size="md" onPress={handleSubmit(onSubmit)}>

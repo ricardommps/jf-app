@@ -3,7 +3,7 @@ import { VStack } from "@/components/ui/vstack";
 import { useRouter } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
-import Logo from "@/assets/images/logo.svg";
+import { Image } from "@/components/ui/image";
 import { Pressable } from "@/components/ui/pressable";
 import Animated, {
   useSharedValue,
@@ -41,7 +41,12 @@ const ErrorScreen = () => {
         <VStack space="lg" className="items-center max-w-[280px]">
           {/* Logo illustration */}
           <View className="mb-4">
-            <Logo />
+            <Image
+              source={require("@/assets/images/jf_logo_full.png")}
+              alt="logo"
+              contentFit="contain"
+              className="w-[500px] h-[300px]"
+            />
           </View>
 
           {/* Title */}

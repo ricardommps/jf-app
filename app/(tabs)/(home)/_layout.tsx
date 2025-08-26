@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React from "react";
 import { Slot } from "expo-router";
 import { View } from "@/components/ui/view";
 import Animated from "react-native-reanimated";

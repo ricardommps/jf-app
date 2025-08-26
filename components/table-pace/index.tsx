@@ -5,6 +5,7 @@ import { VStack } from "@/components/ui/vstack";
 import { Text } from "@/components/ui/text";
 import { Heading } from "@/components/ui/heading";
 import { runningPace } from "@/utils/running-pace";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Props {
   visible: boolean;
@@ -56,35 +57,49 @@ const TablePace: React.FC<Props> = ({ visible, onRequestClose }) => {
       visible={visible}
       onRequestClose={onRequestClose}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-      <Box className="flex-1 bg-background-0">
-        <VStack className="flex-1 px-4 pt-10">
-          {/* Header */}
-          <HStack className="justify-between items-center mb-4">
-            <Heading size="lg" className="text-white">
-              Tabela - Pace X Km/h
-            </Heading>
-            <TouchableOpacity
-              onPress={onRequestClose}
-              activeOpacity={0.7}
-              accessible={true}
-              accessibilityLabel="Fechar modal"
-              accessibilityRole="button"
-            >
-              <Text className="text-2xl text-white">✕</Text>
-            </TouchableOpacity>
-          </HStack>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#000"
+        translucent={false}
+      />
 
-          <FlatList
-            data={filteredPace}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={renderItem}
-            ListHeaderComponent={ListHeader}
-            contentContainerStyle={{ paddingBottom: 24 }}
-            className="rounded-md overflow-hidden"
-          />
-        </VStack>
-      </Box>
+      <SafeAreaView
+        edges={["right", "bottom", "left"]}
+        style={{
+          flex: 1,
+          backgroundColor: "#000",
+          paddingTop: 50,
+        }}
+      >
+        <Box className="flex-1 bg-background-0">
+          <VStack className="flex-1 px-4 pt-10">
+            {/* Header */}
+            <HStack className="justify-between items-center mb-4">
+              <Heading size="lg" className="text-white">
+                Tabela - Pace X Km/h
+              </Heading>
+              <TouchableOpacity
+                onPress={onRequestClose}
+                activeOpacity={0.7}
+                accessible={true}
+                accessibilityLabel="Fechar modal"
+                accessibilityRole="button"
+              >
+                <Text className="text-2xl text-white">✕</Text>
+              </TouchableOpacity>
+            </HStack>
+
+            <FlatList
+              data={filteredPace}
+              keyExtractor={(_, index) => index.toString()}
+              renderItem={renderItem}
+              ListHeaderComponent={ListHeader}
+              contentContainerStyle={{ paddingBottom: 24 }}
+              className="rounded-md overflow-hidden"
+            />
+          </VStack>
+        </Box>
+      </SafeAreaView>
     </Modal>
   );
 };

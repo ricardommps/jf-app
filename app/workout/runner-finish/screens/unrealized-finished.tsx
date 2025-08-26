@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { ScrollView } from "react-native";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,7 +21,6 @@ import {
   ToastDescription,
 } from "@/components/ui/toast";
 import { finishedWorkout } from "@/services/finished.service";
-import { useLocalSearchParams as useExpoLocalSearchParams } from "expo-router";
 
 const workoutSchema = z.object({
   workoutsId: z.string(),
@@ -88,10 +87,12 @@ const UnrealizedFinishView = ({ safeId }: Props) => {
       render: ({ id }) => {
         const uniqueToastId = "toast-" + id;
         return (
-          <Toast nativeID={uniqueToastId} action="error" variant="solid">
-            <ToastTitle>Erro ao finalizar treino</ToastTitle>
-            <ToastDescription>{message}</ToastDescription>
-          </Toast>
+          <Box className="mt-12">
+            <Toast nativeID={uniqueToastId} action="error" variant="solid">
+              <ToastTitle>Erro ao finalizar treino</ToastTitle>
+              <ToastDescription>{message}</ToastDescription>
+            </Toast>
+          </Box>
         );
       },
     });
@@ -131,7 +132,7 @@ const UnrealizedFinishView = ({ safeId }: Props) => {
         </Box>
         {/* Escala de esforço */}
         <HStack className="gap-4 py-10 justify-end w-full px-4">
-          <Button variant="outline" size="md">
+          <Button variant="outline" size="md" onPress={() => router.back()}>
             <ButtonText>Fechar</ButtonText>
           </Button>
           <Button action="primary" size="md" onPress={handleSubmit(onSubmit)}>

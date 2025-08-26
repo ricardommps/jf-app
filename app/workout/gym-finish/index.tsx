@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useMemo } from "react";
+import { useContext, useState, useMemo } from "react";
 import { Modal, ScrollView, TouchableWithoutFeedback } from "react-native";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,6 +37,7 @@ import {
 import { finishedWorkout } from "@/services/finished.service";
 import { calendarBaseTheme } from "@/utils/calendar-base-theme";
 import { useLocalSearchParams as useExpoLocalSearchParams } from "expo-router";
+import { useWorkouut } from "@/contexts/WorkoutContext";
 
 const workoutSchema = z.object({
   workoutsId: z.string(),
@@ -48,6 +49,7 @@ const workoutSchema = z.object({
     .refine((val) => val !== null && val !== "", {
       message: "Data de realização do treino obrigatório",
     }),
+  checkList: z.array(z.number()),
 });
 
 type WorkoutFormData = z.infer<typeof workoutSchema>;
@@ -65,7 +67,7 @@ const GymFinishView = () => {
   const safeId = id ?? "";
   const router = useRouter();
   const toast = useToast();
-
+  const { checkList } = useWorkouut();
   const { colorMode }: any = useContext(ThemeContext);
   const isDarkMode = colorMode === "dark";
 
@@ -79,6 +81,7 @@ const GymFinishView = () => {
       comments: "",
       workoutsId: safeId,
       executionDay: "",
+      checkList: [],
     }),
     [safeId]
   );
@@ -116,6 +119,7 @@ const GymFinishView = () => {
       payload.workoutsId = safeId;
       payload.rpe = Number(payload.rpe);
       payload.executionDay = convertDate(payload.executionDay);
+      payload.checkList = checkList;
       await finishedWorkout(payload);
       router.push(`/finished`);
     } catch (err) {
@@ -138,10 +142,12 @@ const GymFinishView = () => {
       render: ({ id }) => {
         const uniqueToastId = "toast-" + id;
         return (
-          <Toast nativeID={uniqueToastId} action="error" variant="solid">
-            <ToastTitle>Erro ao finalizar treino</ToastTitle>
-            <ToastDescription>{message}</ToastDescription>
-          </Toast>
+          <Box className="mt-12">
+            <Toast nativeID={uniqueToastId} action="error" variant="solid">
+              <ToastTitle>Erro ao finalizar treino</ToastTitle>
+              <ToastDescription>{message}</ToastDescription>
+            </Toast>
+          </Box>
         );
       },
     });
@@ -299,7 +305,7 @@ const GymFinishView = () => {
           </VStack>
         </VStack>
         <HStack className="gap-4 py-10 justify-end w-full px-4">
-          <Button variant="outline" size="md">
+          <Button variant="outline" size="md" onPress={() => router.back()}>
             <ButtonText>Fechar</ButtonText>
           </Button>
           <Button action="primary" size="md" onPress={handleSubmit(onSubmit)}>

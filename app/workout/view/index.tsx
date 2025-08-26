@@ -19,8 +19,6 @@ const WorkoutView = () => {
     queryFn: async () => await getWorkout(safeId),
     staleTime: 0,
     gcTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
     enabled: !!id,
   });
 

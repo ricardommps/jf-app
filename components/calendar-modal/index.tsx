@@ -1,11 +1,10 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, Modal, StatusBar } from "react-native";
+import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { Box } from "@/components/ui/box";
 import { HStack } from "@/components/ui/hstack";
 import { Heading } from "@/components/ui/heading";
 import { Button, ButtonText } from "@/components/ui/button";
-import { useCalendar } from "@/hooks/useCalendar";
 
 interface CalendarModalScreenProps {
   visible: boolean;

@@ -1,39 +1,71 @@
-import React, { useContext } from "react";
-import { Text } from "@/components/ui/text";
+import React, { useState, useEffect } from "react";
+import { Switch, Text, View } from "react-native";
 import { VStack } from "@/components/ui/vstack";
-import { HStack } from "@/components/ui/hstack";
-import ThemeCard from "@/components/screens/settings/theme-card";
-import { ThemeContext } from "@/contexts/theme-context";
 import CustomHeader from "@/components/shared/custom-header";
-import { Button, ButtonText } from "@/components/ui/button";
-import { useRouter } from "expo-router";
+
+import * as Notifications from "expo-notifications";
+import * as SecureStore from "expo-secure-store";
+import Constants from "expo-constants";
+import * as Application from "expo-application";
+
+const PUSH_KEY = "pushEnabled";
 
 const Settings = () => {
-  const router = useRouter();
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [appVersion, setAppVersion] = useState("1.0.0");
 
-  const handeTeste = () => {
-    const payload = {
-      distanceInMeters: "1202.00",
-      durationInSeconds: "4440.00",
-      paceInSeconds: "610.00",
-      executionDay: "2025-06-15 12:00:00.00",
-      rpe: 8,
+  useEffect(() => {
+    const version =
+      Application.nativeApplicationVersion ||
+      Constants.expoConfig?.version ||
+      "1.0.0";
+    setAppVersion(version);
+
+    const loadPreference = async () => {
+      const value = await SecureStore.getItemAsync(PUSH_KEY);
+      if (value !== null) {
+        setPushEnabled(value === "true");
+      }
     };
-    router.push(
-      `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}
-      &paceInSeconds=${payload.paceInSeconds}&executionDay=${payload.executionDay}&rpe=${payload.rpe}`
-    );
-  };
-  return (
-    <VStack space="md" className="bg-background-0 flex-1">
-      <CustomHeader variant="general" title="Settings" />
+    loadPreference();
+  }, []);
 
-      <VStack className="px-4" space="md">
-        <Text className="font-semibold">Tema</Text>
+  const togglePush = async () => {
+    const newValue = !pushEnabled;
+    setPushEnabled(newValue);
+    await SecureStore.setItemAsync(PUSH_KEY, newValue.toString());
+
+    if (!newValue) {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+    } else {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") {
+        alert("Permissão para notificações não concedida.");
+      }
+    }
+  };
+
+  return (
+    <VStack className="flex-1 bg-background-0 justify-between">
+      <VStack>
+        <CustomHeader variant="general" title="Configurações" />
+
+        <VStack className="mt-4 bg-[#2b2b2b9d] rounded-lg shadow-sm">
+          <View className="flex-row justify-between items-center px-4 h-14 border-b ">
+            <Text className="text-base font-medium text-white">
+              Receber notificações push
+            </Text>
+            <Switch value={pushEnabled} onValueChange={togglePush} />
+          </View>
+        </VStack>
       </VStack>
-      <Button action="primary" className="w-full" onPress={handeTeste}>
-        <ButtonText>Acessar conta</ButtonText>
-      </Button>
+
+      {/* Rodapé com versão */}
+      <View className="py-4">
+        <Text className="text-center text-white text-sm">
+          Versão {appVersion}
+        </Text>
+      </View>
     </VStack>
   );
 };

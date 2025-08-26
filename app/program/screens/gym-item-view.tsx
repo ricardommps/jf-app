@@ -11,7 +11,6 @@ import { Workout } from "@/types/workout";
 import { useState } from "react";
 import HistoryModal from "../components/history-modal";
 import { Finished } from "@/types/finished";
-import { Portal } from "@/components/ui/portal";
 import Comments from "@/components/comments";
 
 interface Props {
@@ -42,22 +41,30 @@ const GymItemView = ({ item }: Props) => {
   };
 
   const getLastWorkoutInfo = () => {
-    if (!item?.history?.length || !item.history[0]?.executionDay) {
+    if (!item?.history?.length) {
       return null;
     }
 
-    const { executionDay } = item.history[0];
+    // Ordena do mais recente para o mais antigo
+    const sortedHistory = [...item.history].sort((a, b) => {
+      const timeA = a.executionDay ? new Date(a.executionDay).getTime() : 0;
+      const timeB = b.executionDay ? new Date(b.executionDay).getTime() : 0;
+      return timeB - timeA;
+    });
+
+    const latest = sortedHistory[0];
+    if (!latest?.executionDay) {
+      return null;
+    }
+
     try {
-      const parsedDate = parseISO(executionDay);
+      const parsedDate = parseISO(latest.executionDay);
       const day = format(parsedDate, "dd");
       const monthYear = format(parsedDate, "MMMM", { locale: ptBR });
 
-      if (day && monthYear) {
-        return { day, monthYear };
-      }
-      return null;
+      return { day, monthYear };
     } catch (error) {
-      console.warn("Data inválida:", executionDay);
+      console.warn("Data inválida:", latest.executionDay);
       return null;
     }
   };
@@ -156,7 +163,6 @@ const GymItemView = ({ item }: Props) => {
         onRequestClose={() => setShowHistoryModal(false)}
         history={item.history}
         subtitle={item.subtitle}
-        toggleComments={toggleComments}
       />
     </>
   );

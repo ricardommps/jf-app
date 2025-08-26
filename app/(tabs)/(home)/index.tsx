@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   RefreshControl,
@@ -11,17 +11,15 @@ import Animated, { FadeInUp } from "react-native-reanimated";
 import ProgramCard from "@/components/screens/program/program-card";
 import { useQuery } from "@tanstack/react-query";
 import { getPrograms } from "@/services/program.services";
-import { useErrorHandler } from "@/hooks/useErrorHandler";
 import Loading from "@/components/shared/loading";
 import { useRouter } from "expo-router";
-import { AxiosError } from "axios";
+import { isAxiosError, AxiosError } from "axios";
 import { PaidInvoices } from "@/types/invoice";
 import { getTotalPaidInvoices } from "@/services/invoice.service";
 import { Box } from "@/components/ui/box";
 import { VStack } from "@/components/ui/vstack";
 import { Button, ButtonText } from "@/components/ui/button";
 
-// Definir o tipo do item do programa baseado no retorno da API
 interface ProgramItem {
   id: number;
   name: string;
@@ -36,40 +34,46 @@ const Home = () => {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
-  const { handleError } = useErrorHandler();
+  const handleErrorSafely = (error: unknown) => {
+    if (isAxiosError(error)) {
+      router.push(`/error/view`);
+    } else if (error) {
+      router.push(`/error/view`);
+    }
+  };
 
   const {
     data: programs,
-    isLoading,
+    isLoading: isProgramsLoading,
     refetch: refetchPrograms,
-    error,
+    error: programsError,
   } = useQuery<ProgramItem[], AxiosError>({
     staleTime: 0,
     gcTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
     queryKey: ["programs"],
-    queryFn: async () => await getPrograms(),
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    queryFn: getPrograms,
+    retry: false,
   });
 
-  const { data: paidInvoices, refetch: refetchPaidInvoices } = useQuery<
-    PaidInvoices,
-    AxiosError
-  >({
+  const {
+    data: paidInvoices,
+    refetch: refetchPaidInvoices,
+    isLoading: isInvoicesLoading,
+    error: invoicesError,
+  } = useQuery<PaidInvoices, AxiosError>({
     queryKey: ["other-data"],
+    staleTime: 0,
+    gcTime: 0,
     queryFn: getTotalPaidInvoices,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retry: false,
   });
 
   const onRefresh = async () => {
     setRefreshing(true);
     try {
       await Promise.all([refetchPrograms(), refetchPaidInvoices()]);
-    } catch (error) {
-      handleError(error as any); // ou cast para o tipo esperado
+    } catch (err) {
+      handleErrorSafely(err);
     } finally {
       setRefreshing(false);
     }
@@ -97,19 +101,25 @@ const Home = () => {
     </Animated.View>
   );
 
+  useEffect(() => {
+    if (programsError) {
+      handleErrorSafely(programsError);
+    }
+
+    if (invoicesError) {
+      handleErrorSafely(invoicesError);
+    }
+  }, [programsError, invoicesError, router]);
+
+  const isLoading = isProgramsLoading || isInvoicesLoading;
+
   if (isLoading) {
     return <Loading />;
   }
 
-  if (error) {
-    if (error?.status !== 403) {
-      router.push(`/error/view`);
-    }
-  }
-
   return (
     <>
-      {paidInvoices && paidInvoices?.totalOverdue > 0 && (
+      {paidInvoices && paidInvoices.totalOverdue > 0 && (
         <Box className="bg-[#e20e0ee1] rounded-xl mb-2 min-h-[80px] mx-5 p-5">
           <VStack>
             <Text className="text-white font-bold text-base">
@@ -124,13 +134,13 @@ const Home = () => {
       )}
 
       <FlatList
-        data={programs || []} // Usar dados da API em vez de ProgramsData
+        data={programs || []}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
-        style={{ flex: 1, backgroundColor: "var(--background-0)" }} // Aplicar estilo diretamente
+        style={{ flex: 1, backgroundColor: "var(--background-0)" }}
         contentContainerStyle={{
-          gap: 32, // 8 * 4 = 32 (equivalente ao gap-8 do Tailwind)
-          paddingHorizontal: 20, // 5 * 4 = 20 (equivalente ao px-5)
+          gap: 32,
+          paddingHorizontal: 20,
           paddingVertical: 16,
         }}
         showsVerticalScrollIndicator={false}
@@ -138,13 +148,13 @@ const Home = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#2b2b2b9d"]} // Cor do loading no Android
-            tintColor="#2b2b2b9d" // Cor do loading no iOS
+            colors={["#2b2b2b9d"]}
+            tintColor="#2b2b2b9d"
           />
         }
         ListEmptyComponent={() => (
           <View>
-            <Text>Nenhum item encontrado</Text>
+            <Text>Você não tem nenhum programa ativo.</Text>
           </View>
         )}
       />

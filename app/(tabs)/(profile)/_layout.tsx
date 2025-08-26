@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React from "react";
 import { Slot } from "expo-router";
 import { ScrollView } from "@/components/ui/scroll-view";
 import { View } from "@/components/ui/view";
@@ -56,7 +56,6 @@ const Layout = () => {
         showsVerticalScrollIndicator={false}
       >
         <Slot />
-        {/* consider it like a {children} */}
       </ScrollView>
     </View>
   );

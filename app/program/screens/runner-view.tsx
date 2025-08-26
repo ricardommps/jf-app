@@ -89,6 +89,8 @@ const RunnerView = ({ workouts, programId }: Props) => {
     queryKey: ["programData", programId],
     queryFn: async () => await getProgram(programId),
     enabled: !!programId,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const { colorMode }: any = useContext(ThemeContext);
@@ -209,12 +211,6 @@ const RunnerView = ({ workouts, programId }: Props) => {
     markedDatesConfig: generateMarkedDatesConfig(workouts),
   });
 
-  // Atualizar a configuração quando os workouts mudarem
-  // useEffect(() => {
-  //   const newConfig = generateMarkedDatesConfig(workouts);
-  //   calendar.setMarkedDatesConfig(newConfig);
-  // }, [workouts, generateMarkedDatesConfig, calendar]);
-
   useEffect(() => {
     if (workouts?.length > 0) {
       const filtered = getFilteredWorkoutsByDate(workouts, selectedDate);
@@ -246,8 +242,8 @@ const RunnerView = ({ workouts, programId }: Props) => {
   }, [activeTab]);
 
   useEffect(() => {
-    if (data?.pv) {
-      getExtrapolationByPv(data.pv);
+    if (data?.program?.pv) {
+      getExtrapolationByPv(data?.program?.pv);
     }
   }, [data]);
 
@@ -342,7 +338,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
 
       <Actionsheet isOpen={showActionsheet} onClose={handleClose}>
         <ActionsheetBackdrop />
-        <ActionsheetContent className="px-5">
+        <ActionsheetContent className="px-5 bg-[#2b2b2b]">
           <ActionsheetDragIndicatorWrapper>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
@@ -399,28 +395,28 @@ const RunnerView = ({ workouts, programId }: Props) => {
 
               <HStack className="items-center w-full mt-5 gap-3">
                 <Text size="lg" className="font-semibold flex-1">
-                  PV: {data?.pv || 0}
+                  PV: {data?.program?.pv || 0}
                 </Text>
                 <Text size="lg" className="font-semibold">
-                  Pace do PV Max: {data?.pace || 0}
+                  Pace do PV Max: {data?.program?.pace || 0}
                 </Text>
               </HStack>
 
               <HStack className="items-center w-full mt-5 gap-3">
                 <Text size="lg" className="font-semibold flex-1">
-                  VLA: {data?.vla || 0}
+                  VLA: {data?.program?.vla || 0}
                 </Text>
                 <Text size="lg" className="font-semibold">
-                  Pace VLA: {data?.paceVla || 0}
+                  Pace VLA: {data?.program?.paceVla || 0}
                 </Text>
               </HStack>
 
               <HStack className="items-center w-full mt-5 gap-3">
                 <Text size="lg" className="font-semibold flex-1">
-                  VLAN: {data?.vlan || 0}
+                  VLAN: {data?.program?.vlan || 0}
                 </Text>
                 <Text size="lg" className="font-semibold">
-                  Pace VLAN: {data?.paceVlan || 0}
+                  Pace VLAN: {data?.program?.paceVlan || 0}
                 </Text>
               </HStack>
             </>
@@ -461,12 +457,12 @@ const RunnerView = ({ workouts, programId }: Props) => {
         visible={showExertionZone}
         onRequestClose={() => setShowExertionZone(false)}
         data={{
-          pv: data?.pv,
-          pace: data?.pace,
-          vla: data?.vla,
-          paceVla: data?.paceVla,
-          vlan: data?.vlan,
-          paceVlan: data?.paceVlan,
+          pv: data?.program?.pv,
+          pace: data?.program?.pace,
+          vla: data?.program?.vla,
+          paceVla: data?.program?.paceVla,
+          vlan: data?.program?.vlan,
+          paceVlan: data?.program?.paceVlan,
         }}
       />
     </>
