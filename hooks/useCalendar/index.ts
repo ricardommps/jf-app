@@ -50,7 +50,12 @@ export const useCalendar = (
     useState<string[]>(preSelectedDates);
   const [isModalVisible, setModalVisible] = useState<boolean>(false);
   const [markedConfig, setMarkedConfig] = useState<{
-    [key: string]: { color: string; textColor: string };
+    [key: string]: {
+      color: string;
+      textColor: string;
+      startingDay?: boolean;
+      endingDay?: boolean;
+    };
   }>(markedDatesConfig);
 
   const openModal = useCallback((): void => {
@@ -124,7 +129,6 @@ export const useCalendar = (
   const getMarkedDates = useCallback(() => {
     const marked: { [key: string]: any } = {};
     const today = new Date().toISOString().split("T")[0];
-
     // Aplicar configurações personalizadas de marcação
     Object.keys(markedConfig).forEach((date) => {
       const config = markedConfig[date];
@@ -132,6 +136,10 @@ export const useCalendar = (
         selected: true,
         selectedColor: config.color,
         selectedTextColor: config.textColor,
+        ...(config.startingDay !== undefined && {
+          startingDay: config.startingDay,
+        }),
+        ...(config.endingDay !== undefined && { endingDay: config.endingDay }),
       };
     });
 

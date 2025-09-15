@@ -150,6 +150,12 @@ const RunnerItemView = ({ isDarkMode, item }: Props) => {
           <Text className="text-typography-900 text-base font-semibold mt-1">
             {item.subtitle}
           </Text>
+          {item.workoutDateOther && (
+            <Text className="text-typography-900 text-base font-semibold mt-1">
+              Dia alternativo :{" "}
+              {format(new Date(item.workoutDateOther), "dd/MM/yyyy")}
+            </Text>
+          )}
           <Box className="py-5">{statusTraining()}</Box>
           {item?.finished && item?.history?.length > 0 ? (
             <HStack className="pt-2 justify-around">

@@ -85,9 +85,10 @@ type WorkoutFormData = z.infer<typeof workoutSchema>;
 interface Props {
   safeId: string;
   titleStr?: string;
+  subtitle?: string;
 }
 
-const OutdoorScreen = ({ safeId, titleStr }: Props) => {
+const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
   const router = useRouter();
   const toast = useToast();
 
@@ -164,7 +165,7 @@ const OutdoorScreen = ({ safeId, titleStr }: Props) => {
       await finishedWorkout(payload);
       router.push(
         `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}
-        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}`
+        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}&subtitle=${subtitle}`
       );
     } catch (err) {
       const parsedError = err as Error;

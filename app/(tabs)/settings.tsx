@@ -7,6 +7,7 @@ import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
 import * as Application from "expo-application";
+import { useRouter } from "expo-router";
 
 const PUSH_KEY = "pushEnabled";
 
@@ -59,8 +60,6 @@ const Settings = () => {
           </View>
         </VStack>
       </VStack>
-
-      {/* Rodapé com versão */}
       <View className="py-4">
         <Text className="text-center text-white text-sm">
           Versão {appVersion}

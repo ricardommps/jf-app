@@ -27,8 +27,14 @@ import { moduleName } from "@/utils/module-name";
 
 export default function CongratulationScreen() {
   const router = useRouter();
-  const { distanceInMeters, durationInSeconds, paceInSeconds, rpe, title } =
-    useLocalSearchParams();
+  const {
+    distanceInMeters,
+    durationInSeconds,
+    paceInSeconds,
+    rpe,
+    title,
+    subtitle,
+  } = useLocalSearchParams();
   const shareViewRef = useRef(null);
   const [showButtons, setShowButtons] = useState(true);
 
@@ -80,47 +86,31 @@ export default function CongratulationScreen() {
         className="flex-1 p-2"
       >
         <SafeAreaView className="flex-1 px-7">
-          {showButtons && (
-            <Box className="pt-4 pb-4">
-              <HStack className="gap-2">
-                <Button
-                  action="primary"
-                  size="md"
-                  className="flex-1"
-                  onPress={handleNavigate}
-                >
-                  <ButtonText>Fechar</ButtonText>
-                </Button>
-                {!isGym && (
-                  <Button
-                    action="secondary"
-                    size="md"
-                    className="flex-1"
-                    onPress={handleShare}
-                  >
-                    <ButtonIcon as={Share2} />
-                    <ButtonText>Compartilhar</ButtonText>
-                  </Button>
-                )}
-              </HStack>
-            </Box>
-          )}
-
           <View className="flex-1 p-12">
             <VStack className="flex-1 justify-center items-center">
-              <Box className="mt-0">
+              <Box className="mt-[150]">
                 <VStack className="w-full max-w-[300px] self-center">
                   <Text className="text-3xl font-extrabold text-white text-center">
                     Parabéns!
                   </Text>
-                  <Text className="text-2xl font-extrabold text-white text-center">
-                    Mais um treino concluído com sucesso.
-                  </Text>
+                  {String(title) === "COMPETICAO" && subtitle ? (
+                    <Text className="text-2xl font-extrabold text-white text-center">
+                      Mais uma prova concluída com sucesso.
+                    </Text>
+                  ) : (
+                    <Text className="text-2xl font-extrabold text-white text-center">
+                      Mais um treino concluído com sucesso.
+                    </Text>
+                  )}
                 </VStack>
 
                 {!isGym && (
                   <VStack>
-                    {title && (
+                    {String(title) === "COMPETICAO" && subtitle ? (
+                      <Text className="text-xl font-extrabold text-white text-center">
+                        {String(subtitle)}
+                      </Text>
+                    ) : (
                       <Text className="text-2xl font-extrabold text-white text-center">
                         {moduleName(String(title))}
                       </Text>
@@ -201,6 +191,32 @@ export default function CongratulationScreen() {
               </Box>
             </VStack>
           </View>
+
+          {showButtons && (
+            <Box className="pt-4 pb-4">
+              <HStack className="gap-2">
+                <Button
+                  action="primary"
+                  size="md"
+                  className="flex-1"
+                  onPress={handleNavigate}
+                >
+                  <ButtonText>Fechar</ButtonText>
+                </Button>
+                {!isGym && (
+                  <Button
+                    action="secondary"
+                    size="md"
+                    className="flex-1"
+                    onPress={handleShare}
+                  >
+                    <ButtonIcon as={Share2} />
+                    <ButtonText>Compartilhar</ButtonText>
+                  </Button>
+                )}
+              </HStack>
+            </Box>
+          )}
         </SafeAreaView>
       </ImageBackground>
     </View>

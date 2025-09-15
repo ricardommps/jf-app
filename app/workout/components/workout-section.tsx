@@ -63,7 +63,9 @@ const WorkoutSection = ({
         </AccordionHeader>
         <AccordionContent>
           {description && (
-            <AccordionContentText>{description}</AccordionContentText>
+            <AccordionContentText className="pb-5">
+              {description}
+            </AccordionContentText>
           )}
           {medias && medias.length > 0 && (
             <WorkoutView

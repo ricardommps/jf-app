@@ -191,6 +191,16 @@ const GymView = ({ workouts, programId }: Props) => {
     return <Loading />;
   }
 
+  if (program?.message) {
+    return (
+      <VStack className="px-0" space="md">
+        <VStack className="rounded-1xl bg-[#2b2b2b9d] gap-3 p-3">
+          <Text className="text-red-700 font-bold">{program.message}</Text>
+        </VStack>
+      </VStack>
+    );
+  }
+
   return (
     <>
       <VStack className="px-0" space="md">
@@ -211,6 +221,7 @@ const GymView = ({ workouts, programId }: Props) => {
               </Text>
             )}
           </VStack>
+          {program?.message && <Text>{program.message}</Text>}
         </VStack>
       </VStack>
 

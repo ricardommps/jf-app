@@ -38,7 +38,7 @@ const RunnerView = ({ workout }: Props) => {
     setSelected("indoor");
     if (selected === "outdoor") {
       router.push(
-        `/workout/runner-finish?id=${workout.id}&outdoor=true&title=${workout.title}`
+        `/workout/runner-finish?id=${workout.id}&outdoor=true&title=${workout.title}&subtitle=${workout.subtitle}`
       );
     } else {
       router.push(
@@ -65,6 +65,14 @@ const RunnerView = ({ workout }: Props) => {
     );
   };
 
+  const ListHeader = () => (
+    <Box className="px-4 py-3 mt-3">
+      <Text className="text-lg font-bold text-gray-800 dark:text-white">
+        {workout.subtitle}
+      </Text>
+    </Box>
+  );
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
@@ -88,6 +96,7 @@ const RunnerView = ({ workout }: Props) => {
             gap: 16,
             paddingBottom: 50,
           }}
+          ListHeaderComponent={ListHeader}
           ListFooterComponent={() => (
             <VStack space="md" className="w-full px-4">
               <Button

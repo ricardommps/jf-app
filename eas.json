@@ -12,7 +12,8 @@
       "env": {
         "APP_ENV": "dev",
         "EXPO_PUBLIC_API_URL": "http://192.168.15.59:8001",
-        "EXPO_PUBLIC_IS_DEV": "true"
+        "EXPO_PUBLIC_IS_DEV": "true",
+        "GOOGLE_SERVICES_JSON": "file:google-services.json"
       }
     },
     "preview": {
@@ -23,7 +24,8 @@
       "env": {
         "APP_ENV": "dev",
         "EXPO_PUBLIC_API_URL": "http://192.168.15.59:8001",
-        "EXPO_PUBLIC_IS_DEV": "true"
+        "EXPO_PUBLIC_IS_DEV": "true",
+        "GOOGLE_SERVICES_JSON": "file:google-services.json"
       }
     },
     "production": {
@@ -31,21 +33,35 @@
       "ios": {
         "simulator": false
       },
+      "android": {
+        "buildType": "app-bundle"
+      },
       "env": {
         "APP_ENV": "prod",
         "EXPO_PUBLIC_API_URL": "https://jf-app-api.vercel.app",
-        "EXPO_PUBLIC_IS_DEV": "false"
+        "EXPO_PUBLIC_IS_DEV": "false",
+        "GOOGLE_SERVICES_JSON": "file:google-services.json"
       }
     },
     "test": {
       "env": {
         "APP_ENV": "dev",
         "EXPO_PUBLIC_API_URL": "https://jf-app-api.vercel.app",
-        "EXPO_PUBLIC_IS_DEV": "true"
+        "EXPO_PUBLIC_IS_DEV": "true",
+        "GOOGLE_SERVICES_JSON": "file:google-services.json"
       }
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "ricardommps@gmail.com",
+        "ascAppId": "6750486916"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      }
+    }
   }
 }

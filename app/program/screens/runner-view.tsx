@@ -148,20 +148,50 @@ const RunnerView = ({ workouts, programId }: Props) => {
       const datePublished = toISOStringWithTimezone(
         new Date(workout.datePublished)
       );
-      return targetDate === datePublished;
+      const workoutDateOther = workout.workoutDateOther
+        ? toISOStringWithTimezone(new Date(workout.workoutDateOther))
+        : null;
+
+      if (targetDate === datePublished) {
+        return true;
+      }
+
+      if (workoutDateOther && targetDate === workoutDateOther) {
+        return true;
+      }
+
+      return false;
     });
   }
 
   const generateMarkedDatesConfig = useCallback((workouts: Workout[]) => {
-    const config: { [key: string]: { color: string; textColor: string } } = {};
+    const config: {
+      [key: string]: {
+        color: string;
+        textColor: string;
+        startingDay?: boolean;
+        endingDay?: boolean;
+        selected?: boolean;
+      };
+    } = {};
     const today = toISOStringWithTimezone(new Date());
 
     workouts.forEach((workout) => {
       const workoutDate = toISOStringWithTimezone(
         new Date(workout.datePublished)
       );
+      const workoutDateOther = workout.workoutDateOther
+        ? toISOStringWithTimezone(new Date(workout.workoutDateOther))
+        : null;
+
       if (workoutDate === today) {
-        config[workoutDate] = { color: "#1E40AF", textColor: "#ffffff" };
+        config[workoutDate] = {
+          color: "#1E40AF",
+          textColor: "#ffffff",
+          selected: true,
+          startingDay: true,
+          endingDay: true,
+        };
         return;
       }
       if (config[workoutDate]) {
@@ -183,20 +213,49 @@ const RunnerView = ({ workouts, programId }: Props) => {
         }
       }
       if (workout.finished && !workout.unrealized) {
-        config[workoutDate] = { color: "#4ADE80", textColor: "#ffffff" };
+        config[workoutDate] = {
+          color: "#4ADE80",
+          textColor: "#ffffff",
+          startingDay: true,
+          endingDay: true,
+        };
       } else if (workout.finished && workout.unrealized) {
-        config[workoutDate] = { color: "#FB923C", textColor: "#ffffff" };
+        config[workoutDate] = {
+          color: "#FB923C",
+          textColor: "#ffffff",
+          startingDay: true,
+          endingDay: true,
+        };
       } else if (!workout.finished && workoutDate < today) {
-        config[workoutDate] = { color: "#EF4444", textColor: "#ffffff" };
+        config[workoutDate] = {
+          color: "#EF4444",
+          textColor: "#ffffff",
+          startingDay: true,
+          endingDay: true,
+        };
       } else if (
         !workout.finished &&
         (workout.unrealized === false || workout.unrealized === null) &&
         workoutDate > today
       ) {
-        config[workoutDate] = { color: "#60A5FA", textColor: "#ffffff" };
+        if (workoutDateOther) {
+          config[workoutDateOther] = {
+            color: "#60A5FA",
+            textColor: "#ffffff",
+            endingDay: true,
+          };
+        }
+        config[workoutDate] = {
+          color: "#60A5FA",
+          textColor: "#ffffff",
+          startingDay: true,
+          ...(!workoutDateOther && {
+            startingDay: true,
+            endingDay: true,
+          }),
+        };
       }
     });
-
     return config;
   }, []);
 
@@ -210,6 +269,14 @@ const RunnerView = ({ workouts, programId }: Props) => {
     },
     markedDatesConfig: generateMarkedDatesConfig(workouts),
   });
+
+  const handleDateSelect = (date: string) => {
+    const filtered = getFilteredWorkoutsByDate(workouts, date);
+    setFilteredWorkouts(filtered);
+    setSelectedDate(date);
+    calendar.selectDate(date);
+    calendar.closeModal();
+  };
 
   useEffect(() => {
     if (workouts?.length > 0) {
@@ -242,8 +309,8 @@ const RunnerView = ({ workouts, programId }: Props) => {
   }, [activeTab]);
 
   useEffect(() => {
-    if (data?.program?.pv) {
-      getExtrapolationByPv(data?.program?.pv);
+    if (data?.pv) {
+      getExtrapolationByPv(data?.pv);
     }
   }, [data]);
 
@@ -252,6 +319,15 @@ const RunnerView = ({ workouts, programId }: Props) => {
   }
   if (isLoading) {
     return <Loading />;
+  }
+  if (data?.message) {
+    return (
+      <VStack className="px-0" space="md">
+        <VStack className="rounded-1xl bg-[#2b2b2b9d] gap-3 p-3">
+          <Text className="text-red-700 font-bold">{data.message}</Text>
+        </VStack>
+      </VStack>
+    );
   }
 
   return (
@@ -395,28 +471,28 @@ const RunnerView = ({ workouts, programId }: Props) => {
 
               <HStack className="items-center w-full mt-5 gap-3">
                 <Text size="lg" className="font-semibold flex-1">
-                  PV: {data?.program?.pv || 0}
+                  PV: {data?.pv || 0}
                 </Text>
                 <Text size="lg" className="font-semibold">
-                  Pace do PV Max: {data?.program?.pace || 0}
+                  Pace do PV Max: {data?.pace || 0}
                 </Text>
               </HStack>
 
               <HStack className="items-center w-full mt-5 gap-3">
                 <Text size="lg" className="font-semibold flex-1">
-                  VLA: {data?.program?.vla || 0}
+                  VLA: {data?.vla || 0}
                 </Text>
                 <Text size="lg" className="font-semibold">
-                  Pace VLA: {data?.program?.paceVla || 0}
+                  Pace VLA: {data?.paceVla || 0}
                 </Text>
               </HStack>
 
               <HStack className="items-center w-full mt-5 gap-3">
                 <Text size="lg" className="font-semibold flex-1">
-                  VLAN: {data?.program?.vlan || 0}
+                  VLAN: {data?.vlan || 0}
                 </Text>
                 <Text size="lg" className="font-semibold">
-                  Pace VLAN: {data?.program?.paceVlan || 0}
+                  Pace VLAN: {data?.paceVlan || 0}
                 </Text>
               </HStack>
             </>
@@ -427,13 +503,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
       <CalendarModalScreen
         visible={calendar.isModalVisible}
         onRequestClose={calendar.closeModal}
-        onDateSelect={(date) => {
-          const filtered = getFilteredWorkoutsByDate(workouts, date);
-          setFilteredWorkouts(filtered);
-          setSelectedDate(date);
-          calendar.selectDate(date);
-          calendar.closeModal();
-        }}
+        onDateSelect={handleDateSelect}
         initialDate={selectedDate}
         customMarkedDates={calendar.getMarkedDates()}
       />
@@ -457,12 +527,12 @@ const RunnerView = ({ workouts, programId }: Props) => {
         visible={showExertionZone}
         onRequestClose={() => setShowExertionZone(false)}
         data={{
-          pv: data?.program?.pv,
-          pace: data?.program?.pace,
-          vla: data?.program?.vla,
-          paceVla: data?.program?.paceVla,
-          vlan: data?.program?.vlan,
-          paceVlan: data?.program?.paceVlan,
+          pv: data?.pv,
+          pace: data?.pace,
+          vla: data?.vla,
+          paceVla: data?.paceVla,
+          vlan: data?.vlan,
+          paceVlan: data?.paceVlan,
         }}
       />
     </>

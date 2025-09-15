@@ -32,6 +32,7 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
   const handleDayPress = (day: any) => {
     const { dateString } = day;
 
+    // Acessa o objeto markedDates com segurança para evitar erros
     if (!markedDates[dateString]) {
       return;
     }
@@ -44,38 +45,39 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
       onRequestClose();
     }
   }, [tempSelectedDate]);
+
   const markedDates = React.useMemo(() => {
-    if (Object.keys(customMarkedDates).length > 0) {
-      const marked = { ...customMarkedDates };
-
-      if (tempSelectedDate && !marked[tempSelectedDate]) {
-        marked[tempSelectedDate] = {
-          selected: true,
-          selectedColor: "#0EA5E9",
-          selectedTextColor: "#ffffff",
-        };
-      } else if (tempSelectedDate && marked[tempSelectedDate]) {
-        marked[tempSelectedDate] = {
-          ...marked[tempSelectedDate],
-          selected: true,
-          customStyles: {
-            container: {
-              borderWidth: 2,
-              borderColor: "#0EA5E9",
-            },
-          },
-        };
-      }
-
-      return marked;
-    }
+    // Corrige o erro de tipagem adicionando o tipo correto
     const marked: { [key: string]: any } = {};
+    // 1. Processa as datas de customMarkedDates
+    Object.keys(customMarkedDates).forEach((date) => {
+      // Para cada data, tratamos ela como um período de um dia
+      marked[date] = {
+        ...customMarkedDates[date],
+        // Adiciona as propriedades necessárias para o 'period'
+
+        color: customMarkedDates[date].selectedColor,
+        textColor: customMarkedDates[date].selectedTextColor,
+        // Remove as propriedades que não são usadas pelo 'period'
+        selectedColor: undefined,
+        selectedTextColor: undefined,
+      };
+    });
 
     if (tempSelectedDate) {
       marked[tempSelectedDate] = {
-        selected: true,
-        selectedColor: "#0EA5E9",
-        selectedTextColor: "#ffffff",
+        ...marked[tempSelectedDate], // Mantém as propriedades existentes se houver
+        startingDay: true,
+        endingDay: true,
+        color: "#313131",
+        textColor: "#ffffff",
+        // Adiciona um estilo de borda para destacar a seleção
+        customStyles: {
+          container: {
+            borderWidth: 2,
+            borderColor: "#0EA5E9",
+          },
+        },
       };
     }
 
@@ -109,6 +111,7 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
             <Calendar
               onDayPress={handleDayPress}
               markedDates={markedDates}
+              markingType={"period"}
               theme={{
                 backgroundColor: "#334155",
                 calendarBackground: "#334155",

@@ -8,6 +8,7 @@ interface Params {
   intensities?: "true" | "false"; // idem
   unrealizedTraining?: "true" | "false"; // idem
   title?: string;
+  subtitle?: string;
 }
 
 function useLocalSearchParams(): Params {
@@ -15,7 +16,7 @@ function useLocalSearchParams(): Params {
 }
 
 const RunnerFinishView = () => {
-  const { id, outdoor, intensities, unrealizedTraining, title } =
+  const { id, outdoor, intensities, unrealizedTraining, title, subtitle } =
     useLocalSearchParams();
   const safeId = id ?? "";
   const outdoorBool = outdoor === "true";
@@ -23,7 +24,9 @@ const RunnerFinishView = () => {
   const unrealizedTrainingBool = unrealizedTraining === "true" ? true : false;
   const titleStr = title ?? "";
   if (outdoorBool) {
-    return <OutdoorScreen safeId={safeId} titleStr={titleStr} />;
+    return (
+      <OutdoorScreen safeId={safeId} titleStr={titleStr} subtitle={subtitle} />
+    );
   }
   return (
     <IndoorViewScreen
