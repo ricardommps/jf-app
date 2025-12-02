@@ -1,4 +1,5 @@
 import Comments from "@/components/comments";
+import { RpeDisplay } from "@/components/rpe-display";
 import { Box } from "@/components/ui/box";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
@@ -8,9 +9,10 @@ import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
 import { VStack } from "@/components/ui/vstack";
 import { Finished } from "@/types/finished";
+import { convertSecondsToHourMinuteFormat } from "@/utils/convertValues";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MessageCircleIcon } from "lucide-react-native";
+import { Clock10Icon, MessageCircleIcon } from "lucide-react-native";
 import { useState } from "react";
 import {
   FlatList,
@@ -133,6 +135,33 @@ const HistoryModal: React.FC<Props> = ({
               </VStack>
             )}
           </HStack>
+          {item?.durationInSeconds && item.rpe && (
+            <>
+              <HStack className="items-start pt-2 pl-3 gap-5">
+                {item?.durationInSeconds && (
+                  <VStack className="items-center">
+                    <Icon
+                      as={Clock10Icon}
+                      size="xl"
+                      className="text-background-700"
+                    />
+                    <Text className="text-xs text-typography-700 mt-1">
+                      Tempo
+                    </Text>
+                    <Text className="text-xs text-typography-900">
+                      {convertSecondsToHourMinuteFormat(
+                        item?.durationInSeconds || 0
+                      )}
+                    </Text>
+                  </VStack>
+                )}
+
+                <VStack className="items-center">
+                  <RpeDisplay rpe={item.rpe || 0} />
+                </VStack>
+              </HStack>
+            </>
+          )}
         </Box>
       </View>
     );

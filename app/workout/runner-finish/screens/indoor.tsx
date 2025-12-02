@@ -175,7 +175,7 @@ const IndoorScreen = ({ safeId, titleStr }: Props) => {
       payload.executionDay = convertDate(payload.executionDay);
       await finishedWorkout(payload);
       router.push(
-        `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}&rpe=${payload.rpe}&title=${titleStr}` as any
+        `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}&rpe=${payload.rpe}&title=${titleStr}&trimp=${payload.trimp}` as any
       );
     } catch (err) {
       const parsedError = err as Error;

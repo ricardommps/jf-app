@@ -25,12 +25,13 @@ import {
   useRouter,
 } from "expo-router";
 import { CalendarDays } from "lucide-react-native";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Modal, ScrollView, TouchableWithoutFeedback } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { z } from "zod";
 
+import { TimePicker } from "@/components/picker-modal";
 import {
   Toast,
   ToastDescription,
@@ -39,10 +40,16 @@ import {
 } from "@/components/ui/toast";
 import { useWorkouut } from "@/contexts/WorkoutContext";
 import { finishedWorkout } from "@/services/finished.service";
+import { convertSecondsToHourMinuteFormat } from "@/utils/convertValues";
 
 const workoutSchema = z.object({
   workoutsId: z.string(),
   rpe: z.number(),
+  trimp: z.number(),
+  durationInSeconds: z
+    .number()
+    .min(1, "O tempo deve ser maior que 0")
+    .refine((val) => val > 0, { message: "Campo tempo total obrigatório" }),
   comments: z.string(),
   executionDay: z
     .string()
@@ -57,6 +64,7 @@ type WorkoutFormData = z.infer<typeof workoutSchema>;
 
 interface Params {
   id?: string;
+  title?: string;
 }
 
 function useLocalSearchParams(): Params {
@@ -64,7 +72,7 @@ function useLocalSearchParams(): Params {
 }
 
 const GymFinishView = () => {
-  const { id } = useLocalSearchParams();
+  const { id, title } = useLocalSearchParams();
   const safeId = id ?? "";
   const router = useRouter();
   const toast = useToast();
@@ -75,10 +83,13 @@ const GymFinishView = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toastId, setToastId] = useState<string>("");
+  const [showTimePicker, setTimeShowPicker] = useState(false);
 
   const defaultValues = useMemo(
     () => ({
       rpe: 0,
+      trimp: 0,
+      durationInSeconds: 0,
       comments: "",
       workoutsId: safeId,
       executionDay: "",
@@ -98,8 +109,12 @@ const GymFinishView = () => {
     defaultValues,
   });
 
+  const values = watch();
   const watchedExecutionDay = watch("executionDay");
   const watchedRpe = watch("rpe");
+  const durationInSeconds = watch("durationInSeconds");
+  const trimp = watch("trimp");
+  const titleStr = title ?? "";
 
   const calendarTheme = useMemo(
     () => ({
@@ -140,10 +155,15 @@ const GymFinishView = () => {
       const payload = Object.assign({}, data);
       payload.workoutsId = safeId;
       payload.rpe = Number(payload.rpe);
+      payload.durationInSeconds = Number(payload.durationInSeconds);
       payload.executionDay = convertDate(payload.executionDay);
       payload.checkList = checkList;
       await finishedWorkout(payload);
-      router.push(`/finished` as any);
+      //router.push(`/finished` as any);
+      router.push(
+        `/finished?durationInSeconds=${payload.durationInSeconds}
+        &trimp=${payload.trimp}&rpe=${payload.rpe}&title=${titleStr}` as any
+      );
     } catch (err) {
       const parsedError = err as Error;
       if (!toast.isActive(toastId)) {
@@ -214,6 +234,22 @@ const GymFinishView = () => {
     },
   ];
 
+  const getTrimp = () => {
+    const durationInSeconds = Number(values.durationInSeconds);
+    if (durationInSeconds > 0) {
+      const durationInMinutes = durationInSeconds / 60;
+      const trimp = durationInMinutes * values.rpe;
+      const formattedTrimp = trimp.toFixed(2);
+      setValue("trimp", Number(formattedTrimp));
+      return formattedTrimp;
+    }
+    return 0;
+  };
+
+  useEffect(() => {
+    getTrimp();
+  }, [values.durationInSeconds, values.rpe]);
+
   if (isLoading) {
     return <Loading />;
   }
@@ -222,7 +258,10 @@ const GymFinishView = () => {
     <VStack space="md" className="flex-1 bg-background-0">
       <HeaderNavigation title="Finalizar treino indoor" />
       <ScrollView>
-        <Box className="px-4 pt-2">
+        <Box className="pt-2">
+          <Text className="text-xl text-center">{titleStr}</Text>
+        </Box>
+        <Box className="px-4 pt-5">
           <Pressable onPress={() => setModalVisible(true)} className="w-full">
             <Box pointerEvents="none">
               <Text className="text-typography-600 text-base">
@@ -252,6 +291,34 @@ const GymFinishView = () => {
           {errors.executionDay && (
             <Text className="text-red-500 text-sm mt-1">
               {errors.executionDay.message}
+            </Text>
+          )}
+        </Box>
+        <Box className="px-4 pt-2">
+          <Pressable className="w-full" onPress={() => setTimeShowPicker(true)}>
+            <Box pointerEvents="none">
+              <Text className="text-typography-600 text-base">
+                Duração (hh:mm:ss)
+              </Text>
+              <Input
+                variant="rounded"
+                className="border-0 bg-[#2b2b2b9d] rounded-md mt-1 mb-1 w-full"
+                size="lg"
+              >
+                <InputField
+                  editable={false}
+                  value={convertSecondsToHourMinuteFormat(durationInSeconds)}
+                  className="placeholder:text-typography-400"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </Input>
+            </Box>
+          </Pressable>
+          {errors.durationInSeconds && (
+            <Text className="text-red-500 text-sm mt-1">
+              {errors.durationInSeconds.message}
             </Text>
           )}
         </Box>
@@ -326,6 +393,23 @@ const GymFinishView = () => {
             })}
           </VStack>
         </VStack>
+        <Box className="px-4 pt-5">
+          <Text className="text-typography-600 text-base">Trimp</Text>
+          <Input
+            variant="rounded"
+            className="border-0 bg-[#2b2b2b9d] rounded-md mt-1 mb-1 w-full"
+            size="lg"
+          >
+            <InputField
+              editable={false}
+              value={String(trimp)}
+              className="placeholder:text-typography-400"
+              autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </Input>
+        </Box>
         <HStack className="gap-4 py-10 justify-end w-full px-4">
           <Button variant="outline" size="md" onPress={() => router.back()}>
             <ButtonText>Fechar</ButtonText>
@@ -373,6 +457,15 @@ const GymFinishView = () => {
           </Box>
         </TouchableWithoutFeedback>
       </Modal>
+      <TimePicker
+        visible={showTimePicker}
+        onClose={() => setTimeShowPicker(false)}
+        onConfirm={(value) => {
+          setValue("durationInSeconds", Number(value));
+          setTimeShowPicker(false);
+        }}
+        initialValue={values.durationInSeconds}
+      />
     </VStack>
   );
 };

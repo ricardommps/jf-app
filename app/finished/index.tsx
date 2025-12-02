@@ -15,6 +15,7 @@ import { moduleName } from "@/utils/module-name";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import {
+  ActivityIcon,
   Clock10Icon,
   FootprintsIcon,
   RouteIcon,
@@ -22,7 +23,6 @@ import {
 } from "lucide-react-native";
 import React, { useRef, useState } from "react";
 import { Alert, ImageBackground, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { captureRef } from "react-native-view-shot";
 
 export default function CongratulationScreen() {
@@ -35,12 +35,12 @@ export default function CongratulationScreen() {
     title,
     subtitle,
     unrealizedTraining,
+    trimp,
   } = useLocalSearchParams();
   const shareViewRef = useRef(null);
   const [showButtons, setShowButtons] = useState(true);
 
-  const isGym =
-    !distanceInMeters && !durationInSeconds && !paceInSeconds && !rpe;
+  const isGym = !distanceInMeters && !paceInSeconds;
 
   function handleNavigate() {
     router.replace("/(tabs)/(home)" as any);
@@ -99,7 +99,7 @@ export default function CongratulationScreen() {
         resizeMode="cover"
         className="flex-1 p-2"
       >
-        <SafeAreaView className="flex-1 px-7">
+        <View className="flex-1 px-7">
           <View className="flex-1 p-12">
             <VStack className="flex-1 justify-center items-center">
               <Box className="mt-[150]">
@@ -203,6 +203,88 @@ export default function CongratulationScreen() {
                             </>
                           )}
                           {Number(rpe) > 0 && <RpeDisplay rpe={Number(rpe)} />}
+                          {Number(trimp) > 0 && (
+                            <>
+                              <Divider
+                                orientation="vertical"
+                                className="bg-gray-300 rounded"
+                              />
+                              <VStack className="items-center">
+                                <Icon
+                                  as={ActivityIcon}
+                                  size="xl"
+                                  className="text-background-700"
+                                />
+                                <Text className="text-xs text-typography-700 mt-1">
+                                  Trimp
+                                </Text>
+                                <Text className="text-xs text-typography-900">
+                                  {Number(trimp)}
+                                </Text>
+                              </VStack>
+                            </>
+                          )}
+                        </HStack>
+                      </VStack>
+                    )}
+
+                    {isGym && (
+                      <VStack>
+                        {title && (
+                          <Text className="text-2xl font-extrabold text-white text-center">
+                            {String(title)}
+                          </Text>
+                        )}
+                        <HStack className="pt-8 justify-around gap-5">
+                          {Number(durationInSeconds) > 0 && (
+                            <>
+                              <VStack className="items-center">
+                                <Icon
+                                  as={Clock10Icon}
+                                  size="xl"
+                                  className="text-background-700"
+                                />
+                                <Text className="text-xs text-typography-700 mt-1">
+                                  Tempo
+                                </Text>
+                                <Text className="text-xs text-typography-900">
+                                  {convertSecondsToHourMinuteFormat(
+                                    Number(durationInSeconds)
+                                  )}
+                                </Text>
+                              </VStack>
+                              <Divider
+                                orientation="vertical"
+                                className="bg-gray-300 rounded"
+                              />
+                            </>
+                          )}
+                          {Number(rpe) > 0 && (
+                            <>
+                              <RpeDisplay rpe={Number(rpe)} />
+                              <Divider
+                                orientation="vertical"
+                                className="bg-gray-300 rounded"
+                              />
+                            </>
+                          )}
+                          {Number(trimp) > 0 && (
+                            <>
+                              <VStack className="items-center">
+                                <Icon
+                                  as={ActivityIcon}
+                                  size="xl"
+                                  className="text-background-700"
+                                />
+                                <Text className="text-xs text-typography-700 mt-1">
+                                  Trimp
+                                </Text>
+                                <Text className="text-xs text-typography-900">
+                                  {Number(trimp)}
+                                </Text>
+                              </VStack>
+                            </>
+                          )}
                         </HStack>
                       </VStack>
                     )}
@@ -223,7 +305,7 @@ export default function CongratulationScreen() {
                 >
                   <ButtonText>Fechar</ButtonText>
                 </Button>
-                {!isGym && !unrealizedTraining && (
+                {!unrealizedTraining && (
                   <Button
                     action="secondary"
                     size="md"
@@ -237,7 +319,7 @@ export default function CongratulationScreen() {
               </HStack>
             </Box>
           )}
-        </SafeAreaView>
+        </View>
       </ImageBackground>
     </View>
   );

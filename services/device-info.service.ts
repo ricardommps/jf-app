@@ -1,4 +1,5 @@
 import axiosInstance from "@/config/axios";
+import * as Sentry from "@sentry/react-native";
 
 export interface DeviceInfoPayload {
   customerId: number;
@@ -15,7 +16,12 @@ export async function deviceInfo(payload: DeviceInfoPayload) {
     const response = await axiosInstance.post("/api/v2/device-info", payload);
     return response.data;
   } catch (error) {
-    console.error("Erro ao enviar informações do dispositivo:", error);
+    Sentry.captureException(error, {
+      extra: {
+        context: "deviceInfo",
+        payload,
+      },
+    });
     throw error;
   }
 }
@@ -27,7 +33,12 @@ export async function getDeviceInfo(customerId: number) {
     );
     return response.data;
   } catch (error) {
-    console.error("Erro ao obter informações do dispositivo:", error);
+    Sentry.captureException(error, {
+      extra: {
+        context: "getDeviceInfo",
+        customerId,
+      },
+    });
     throw error;
   }
 }

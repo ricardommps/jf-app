@@ -1,8 +1,11 @@
 import APICaller from "@/config/axios";
 import globalEventEmitter from "@/utils/events";
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { createContext, PropsWithChildren, useContext, useEffect } from "react";
+import { Platform } from "react-native";
 import { useStorageState } from "./useStorageState";
 
 import { UserType } from "@/types/ProfileType";
@@ -47,6 +50,38 @@ export function useSession() {
   return useContext(AuthContext);
 }
 
+// --- Registrar push token ---
+async function registerPushToken() {
+  try {
+    if (!Device.isDevice) return;
+
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== "granted") return;
+
+    const token = (await Notifications.getExpoPushTokenAsync()).data;
+
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+      });
+    }
+
+    return token;
+  } catch (error) {
+    console.error("Erro ao registrar push token:", error);
+    return undefined;
+  }
+}
+
 export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, sessionStr], setSessionStr] = useStorageState("session");
   const router = useRouter();
@@ -60,7 +95,6 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     const listener = () => {
-      console.log("📢 Evento de logout recebido no Authentication");
       setSessionStr(null);
       setTimeout(() => {
         try {
@@ -80,17 +114,27 @@ export function SessionProvider({ children }: PropsWithChildren) {
   }, [router, setSessionStr]);
 
   const signOut = async () => {
-    await APICaller.request("/logout", "POST").catch(() => {});
+    try {
+      // Marca que está fazendo logout ANTES de qualquer requisição
+      APICaller.forceLogout();
+
+      // Tenta fazer logout no backend, mas ignora completamente qualquer erro
+      await APICaller.request("/logout", "POST").catch(() => {});
+    } catch (error) {}
+
     await removeTokens();
     setSessionStr(null);
     globalEventEmitter.emit("logout");
   };
 
   const login = async ({ email, password }: LoginProps): Promise<UserType> => {
+    // NOVO: Reseta o estado de logout ao fazer novo login
+    APICaller.resetLogoutState();
+    const pushToken = await registerPushToken();
     const data: LoginResponseApi = await APICaller.request(
       "/api/v2/auth/login-customer",
       "POST",
-      { email, password }
+      { email, password, ...(pushToken && { pushToken }) }
     );
     if (!data.accessToken) throw new Error("Token inválido");
 

@@ -263,7 +263,7 @@ const GymView = ({ workouts, programId }: Props) => {
                   ? "#0d0d0dcc"
                   : "#ffffffcc"
                 : "transparent",
-            bottom: insets.bottom > 0 ? insets.bottom - 4 : 8,
+            bottom: 0,
           },
         ]}
       >

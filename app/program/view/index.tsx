@@ -25,7 +25,7 @@ const ProgramView = () => {
   };
 
   return (
-    <VStack space="md" className="flex-1 bg-background-0">
+    <VStack className="flex-1 bg-background-0">
       <HeaderNavigation title="Meus treinos" />
       {isLoading ? <Loading /> : <>{data?.length && renderItem()}</>}
     </VStack>

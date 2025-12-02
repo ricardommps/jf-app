@@ -1,6 +1,6 @@
-import React from "react";
 import { createIcon } from "@/components/ui/icon";
-import { Path, Circle } from "react-native-svg";
+import React from "react";
+import { Circle, Path, Rect } from "react-native-svg";
 
 const ArrowUpIcon = createIcon({
   viewBox: "0 0 12 12",
@@ -178,3 +178,42 @@ const HistoryIcon = createIcon({
   ),
 });
 export { HistoryIcon };
+
+const ActiveChartColumnStackedIcon = createIcon({
+  viewBox: "0 0 24 24",
+  path: (
+    <>
+      <Path d="M3 3v16a2 2 0 0 0 2 2h16" />
+      <Rect x="7" y="13" width="3" height="6" rx="1" />
+      <Rect x="7" y="9" width="3" height="4" rx="1" />
+      <Rect x="12" y="10" width="3" height="9" rx="1" />
+      <Rect x="12" y="6" width="3" height="4" rx="1" />
+      <Rect x="17" y="12" width="3" height="7" rx="1" />
+      <Rect x="17" y="8" width="3" height="4" rx="1" />
+      <Path d="M3 3v16a2 2 0 0 0 2 2h16" />
+      <Rect x="7" y="13" width="3" height="6" rx="1" />
+      <Rect x="7" y="9" width="3" height="4" rx="1" />
+      <Rect x="12" y="10" width="3" height="9" rx="1" />
+      <Rect x="12" y="6" width="3" height="4" rx="1" />
+      <Rect x="17" y="12" width="3" height="7" rx="1" />
+      <Rect x="17" y="8" width="3" height="4" rx="1" />
+    </>
+  ),
+});
+
+const ChartColumnStackedIcon = createIcon({
+  viewBox: "0 0 24 24",
+  path: (
+    <>
+      <Path d="M3 3v16a2 2 0 0 0 2 2h16" />
+      <Rect x="7" y="13" width="3" height="6" rx="1" />
+      <Rect x="7" y="9" width="3" height="4" rx="1" />
+      <Rect x="12" y="10" width="3" height="9" rx="1" />
+      <Rect x="12" y="6" width="3" height="4" rx="1" />
+      <Rect x="17" y="12" width="3" height="7" rx="1" />
+      <Rect x="17" y="8" width="3" height="4" rx="1" />
+    </>
+  ),
+});
+
+export { ActiveChartColumnStackedIcon, ChartColumnStackedIcon };

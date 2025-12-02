@@ -16,7 +16,7 @@ const Layout = () => {
           zIndex: 10,
         }}
       >
-        <CustomHeader variant="general" title="Perfil" />
+        <CustomHeader variant="general" title="Monotonia" />
       </View>
 
       {/* Conteúdo estático */}

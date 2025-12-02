@@ -61,10 +61,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     // Listener: usuário interage com a notificação
     responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        // Aqui você pode, por exemplo, navegar para uma tela específica
-        console.log("Usuário tocou na notificação:", response);
-      });
+      Notifications.addNotificationResponseReceivedListener((response) => {});
 
     // Limpeza ao desmontar o componente
     return () => {

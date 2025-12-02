@@ -22,7 +22,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { Gesture } from "react-native-gesture-handler";
+import { Gesture, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 
 // Importa o novo componente
@@ -43,6 +43,13 @@ const getYoutubeId = (url?: string) => {
   return match ? match[1] : null;
 };
 
+// ✅ Nova função para garantir HTTPS nas thumbnails
+const ensureHttps = (url?: string) => {
+  if (!url) return null;
+  // Converte HTTP para HTTPS (especialmente para URLs do YouTube)
+  return url.replace(/^http:\/\//i, "https://");
+};
+
 const WorkoutItem = ({
   media,
   exerciseInfo,
@@ -57,6 +64,12 @@ const WorkoutItem = ({
   )!;
 
   const videoId = useMemo(() => getYoutubeId(media.videoUrl), [media.videoUrl]);
+
+  // ✅ Memoriza a thumbnail com HTTPS
+  const thumbnailUrl = useMemo(
+    () => ensureHttps(media.thumbnail),
+    [media.thumbnail]
+  );
 
   const [isEditing, setIsEditing] = useState(false);
   const [carga, setCarga] = useState("");
@@ -100,7 +113,6 @@ const WorkoutItem = ({
       }
     });
 
-  // ... (useQuery e useMutation permanecem inalterados) ...
   const {
     data: workoutLoad,
     isLoading,
@@ -160,9 +172,6 @@ const WorkoutItem = ({
     }
   };
 
-  // REMOVEMOS AQUI O animatedStyle e as variáveis de playerWidth/Height
-  // Elas foram movidas para o VideoPlayerModal
-
   return (
     <>
       <Box
@@ -176,13 +185,14 @@ const WorkoutItem = ({
               {media.title}
             </Text>
 
-            {media.thumbnail && (
+            {/* ✅ Usa thumbnailUrl com HTTPS em vez de media.thumbnail */}
+            {thumbnailUrl && (
               <Pressable
                 onPress={handlePlayVideo}
                 style={styles.thumbnailContainer}
               >
                 <Image
-                  source={{ uri: media.thumbnail }}
+                  source={{ uri: thumbnailUrl }}
                   style={styles.thumbnail}
                   resizeMode="cover"
                 />
@@ -195,8 +205,6 @@ const WorkoutItem = ({
             )}
 
             <VStack className="px-2 gap-3">
-              {/* ... (Seção de Carga, InfoItem, etc. permanecem inalterados) ... */}
-
               {isWorkoutLoad && (
                 <HStack className="rounded-2xl bg-background-300 flex-row justify-between items-center p-2">
                   {error ? (
@@ -320,29 +328,29 @@ const WorkoutItem = ({
       </Box>
 
       {/* Modal Flutuante do Player - Usando o novo componente */}
-      <Modal
-        visible={showPlayer}
-        transparent
-        animationType="fade"
-        onRequestClose={handleClosePlayer}
-      >
-        <VideoPlayerModal
-          videoId={videoId}
-          showPlayer={showPlayer}
-          minimized={minimized}
-          isFullscreen={isFullscreen}
-          handleClosePlayer={handleClosePlayer}
-          handleToggleFullscreen={handleToggleFullscreen}
-          translateX={translateX}
-          translateY={translateY}
-          panGesture={panGesture}
-        />
-      </Modal>
+      <GestureHandlerRootView style={{ position: "absolute" }}>
+        <Modal
+          visible={showPlayer}
+          transparent
+          animationType="fade"
+          onRequestClose={handleClosePlayer}
+        >
+          <VideoPlayerModal
+            videoId={videoId}
+            showPlayer={showPlayer}
+            minimized={minimized}
+            isFullscreen={isFullscreen}
+            handleClosePlayer={handleClosePlayer}
+            handleToggleFullscreen={handleToggleFullscreen}
+            translateX={translateX}
+            translateY={translateY}
+            panGesture={panGesture}
+          />
+        </Modal>
+      </GestureHandlerRootView>
     </>
   );
 };
-
-// ... (InfoItem e Styles permanecem inalterados, exceto pelos estilos do modal que foram movidos) ...
 
 const InfoItem = ({ label, value }: { label: string; value: string }) => (
   <VStack className="items-start">
@@ -387,7 +395,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  // Os estilos do modal foram movidos para VideoPlayerModal.tsx
 });
 
 export default WorkoutItem;
