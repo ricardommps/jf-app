@@ -8,8 +8,6 @@ import { useSession } from "@/contexts/Authentication";
 import { ThemeContext } from "@/contexts/theme-context";
 import { LogOut, Mic } from "lucide-react-native";
 import React, { useContext } from "react";
-import { Platform } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CustomHeader = ({
   variant = "general",
@@ -22,7 +20,6 @@ const CustomHeader = ({
 }) => {
   const { signOut, getProfile } = useSession();
   const { colorMode }: any = useContext(ThemeContext);
-  const insets = useSafeAreaInsets();
   const isDarkMode = colorMode === "dark";
   const profile = getProfile();
 
@@ -30,14 +27,9 @@ const CustomHeader = ({
     <Box
       className={`${
         isDarkMode ? "bg-[#2b2b2b]" : "bg-gray-100"
-      } overflow-hidden mb-3 items-center justify-center`}
+      } overflow-hidden mb-2 items-center justify-center`}
     >
-      <HStack
-        className="p-5 gap-6 justify-between w-full max-w-screen-lg mx-auto items-center"
-        style={{
-          paddingTop: Platform.OS === "ios" ? insets.top + 10 : insets.top + 20,
-        }}
-      >
+      <HStack className="px-5 py-3  gap-6 justify-between w-full max-w-screen-lg mx-auto items-center mt-5">
         <HStack className="items-center gap-3">
           <Image
             source={require("@/assets/images/jf_icone_v1.png")}

@@ -1,17 +1,14 @@
 import { Maximize, Minus, X } from "lucide-react-native";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
   Dimensions,
   Pressable,
   StyleSheet,
   View,
 } from "react-native";
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   SharedValue,
   useAnimatedStyle,
@@ -46,7 +43,33 @@ const VideoPlayerModal = ({
 }: VideoPlayerModalProps) => {
   const insets = useSafeAreaInsets();
   const playerRef = useRef(null);
-  const [loading, setLoading] = useState(true); // ✅ estado de carregamento
+  const [loading, setLoading] = useState(true);
+  const [playerKey, setPlayerKey] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // ✅ Monitora o estado do app para pausar quando vai para background
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "background" || nextAppState === "inactive") {
+        setIsPlaying(false);
+      }
+    });
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
+
+  // ✅ Reseta o estado quando o modal fecha ou o videoId muda
+  useEffect(() => {
+    if (showPlayer && videoId) {
+      setLoading(true);
+      setIsPlaying(true);
+      setPlayerKey((prev) => prev + 1);
+    } else {
+      setIsPlaying(false);
+    }
+  }, [videoId, showPlayer]);
 
   const playerWidth = isFullscreen
     ? SCREEN_WIDTH
@@ -85,7 +108,7 @@ const VideoPlayerModal = ({
   const draggable = minimized;
 
   return (
-    <GestureHandlerRootView style={styles.modalRoot}>
+    <View style={styles.modalRoot}>
       <View
         style={[
           styles.modalOverlay,
@@ -110,36 +133,59 @@ const VideoPlayerModal = ({
             )}
 
             <YoutubePlayer
+              key={`player-${playerKey}-${videoId}`}
               ref={playerRef}
               height={playerHeight - insets.top}
               width={playerWidth}
-              play={true}
+              play={isPlaying}
               videoId={videoId}
               mute={true}
-              onReady={() => setLoading(false)} // ✅ remove loader quando o vídeo carrega
+              volume={10}
               initialPlayerParams={{
-                controls: false,
+                controls: true, // ✅ Ativado para permitir controle pelo usuário
                 modestbranding: true,
                 rel: false,
+                mute: true,
+                autoplay: false, // ✅ Mudado para false para evitar conflitos
+                preventFullScreen: false,
               }}
               webViewProps={{
+                mediaPlaybackRequiresUserAction: false,
+                allowsInlineMediaPlayback: true,
+                // ✅ Desabilita picture-in-picture que pode causar conflitos
+                allowsPictureInPictureMediaPlayback: false,
                 injectedJavaScript: `
                   var element = document.getElementsByClassName('container')[0];
                   element.style.position = 'unset';
                   element.style.paddingBottom = 'unset';
+                  
+                  // ✅ Tenta pausar qualquer mídia externa antes de iniciar
+                  if (window.pauseExternalMedia) {
+                    window.pauseExternalMedia();
+                  }
                   true;
                 `,
                 userAgent:
                   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36",
-                mediaPlaybackRequiresUserAction: false,
-                allowsInlineMediaPlayback: false,
+              }}
+              onReady={() => {
+                setLoading(false);
+                // ✅ Inicia a reprodução após o player estar pronto
+                setIsPlaying(true);
+              }}
+              onChangeState={(state: string) => {
+                // ✅ Sincroniza o estado de reprodução
+                if (state === "playing") {
+                  setIsPlaying(true);
+                } else if (state === "paused" || state === "ended") {
+                  setIsPlaying(false);
+                }
               }}
             />
-
             {/* Controles flutuantes */}
             <View
               pointerEvents="box-none"
-              style={[styles.floatingControls, { marginTop: insets.top + 8 }]}
+              style={[styles.floatingControls, { marginTop: insets.top + 50 }]}
             >
               <Pressable
                 onPress={handleClosePlayer}
@@ -164,7 +210,7 @@ const VideoPlayerModal = ({
           </Animated.View>
         </GestureDetector>
       </View>
-    </GestureHandlerRootView>
+    </View>
   );
 };
 
@@ -203,7 +249,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.6)", // ✅ leve transparência sobre o player
+    backgroundColor: "rgba(0,0,0,0.6)",
     zIndex: 1002,
   },
 });

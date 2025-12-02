@@ -26,7 +26,7 @@ const HeaderNavigation = ({ title }: { title?: string }) => {
         "bg-[#2b2b2b] rounded-t-3xl overflow-hidden items-center justify-center"
       }
     >
-      <HStack className="pt-5 px-5 gap-2 justify-between w-full max-w-screen-lg mx-auto items-center">
+      <HStack className="pt-5 px-5 gap-2 justify-between w-full max-w-screen-lg mx-auto items-center mt-2">
         <VStack className="gap-1 flex-1 min-w-0">
           <Text
             className={`${

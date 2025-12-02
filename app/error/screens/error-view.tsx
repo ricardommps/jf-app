@@ -3,17 +3,12 @@ import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
 import { VStack } from "@/components/ui/vstack";
-import { setIsOnErrorPage } from "@/config/navigationState"; // ✅ IMPORTA A FLAG GLOBAL
+import { setIsOnErrorPage } from "@/config/navigationState";
 import { useSession } from "@/contexts/Authentication";
 import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo } from "react";
 import { Linking, Platform } from "react-native";
-import {
-  useSharedValue,
-  withSequence,
-  withSpring,
-} from "react-native-reanimated";
 
 interface ErrorDetails {
   code?: string;
@@ -27,185 +22,139 @@ const ErrorScreen = () => {
   const profile = getProfile();
   const router = useRouter();
   const params = useLocalSearchParams();
-  const retryScale = useSharedValue(1);
 
-  // ✅ Marca que está na tela de erro (evita loops)
   useEffect(() => {
     setIsOnErrorPage(true);
-    return () => {
-      setIsOnErrorPage(false);
-    };
+    return () => setIsOnErrorPage(false);
   }, []);
 
-  // Parse error from URL params
   const errorDetails = useMemo<ErrorDetails>(() => {
     try {
       if (params.error && typeof params.error === "string") {
         return JSON.parse(decodeURIComponent(params.error));
       }
-    } catch (e) {
-      console.warn("Failed to parse error details:", e);
+    } catch {
+      return {};
     }
     return {};
   }, [params.error]);
 
-  const handleRetryPress = () => {
-    retryScale.value = withSequence(
-      withSpring(0.95, { duration: 100 }),
-      withSpring(1, { duration: 100 })
-    );
-    // Add a small delay to allow animation to complete
-    setTimeout(() => {
-      router.back();
-    }, 200);
-  };
+  const handleRetry = () => router.back();
 
   const handleReportError = async () => {
-    try {
-      const errorReport = [
-        "🚨 *Relatório de Erro - Foltz App*",
-        "",
-        `- Nome:* ${profile?.name}`,
-        `- E-mail:* ${profile?.email}`,
-        "",
-        `- Plataforma:* ${Platform.OS}`,
-        `- Data:* ${new Date().toLocaleString("pt-BR")}`,
-        "",
-        "- Detalhes do Erro:*",
-        `• Código: ${errorDetails.code || "N/A"}`,
-        `• Mensagem: ${errorDetails.message || "N/A"}`,
-        "",
-        "- Requisição:*",
-        `• Método: ${errorDetails.method || "N/A"}`,
-        `• URL: ${errorDetails.url || "N/A"}`,
-        "",
-        "---",
-        "Por favor, descreva o que você estava fazendo quando o erro ocorreu:",
-      ].join("\n");
+    const phoneNumber = process.env.PHONENUMBER!;
 
-      const whatsappNumber = "5548991781646";
-      const encodedMessage = encodeURIComponent(errorReport);
-      const whatsappUrl = `whatsapp://send?phone=${whatsappNumber}&text=${encodedMessage}`;
-
-      const canOpen = await Linking.canOpenURL(whatsappUrl);
-      if (canOpen) {
-        await Linking.openURL(whatsappUrl);
-      } else {
-        const webWhatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-        await Linking.openURL(webWhatsappUrl);
-      }
-    } catch (error) {
-      console.error("Erro ao abrir WhatsApp:", error);
-      const fallbackNumber = "5548999999999";
-      const fallbackMsg = encodeURIComponent(
-        "Erro ao reportar problema pelo app"
-      );
-      Linking.openURL(`https://wa.me/${fallbackNumber}?text=${fallbackMsg}`);
-    }
+    const message = encodeURIComponent(
+      `🚨 Relatório de erro\n\nUsuário: ${profile?.name}\nE-mail: ${profile?.email}\nPlataforma: ${Platform.OS}\nCódigo: ${errorDetails.code}\nMensagem: ${errorDetails.message}`
+    );
+    const url = `https://wa.me/${phoneNumber}?text=${message}`;
+    await Linking.openURL(url);
   };
+  const urlApp = process.env.URLAPP!;
+  const handleOpenWeb = () => Linking.openURL(urlApp);
 
-  const getUserFriendlyMessage = () => {
-    const code = errorDetails.code;
-    switch (code) {
+  const friendlyMsg = (() => {
+    switch (errorDetails.code) {
       case "NETWORK_ERROR":
-        return (
-          errorDetails.message ||
-          "Não foi possível conectar ao servidor. Verifique sua conexão com a internet."
-        );
+        return "Parece que você está sem conexão com a internet.";
       case "TIMEOUT":
-        return (
-          errorDetails.message ||
-          "A requisição demorou muito para responder. Verifique sua conexão."
-        );
-      case "400":
-        return "Requisição inválida. Verifique os dados e tente novamente.";
-      case "404":
-        return "Recurso não encontrado. O item solicitado pode não existir mais.";
+        return "A conexão demorou demais para responder.";
       case "500":
-        return "Erro interno do servidor. Estamos trabalhando para resolver isso.";
-      case "502":
-      case "503":
-        return "Serviço temporariamente indisponível. Tente novamente em alguns instantes.";
-      case "504":
-        return "Tempo de resposta excedido. Verifique sua conexão e tente novamente.";
+        return "Estamos enfrentando um problema no servidor.";
       default:
-        return (
-          errorDetails.message ||
-          "Ocorreu um erro inesperado. Tente novamente mais tarde."
-        );
+        return "Algo inesperado aconteceu. Tente novamente.";
+    }
+  })();
+
+  const getIcon = () => {
+    switch (errorDetails.code) {
+      case "NETWORK_ERROR":
+        return "wifi";
+      case "TIMEOUT":
+        return "clock-o";
+      default:
+        return "exclamation-circle";
     }
   };
 
   return (
-    <View className="flex-1 bg-white dark:bg-gray-900">
-      <View className="flex-1 justify-center items-center pb-12 px-6">
-        <VStack space="lg" className="items-center max-w-[320px]">
-          <View className="mb-4">
-            <Image
-              source={require("@/assets/images/jf_logo_full.png")}
-              alt="logo"
-              resizeMode="contain"
-              className="w-[500px] h-[300px]"
-            />
-          </View>
+    <View className="flex-1 bg-gray-50 dark:bg-gray-950 justify-center items-center px-6">
+      <VStack space="lg" className="w-full max-w-[340px] items-center">
+        {/* Ícone de erro grande */}
+        <FontAwesome
+          name={getIcon()}
+          size={64}
+          color="#EF4444"
+          style={{ marginBottom: 8 }}
+        />
 
-          {errorDetails.code && (
-            <View
-              className={`px-4 py-2 rounded-full mb-2 ${
-                errorDetails.code === "NETWORK_ERROR" ||
-                errorDetails.code === "TIMEOUT"
-                  ? "bg-orange-100 dark:bg-orange-900/30"
-                  : "bg-red-100 dark:bg-red-900/30"
-              }`}
+        {/* Mensagem principal */}
+        <Text
+          size="xl"
+          className="font-bold text-gray-900 dark:text-white text-center"
+        >
+          Ops! Algo deu errado.
+        </Text>
+
+        {/* Mensagem amigável */}
+        <Text
+          size="md"
+          className="text-center text-gray-600 dark:text-gray-400 leading-5"
+        >
+          {friendlyMsg}
+        </Text>
+
+        {/* Detalhes técnicos opcionais */}
+        {errorDetails.code && (
+          <View className="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-2 mt-2">
+            <Text
+              size="sm"
+              className="text-gray-500 dark:text-gray-300 text-center"
             >
-              <Text
-                size="md"
-                className={`font-bold ${
-                  errorDetails.code === "NETWORK_ERROR" ||
-                  errorDetails.code === "TIMEOUT"
-                    ? "text-orange-600 dark:text-orange-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}
-              >
-                {errorDetails.code === "NETWORK_ERROR"
-                  ? "⚠️ Sem Conexão"
-                  : errorDetails.code === "TIMEOUT"
-                  ? "⏱️ Timeout"
-                  : `Erro ${errorDetails.code}`}
-              </Text>
-            </View>
-          )}
+              Código do erro: {errorDetails.code}
+            </Text>
+          </View>
+        )}
 
-          <Text
-            size="lg"
-            className="font-semibold text-gray-900 dark:text-white text-center mb-2"
-          >
-            Ops! Algo deu errado.
-          </Text>
+        {/* Botões de ação */}
+        <VStack space="sm" className="w-full mt-4">
+          <Button size="lg" action="primary" onPress={handleRetry}>
+            <ButtonText>Tentar Novamente</ButtonText>
+          </Button>
 
-          <Text
-            size="md"
-            className="text-gray-600 dark:text-gray-400 text-center leading-5 mb-4"
-          >
-            {getUserFriendlyMessage()}
-          </Text>
-
-          <VStack space="sm" className="w-full">
-            <Button onPress={handleRetryPress} size="lg" action="primary">
-              <ButtonText>Tentar Novamente</ButtonText>
-            </Button>
-
-            <Button onPress={handleReportError} size="lg" action="positive">
-              <ButtonIcon
-                as={() => (
-                  <FontAwesome name="whatsapp" size={20} color="white" />
-                )}
-              />
-              <ButtonText className="text-white">Reportar Erro</ButtonText>
-            </Button>
-          </VStack>
+          <Button size="lg" action="positive" onPress={handleReportError}>
+            <ButtonIcon
+              as={() => <FontAwesome name="whatsapp" size={20} color="white" />}
+            />
+            <ButtonText className="text-white">Reportar Erro</ButtonText>
+          </Button>
         </VStack>
-      </View>
+
+        {/* Mensagem adicional */}
+        <Text
+          size="lg"
+          className="text-center text-gray-500 dark:text-gray-400 mt-3"
+        >
+          Caso o erro persista, acesse a versão web{" "}
+          <Text
+            className="text-blue-600 dark:text-blue-400 underline"
+            onPress={handleOpenWeb}
+          >
+            clicando aqui
+          </Text>
+          .
+        </Text>
+
+        {/* Logo no rodapé */}
+        <View className="mt-8 opacity-80">
+          <Image
+            source={require("@/assets/images/jf_logo_full.png")}
+            alt="logo"
+            resizeMode="contain"
+            className="w-[180px] h-[100px]"
+          />
+        </View>
+      </VStack>
     </View>
   );
 };

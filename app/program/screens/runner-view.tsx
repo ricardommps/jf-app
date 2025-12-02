@@ -27,7 +27,7 @@ import { fDate } from "@/utils/format-time";
 import { useQuery } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
-import { CalendarDays, Volume1Icon } from "lucide-react-native";
+import { CalendarDays, FootprintsIcon } from "lucide-react-native";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -70,8 +70,8 @@ const tabItems: TabItem[] = [
   {
     id: "volume",
     label: "Volume",
-    inActiveIcon: Volume1Icon,
-    icon: Volume1Icon,
+    inActiveIcon: FootprintsIcon,
+    icon: FootprintsIcon,
   },
   {
     id: "info",
@@ -405,7 +405,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
                   ? "#0d0d0dcc"
                   : "#ffffffcc"
                 : "transparent",
-            bottom: insets.bottom > 0 ? insets.bottom - 4 : 8,
+            bottom: 0,
           },
         ]}
       >

@@ -160,7 +160,7 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
       await finishedWorkout(payload);
       router.push(
         `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}
-        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}&subtitle=${subtitle}` as any
+        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}&subtitle=${subtitle}&trimp=${payload.trimp}` as any
       );
     } catch (err) {
       const parsedError = err as Error;

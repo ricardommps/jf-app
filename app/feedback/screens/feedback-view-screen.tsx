@@ -26,7 +26,7 @@ import {
   RouteIcon,
 } from "lucide-react-native";
 import { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View } from "react-native";
 
 interface Props {
   finishedItem: FinishedHistory;
@@ -72,7 +72,7 @@ export default function FeedbackViewScreen({ finishedItem, id }: Props) {
   };
 
   return (
-    <SafeAreaView className="container px-7 bg-black h-full">
+    <View className="container px-7 bg-black h-full">
       <Box className="bg-[#2b2b2b9d] rounded-xl p-4 mb-2 min-h-[100px]">
         <HStack
           className="w-full mb-4"
@@ -221,6 +221,6 @@ export default function FeedbackViewScreen({ finishedItem, id }: Props) {
           updatedAt: finishedItem.updatedAt || "",
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }

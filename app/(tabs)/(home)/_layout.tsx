@@ -2,13 +2,14 @@ import CustomHeader from "@/components/shared/custom-header";
 import { View } from "@/components/ui/view";
 import { Slot } from "expo-router";
 import React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Layout = () => {
+  const insets = useSafeAreaInsets();
   const headerHeight = 100;
 
-  // ❌ Antes: const dynamicPaddingTop = insets.top + headerHeight;
-  // ✅ Agora só consideramos a altura do header, pois o CustomHeader já usa insets.top internamente
-  const dynamicPaddingTop = headerHeight;
+  // ✅ Agora considera o inset do topo do dispositivo
+  const dynamicPaddingTop = insets.top + headerHeight;
 
   return (
     <View className="flex-1">

@@ -143,7 +143,7 @@ const Home = () => {
 
   if (isProgramsLoading || isInvoicesLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.container}>
         <Loading />
       </View>
     );

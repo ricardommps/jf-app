@@ -9,7 +9,6 @@ import { Pressable } from "@/components/ui/pressable";
 import { Text } from "@/components/ui/text";
 import TreadmillIcon from "@/components/ui/treadmill-icon";
 import { VStack } from "@/components/ui/vstack";
-import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { history } from "@/services/finished.service";
 import { FinishedHistory } from "@/types/finished";
 import {
@@ -21,10 +20,8 @@ import { moduleName } from "@/utils/module-name";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FlashList, ListRenderItem } from "@shopify/flash-list";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AxiosError } from "axios";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useRouter } from "expo-router";
 import {
   Clock10Icon,
   FootprintsIcon,
@@ -33,7 +30,6 @@ import {
 } from "lucide-react-native";
 import { useState } from "react";
 import { RefreshControl, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Comments from "./components/comments";
 
 const renderCardGym = (
@@ -237,18 +233,16 @@ const createRenderItem = (
 };
 
 const History = () => {
-  const router = useRouter();
-  const { handleError } = useErrorHandler();
   const [comments, setComments] = useState<{
     feedback: string;
     comments: string;
     executionDay: string;
     updatedAt: string;
   } | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["history"],
     queryFn: history,
     staleTime: 0,
@@ -261,23 +255,23 @@ const History = () => {
       queryClient.removeQueries({ queryKey: ["history"] });
       await queryClient.invalidateQueries({ queryKey: ["history"] });
     } catch (error) {
-      if (error instanceof AxiosError) {
-        handleError(error);
-      } else {
-        handleError(null);
-      }
+      console.warn(error);
     }
   };
 
   if (isLoading) {
-    return <Loading />;
+    return (
+      <View className="flex-1">
+        <Loading />
+      </View>
+    );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background-0">
+    <View className="flex-1 bg-[#000]">
       <Text
         size="2xl"
-        className="text-typography-900 font-roboto text-center mt-6 mb-5"
+        className="text-typography-900 font-roboto text-center mb-5"
       >
         Histórico dos últimos 30 dias
       </Text>
@@ -307,7 +301,7 @@ const History = () => {
         onClose={() => setComments(null)}
         content={comments}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

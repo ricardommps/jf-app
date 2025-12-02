@@ -18,7 +18,9 @@ const GymView = ({ workout }: Props) => {
   const insets = useSafeAreaInsets();
 
   function handleNavigate() {
-    router.push(`/workout/gym-finish?id=${workout.id}` as any);
+    router.push(
+      `/workout/gym-finish?id=${workout.id}&title=${workout.subtitle}` as any
+    );
   }
 
   const ListHeader = () => (

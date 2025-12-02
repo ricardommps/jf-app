@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/toast";
 import { View } from "@/components/ui/view";
 import { useSession } from "@/contexts/Authentication";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const schema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -84,7 +83,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <View className="flex-1 bg-black">
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -213,7 +212,7 @@ export default function LoginScreen() {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

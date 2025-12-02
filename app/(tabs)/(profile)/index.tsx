@@ -36,7 +36,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Notifications from "./components/notifications";
 
 const DashboardLayout = (props: any) => {
@@ -337,7 +336,7 @@ const Profile = () => {
   };
 
   return (
-    <SafeAreaView className="h-full w-full">
+    <View className="h-full w-full">
       <DashboardLayout title="Perfil">
         <MainContent
           setShowNotifications={setShowNotifications}
@@ -385,7 +384,7 @@ const Profile = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

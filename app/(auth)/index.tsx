@@ -6,7 +6,6 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { Dimensions } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Authentication() {
   const router = useRouter();
@@ -46,7 +45,7 @@ export default function Authentication() {
   return (
     <>
       <StatusBar style="light" backgroundColor="#000000" />
-      <SafeAreaView className="flex-1 bg-black px-5">
+      <View className="flex-1 bg-black px-5">
         <View className={`${currentClasses.container} items-center`}>
           {/* Logo */}
           <View className="items-center">
@@ -75,7 +74,7 @@ export default function Authentication() {
             </Button>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
     </>
   );
 }

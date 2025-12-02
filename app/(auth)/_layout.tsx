@@ -7,7 +7,6 @@ import AuthCheck from "@/components/auth/AuthCheck";
 
 export default function RootLayout() {
   const { session, isLoading } = useSession();
-  console.log("-session--", session);
   if (isLoading) {
     return <AuthCheck />;
   }
