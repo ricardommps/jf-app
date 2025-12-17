@@ -268,7 +268,7 @@ const History = () => {
   }
 
   return (
-    <View className="flex-1 bg-[#000]">
+    <View className="flex-1 bg-[#000] pt-3">
       <Text
         size="2xl"
         className="text-typography-900 font-roboto text-center mb-5"

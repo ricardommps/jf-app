@@ -1,5 +1,4 @@
 import { DistancePicker, TimePicker } from "@/components/picker-modal";
-import HeaderNavigation from "@/components/shared/header-navigation";
 import Loading from "@/components/shared/loading";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -30,10 +29,16 @@ import { useRouter } from "expo-router";
 import { CalendarDays } from "lucide-react-native";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Modal, ScrollView, TouchableWithoutFeedback } from "react-native";
+import {
+  Modal,
+  ScrollView,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { Calendar } from "react-native-calendars";
 import { z } from "zod";
 
+import Header from "@/components/header";
 import {
   Toast,
   ToastDescription,
@@ -242,8 +247,8 @@ const IndoorSimpleScreen = ({ safeId, titleStr }: Props) => {
   }
 
   return (
-    <VStack space="md" className="flex-1 bg-background-0">
-      <HeaderNavigation title="Finalizar treino indoor" />
+    <View className="flex-1 bg-black">
+      <Header title="Finalizar treino indoor" />
       <ScrollView>
         <Box className="px-4 pt-2">
           <Pressable onPress={() => setModalVisible(true)} className="w-full">
@@ -560,7 +565,7 @@ const IndoorSimpleScreen = ({ safeId, titleStr }: Props) => {
         initialValue={values.paceInSeconds}
         title="Selecione o pace médio (km)"
       />
-    </VStack>
+    </View>
   );
 };
 

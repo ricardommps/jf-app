@@ -1,9 +1,9 @@
-import HeaderNavigation from "@/components/shared/header-navigation";
+import Header from "@/components/header";
 import Loading from "@/components/shared/loading";
-import { VStack } from "@/components/ui/vstack";
 import { getFinishedById } from "@/services/finished.service";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
+import { View } from "react-native";
 import FeedbackViewScreen from "./screens/feedback-view-screen";
 
 export default function FeedbackView() {
@@ -20,8 +20,8 @@ export default function FeedbackView() {
   });
 
   return (
-    <VStack space="md" className="flex-1 bg-background-0">
-      <HeaderNavigation title="Detalhes do treino" />
+    <View className="flex-1 bg-black">
+      <Header title="Detalhes do treino" />
       {isLoading ? (
         <Loading />
       ) : (
@@ -34,6 +34,6 @@ export default function FeedbackView() {
           )}
         </>
       )}
-    </VStack>
+    </View>
   );
 }

@@ -1,5 +1,4 @@
 import Loading from "@/components/shared/loading";
-import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { getTrimp } from "@/services/trimp.service";
 import { useIsFocused } from "@react-navigation/native";
@@ -32,23 +31,26 @@ const Monotonia = () => {
 
   return (
     <View className="flex-1 bg-[#000]">
-      <Text
-        size="2xl"
-        className="text-typography-900 font-roboto text-center mb-5"
-      >
-        TRIMP - carga de treino
-      </Text>
-
-      <Box>
+      <>
         {isLoading ? (
-          <Loading />
+          <View className="flex-1">
+            <Loading />
+          </View>
         ) : data?.length ? (
-          <TrimpStackedBarChart
-            key={isFocused ? "focused" : "unfocused"}
-            data={data}
-          />
+          <View className="pt-5">
+            <Text
+              size="2xl"
+              className="text-typography-900 font-roboto text-center mb-5"
+            >
+              TRIMP - carga de treino
+            </Text>
+            <TrimpStackedBarChart
+              key={isFocused ? "focused" : "unfocused"}
+              data={data}
+            />
+          </View>
         ) : null}
-      </Box>
+      </>
     </View>
   );
 };

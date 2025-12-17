@@ -1,4 +1,4 @@
-import CustomHeader from "@/components/shared/custom-header";
+import Header from "@/components/header";
 import { VStack } from "@/components/ui/vstack";
 import { useSession } from "@/contexts/Authentication";
 import { Ionicons } from "@expo/vector-icons";
@@ -71,44 +71,50 @@ const Settings = () => {
   };
 
   return (
-    <VStack className="flex-1 bg-background-0 justify-between">
-      <VStack>
-        <CustomHeader variant="general" title="Configurações" />
+    <View className="flex-1 bg-black">
+      {/* Container que distribui topo e rodapé */}
+      <View className="flex-1 justify-between">
+        {/* Conteúdo superior */}
+        <VStack>
+          <Header title="Configurações" />
 
-        <VStack className="mt-4 bg-[#2b2b2b9d] rounded-lg shadow-sm">
-          <View className="flex-row justify-between items-center px-4 h-14 border-b border-gray-700">
-            <Text className="text-base font-medium text-white">
-              Receber notificações push
-            </Text>
-            <Switch value={pushEnabled} onValueChange={togglePush} />
-          </View>
+          <VStack className="mt-4 rounded-lg shadow-sm">
+            <View className="flex-row justify-between items-center px-4 h-14 border-b border-gray-700">
+              <Text className="text-base font-medium text-white">
+                Receber notificações push
+              </Text>
+              <Switch value={pushEnabled} onValueChange={togglePush} />
+            </View>
+          </VStack>
         </VStack>
-      </VStack>
 
-      {/* Bloco de suporte */}
-      <VStack className="items-center mt-6 mb-2">
-        <TouchableOpacity
-          onPress={handleOpenWhatsApp}
-          activeOpacity={0.8}
-          className="flex-row items-center bg-green-600 py-3 px-5 rounded-full shadow-md"
-        >
-          <Ionicons name="logo-whatsapp" size={22} color="white" />
-          <Text className="ml-2 text-white font-semibold text-base">
-            Falar com o suporte
-          </Text>
-        </TouchableOpacity>
+        {/* Bloco inferior */}
+        <View>
+          <VStack className="items-center mb-2">
+            <TouchableOpacity
+              onPress={handleOpenWhatsApp}
+              activeOpacity={0.8}
+              className="flex-row items-center bg-green-600 py-3 px-5 rounded-full shadow-md"
+            >
+              <Ionicons name="logo-whatsapp" size={22} color="white" />
+              <Text className="ml-2 text-white font-semibold text-base">
+                Falar com o suporte
+              </Text>
+            </TouchableOpacity>
 
-        <Text className="text-center text-gray-400 text-xs mt-2">
-          Atendimento via WhatsApp
-        </Text>
-      </VStack>
+            <Text className="text-center text-gray-400 text-xs mt-2">
+              Atendimento via WhatsApp
+            </Text>
+          </VStack>
 
-      <View className="py-4">
-        <Text className="text-center text-white text-sm">
-          Versão {appVersion}
-        </Text>
+          <View className="py-4">
+            <Text className="text-center text-white text-sm">
+              Versão {appVersion}
+            </Text>
+          </View>
+        </View>
       </View>
-    </VStack>
+    </View>
   );
 };
 

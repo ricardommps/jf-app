@@ -1,6 +1,6 @@
-import React from "react";
+import Footer from "@/components/footer";
 import { Tabs } from "expo-router";
-import BottomTabBar from "@/components/shared/bottom-tab-bar";
+import React from "react";
 
 export default function TabLayout() {
   return (
@@ -8,7 +8,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
       }}
-      tabBar={(props: any) => <BottomTabBar {...props} />}
+      tabBar={(props) => <Footer {...props} />}
     />
   );
 }

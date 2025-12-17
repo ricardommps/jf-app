@@ -1,4 +1,3 @@
-import HeaderNavigation from "@/components/shared/header-navigation";
 import Loading from "@/components/shared/loading";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -27,10 +26,16 @@ import {
 import { CalendarDays } from "lucide-react-native";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Modal, ScrollView, TouchableWithoutFeedback } from "react-native";
+import {
+  Modal,
+  ScrollView,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { Calendar } from "react-native-calendars";
 import { z } from "zod";
 
+import Header from "@/components/header";
 import { TimePicker } from "@/components/picker-modal";
 import {
   Toast,
@@ -255,8 +260,8 @@ const GymFinishView = () => {
   }
 
   return (
-    <VStack space="md" className="flex-1 bg-background-0">
-      <HeaderNavigation title="Finalizar treino indoor" />
+    <View className="flex-1 bg-black">
+      <Header title="Finalizar treino de força" />
       <ScrollView>
         <Box className="pt-2">
           <Text className="text-xl text-center">{titleStr}</Text>
@@ -466,7 +471,7 @@ const GymFinishView = () => {
         }}
         initialValue={values.durationInSeconds}
       />
-    </VStack>
+    </View>
   );
 };
 

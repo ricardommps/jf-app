@@ -189,6 +189,10 @@ module.exports = {
         "dm-sans-regular": ["dm-sans-regular", "sans-serif"],
         "dm-sans-medium": ["dm-sans-medium", "sans-serif"],
         "dm-sans-bold": ["dm-sans-bold", "sans-serif"],
+        baloo: ["baloo-regular"],
+        "baloo-semibold": ["baloo-semibold"],
+        "baloo-bold": ["baloo-bold"],
+        "baloo-extrabold": ["baloo-extrabold"],
       },
       fontWeight: {
         extrablack: "950",

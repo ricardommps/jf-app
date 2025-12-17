@@ -60,7 +60,7 @@ const WorkoutGroup = ({
 
     return (
       <Alert
-        className="bg-background-200 rounded-lg flex-row items-center gap-x-2 p-4"
+        className="bg-background-50 rounded-lg flex-row items-center gap-x-2 p-4"
         variant="solid"
       >
         <AlertIcon as={InfoIcon} className="text-white font-dm-sans-bold" />

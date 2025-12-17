@@ -42,9 +42,9 @@ const WorkoutSection = ({
       isCollapsible={true}
       isDisabled={false}
       defaultValue={[title]}
-      className="border-outline-200 bg-background-0"
+      className="border-outline-200 bg-black"
     >
-      <AccordionItem value={title} className="rounded-xl">
+      <AccordionItem value={title} className="rounded-xl bg-black">
         <AccordionHeader>
           <AccordionTrigger>
             {({ isExpanded }) => {
