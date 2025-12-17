@@ -1,5 +1,4 @@
 import { DistancePicker, TimePicker } from "@/components/picker-modal";
-import HeaderNavigation from "@/components/shared/header-navigation";
 import Loading from "@/components/shared/loading";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -30,7 +29,12 @@ import { useRouter } from "expo-router";
 import { CalendarDays } from "lucide-react-native";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Modal, ScrollView, TouchableWithoutFeedback } from "react-native";
+import {
+  Modal,
+  ScrollView,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { Calendar } from "react-native-calendars";
 import { z } from "zod";
 
@@ -42,6 +46,7 @@ import {
 } from "@/components/ui/toast";
 import { finishedWorkout } from "@/services/finished.service";
 
+import Header from "@/components/header";
 import { calendarBaseTheme } from "@/utils/calendar-base-theme";
 
 interface FormData {
@@ -253,8 +258,8 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
   }
 
   return (
-    <VStack space="md" className="flex-1 bg-background-0">
-      <HeaderNavigation title="Finalizar treino outdoor" />
+    <View className="flex-1 bg-black">
+      <Header title="Finalizar treino outdoor" />
       <ScrollView>
         <Box className="px-4 pt-2">
           <Pressable onPress={() => setModalVisible(true)} className="w-full">
@@ -571,7 +576,7 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
         initialValue={values.paceInSeconds}
         title="Selecione o pace médio (km)"
       />
-    </VStack>
+    </View>
   );
 };
 

@@ -1,19 +1,18 @@
-import HeaderNavigation from "@/components/shared/header-navigation";
 import Loading from "@/components/shared/loading";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
-import { VStack } from "@/components/ui/vstack";
 import { convertDate } from "@/utils/format-time";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
 import { z } from "zod";
 
+import Header from "@/components/header";
 import {
   Toast,
   ToastDescription,
@@ -102,8 +101,8 @@ const UnrealizedFinishView = ({ safeId }: Props) => {
   }
 
   return (
-    <VStack space="md" className="flex-1 bg-background-0">
-      <HeaderNavigation title="Finalizar treino indoor" />
+    <View className="flex-1 bg-black">
+      <Header title="Finalizar treino indoor" />
       <ScrollView>
         <Box className="px-4 pt-2">
           <Text className="text-2xl text-red-700 font-bold">
@@ -140,7 +139,7 @@ const UnrealizedFinishView = ({ safeId }: Props) => {
           </Button>
         </HStack>
       </ScrollView>
-    </VStack>
+    </View>
   );
 };
 

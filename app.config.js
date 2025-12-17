@@ -5,7 +5,7 @@ export default {
     name: "FOLTZ",
     slug: "jfapp",
     owner: "jftreinos",
-    version: "1.2.3",
+    version: "1.2.8",
     orientation: "portrait",
     icon: "./assets/images/jf_icone_app.png",
     scheme: "jfapp",
@@ -22,16 +22,19 @@ export default {
 
     ios: {
       bundleIdentifier: "com.jftreinos.jfapp",
-      buildNumber: "31",
+      buildNumber: "37",
       supportsTablet: false,
       deploymentTarget: "15.1",
       infoPlist: {
-        NSPhotoLibraryUsageDescription:
-          "Precisamos acessar suas fotos para alterar o avatar.",
+        // ⚠️ APENAS PERMISSÃO DE CÂMERA
+        // Photo Picker (iOS 14+) NÃO precisa de NSPhotoLibraryUsageDescription
         NSCameraUsageDescription:
-          "Precisamos acessar a câmera para tirar uma foto.",
-        NSPhotoLibraryAddUsageDescription:
-          "Precisamos salvar fotos no seu dispositivo.",
+          "Para você tirar uma foto de perfil com a câmera.",
+
+        // ❌ REMOVER estas linhas (não são necessárias com Photo Picker):
+        // NSPhotoLibraryUsageDescription: "...",
+        // NSPhotoLibraryAddUsageDescription: "...",
+
         UIBackgroundModes: ["remote-notification"],
         CFBundleURLTypes: [
           {
@@ -47,12 +50,12 @@ export default {
         "applinks:connect.garmin.com",
         "applinks:www.strava.com",
       ],
-      runtimeVersion: "1.2.3",
+      runtimeVersion: "1.2.8",
     },
 
     android: {
       package: "com.jftreinos.jfapp",
-      versionCode: 31,
+      versionCode: 37,
       compileSdkVersion: 35,
       targetSdkVersion: 35,
       minSdkVersion: 21,
@@ -96,9 +99,18 @@ export default {
           },
         },
       ],
-      permissions: ["android.permission.RECORD_AUDIO"],
+      // ⚠️ APENAS PERMISSÃO DE CÂMERA E ÁUDIO
+      // Photo Picker (Android 13+) NÃO precisa de READ_MEDIA_IMAGES
+      permissions: [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+      ],
+      blockedPermissions: [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+      ],
       googleServicesFile: "./google-services.json",
-      runtimeVersion: "1.2.3",
+      runtimeVersion: "1.2.8",
     },
 
     web: {
@@ -144,10 +156,15 @@ export default {
       [
         "expo-image-picker",
         {
-          photosPermission:
-            "A aplicação precisa acessar suas fotos para alterar o avatar.",
-          cameraPermission:
-            "Precisamos acessar a câmera para tirar fotos do perfil.",
+          // ✅ Permissão de câmera (necessária em ambas plataformas)
+          cameraPermission: "Para você tirar uma foto de perfil com a câmera.",
+
+          // ❌ NÃO definir photosPermission
+          // Isso força o uso do Photo Picker moderno:
+          // - Android 13+: Photo Picker nativo (sem READ_MEDIA_IMAGES)
+          // - Android <13: Jetpack Photo Picker backport (sem READ_EXTERNAL_STORAGE)
+          // - iOS 14+: PHPickerViewController (sem NSPhotoLibraryUsageDescription)
+          // - iOS <14: UIImagePickerController limitado
         },
       ],
       "./plugins/receive-sharing-intent.js",

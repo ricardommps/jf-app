@@ -24,7 +24,7 @@ const GymView = ({ workout }: Props) => {
   }
 
   const ListHeader = () => (
-    <Box className="rounded-1xl px-4 py-3 bg-[#2b2b2bbe] mt-3 mb-5">
+    <Box className="rounded-1xl px-4 py-3 mt-3 mb-5">
       <Text className="text-xl font-bold text-gray-800 dark:text-white">
         {workout.subtitle}
       </Text>

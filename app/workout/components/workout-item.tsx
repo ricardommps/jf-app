@@ -175,7 +175,7 @@ const WorkoutItem = ({
   return (
     <>
       <Box
-        className={`rounded-2xl bg-background-200 p-2 py-3 px-3 ${
+        className={`rounded-2xl p-2 py-3 px-3 ${
           checkList.includes(Number(media.id)) ? "border border-green-300" : ""
         }`}
       >
@@ -206,7 +206,7 @@ const WorkoutItem = ({
 
             <VStack className="px-2 gap-3">
               {isWorkoutLoad && (
-                <HStack className="rounded-2xl bg-background-300 flex-row justify-between items-center p-2">
+                <HStack className="rounded-2xl bg-background-50 flex-row justify-between items-center p-2">
                   {error ? (
                     <Text
                       className="text-typography-700 font-dm-sans-bold flex-1"
@@ -265,11 +265,7 @@ const WorkoutItem = ({
                           ? carga
                           : "não definida"}
                       </Text>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onPress={() => setIsEditing(true)}
-                      >
+                      <Button size="sm" onPress={() => setIsEditing(true)}>
                         <ButtonText>Editar</ButtonText>
                       </Button>
                     </>

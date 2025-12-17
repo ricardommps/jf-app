@@ -4,11 +4,6 @@ import { SessionProvider } from "@/contexts/Authentication";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeContext, ThemeProvider } from "@/contexts/theme-context";
 import "@/global.css";
-import {
-  DMSans_400Regular,
-  DMSans_500Medium,
-  DMSans_700Bold,
-} from "@expo-google-fonts/dm-sans";
 import * as Sentry from "@sentry/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
@@ -17,38 +12,36 @@ import { Slot, usePathname, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as TaskManager from "expo-task-manager";
+import * as Updates from "expo-updates";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Modal, StyleSheet, Text, View } from "react-native";
 import { LocaleConfig } from "react-native-calendars";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+import { Button, ButtonText } from "@/components/ui/button";
+import {
+  Baloo2_400Regular,
+  Baloo2_600SemiBold,
+  Baloo2_700Bold,
+  Baloo2_800ExtraBold,
+} from "@expo-google-fonts/baloo-2";
+
 Sentry.init({
   dsn: "https://27e9f134adac50771e411adb586a9183@o585732.ingest.us.sentry.io/4510285316292608",
-
-  // Adds more context data to events (IP address, cookies, user, etc.)
-  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
   sendDefaultPii: true,
-
-  // Enable Logs
   enableLogs: true,
-
-  // Configure Session Replay
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1,
   integrations: [
     Sentry.mobileReplayIntegration(),
     Sentry.feedbackIntegration(),
   ],
-
-  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
-  // spotlight: __DEV__,
 });
 
 SplashScreen.preventAutoHideAsync();
-
 const queryClient = new QueryClient();
 
 Notifications.setNotificationHandler({
@@ -218,13 +211,14 @@ const MainLayout = () => {
 
   const { colorMode }: any = useContext(ThemeContext);
   const [fontsLoaded] = useFonts({
-    "dm-sans-regular": DMSans_400Regular,
-    "dm-sans-medium": DMSans_500Medium,
-    "dm-sans-bold": DMSans_700Bold,
+    "baloo-regular": Baloo2_400Regular,
+    "baloo-semibold": Baloo2_600SemiBold,
+    "baloo-bold": Baloo2_700Bold,
+    "baloo-extrabold": Baloo2_800ExtraBold,
   });
-
   const [appReady, setAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [updateVisible, setUpdateVisible] = useState(false);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -233,6 +227,28 @@ const MainLayout = () => {
   }, [fontsLoaded]);
 
   const handleSplashFinish = () => setShowSplash(false);
+
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) setUpdateVisible(true);
+      } catch (error) {
+        console.error("Erro ao checar atualização:", error);
+      }
+    };
+    if (appReady && !showSplash) checkUpdate();
+  }, [appReady, showSplash]);
+
+  const handleUpdateNow = async () => {
+    setUpdateVisible(false);
+    try {
+      await Updates.fetchUpdateAsync();
+      await Updates.reloadAsync();
+    } catch (error) {
+      console.error("Erro ao atualizar:", error);
+    }
+  };
 
   if (!appReady || showSplash) {
     return <SplashScreenView onFinish={handleSplashFinish} />;
@@ -250,6 +266,29 @@ const MainLayout = () => {
             />
             <Slot />
             <IntegratedNotificationHandler />
+
+            <Modal transparent visible={updateVisible} animationType="fade">
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContainer}>
+                  <Text style={styles.modalTitle}>Nova versão disponível!</Text>
+                  <Text style={styles.modalMessage}>
+                    Uma atualização do app está disponível. Por favor, atualize
+                    para continuar usando.
+                  </Text>
+                  <Button onPress={handleUpdateNow} size="xl" className="mb-5">
+                    <ButtonText>Atualizar agora</ButtonText>
+                  </Button>
+
+                  <Button
+                    onPress={() => setUpdateVisible(false)}
+                    size="xl"
+                    variant="outline"
+                  >
+                    <ButtonText>Mais tarde</ButtonText>
+                  </Button>
+                </View>
+              </View>
+            </Modal>
           </SessionProvider>
         </NotificationProvider>
       </GluestackUIProvider>
@@ -296,5 +335,53 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#FFFFFF",
     opacity: 0.7,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#1C1C1C",
+    padding: 24,
+    borderRadius: 12,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  modalMessage: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  button: {
+    backgroundColor: "#FF6B00",
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    marginBottom: 12,
+    width: "100%",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  buttonSecondary: {
+    backgroundColor: "#2C2C2C",
+  },
+  buttonTextSecondary: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

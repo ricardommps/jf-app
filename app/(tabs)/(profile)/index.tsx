@@ -31,6 +31,7 @@ import {
 import React, { useEffect, useState } from "react";
 import {
   Modal,
+  Platform,
   Text as RNText,
   StyleSheet,
   TouchableOpacity,
@@ -213,7 +214,6 @@ const Profile = () => {
 
   useEffect(() => {
     onGetNotifications();
-    requestPermissions();
   }, []);
 
   const showNewToast = (
@@ -238,45 +238,48 @@ const Profile = () => {
     });
   };
 
-  const requestPermissions = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      showNewToast(
-        "Precisamos de acesso à sua galeria para alterar a foto do perfil.",
-        "error"
-      );
-    }
-  };
-
-  // Abrir modal para escolha
   const handleAvatarUpload = () => {
     setModalVisible(true);
   };
 
-  // Escolher galeria
   const pickImageFromGallery = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images", // <- minúsculo
+        mediaTypes: "images",
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        legacy: false,
+        allowsMultipleSelection: false,
+        selectionLimit: 1,
+        orderedSelection: false,
       });
 
       if (!result.canceled && result.assets?.[0]) {
         await uploadAvatar(result.assets[0]);
       }
+
       setModalVisible(false);
     } catch (error) {
-      console.error("Erro ao selecionar da galeria:", error);
-      showNewToast("Não foi possível selecionar a imagem.", "error");
+      if (error instanceof Error) {
+        if (error.message.includes("permission")) {
+          showNewToast(
+            "Erro de permissão. Por favor, verifique as configurações do app.",
+            "error"
+          );
+        } else {
+          showNewToast("Não foi possível selecionar a imagem.", "error");
+        }
+      } else {
+        showNewToast("Não foi possível selecionar a imagem.", "error");
+      }
     }
   };
 
-  // Escolher câmera
   const pickImageFromCamera = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
+
       if (status !== "granted") {
         showNewToast(
           "Precisamos de acesso à câmera para tirar uma foto.",
@@ -284,9 +287,8 @@ const Profile = () => {
         );
         return;
       }
-
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: "images", // <- minúsculo
+        mediaTypes: "images",
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -295,9 +297,9 @@ const Profile = () => {
       if (!result.canceled && result.assets?.[0]) {
         await uploadAvatar(result.assets[0]);
       }
+
       setModalVisible(false);
     } catch (error) {
-      console.error("Erro ao tirar foto:", error);
       showNewToast("Não foi possível tirar a foto.", "error");
     }
   };
@@ -312,14 +314,12 @@ const Profile = () => {
       } as any);
 
       const data = await uploadFile(formData);
-
       await updateProfile({
         avatar: data.url || data.avatar || data.imageUrl,
       });
 
       showNewToast("Foto do perfil atualizada com sucesso!", "success");
     } catch (error) {
-      console.error("Erro no upload:", error);
       showNewToast(
         `Não foi possível atualizar a foto do perfil. ${error}`,
         "error"
@@ -352,7 +352,6 @@ const Profile = () => {
         profile={profile}
       />
 
-      {/* Modal customizado para escolher foto */}
       <Modal
         transparent
         animationType="fade"
@@ -361,18 +360,26 @@ const Profile = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
+            <RNText style={styles.modalTitle}>Escolha uma opção</RNText>
+
             <TouchableOpacity
               style={styles.optionButton}
               onPress={pickImageFromGallery}
             >
-              <RNText style={styles.optionText}>Galeria</RNText>
+              <RNText style={styles.optionText}>📸 Galeria</RNText>
             </TouchableOpacity>
+
+            <View style={styles.divider} />
+
             <TouchableOpacity
               style={styles.optionButton}
               onPress={pickImageFromCamera}
             >
-              <RNText style={styles.optionText}>Câmera</RNText>
+              <RNText style={styles.optionText}>📷 Câmera</RNText>
             </TouchableOpacity>
+
+            <View style={styles.divider} />
+
             <TouchableOpacity
               style={[styles.optionButton, styles.cancelButton]}
               onPress={() => setModalVisible(false)}
@@ -391,29 +398,57 @@ const Profile = () => {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalContainer: {
     backgroundColor: "#fff",
-    borderRadius: 12,
-    width: 280,
+    borderRadius: 16,
+    width: 320,
+    paddingVertical: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    textAlign: "center",
     paddingVertical: 16,
+    paddingHorizontal: 24,
   },
   optionButton: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 24,
     alignItems: "center",
   },
   optionText: {
     fontSize: 18,
     color: "#007AFF",
+    fontWeight: "500",
+  },
+  optionSubtext: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#E5E5E5",
+    marginHorizontal: 16,
   },
   cancelButton: {
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-    marginTop: 8,
+    marginTop: 4,
   },
   cancelText: {
     color: "#FF3B30",

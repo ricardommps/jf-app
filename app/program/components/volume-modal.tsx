@@ -391,7 +391,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
             </HStack>
 
             {/* Seção de seleção de datas */}
-            <VStack className="bg-gray-900 rounded-2xl p-5 mb-5">
+            <VStack className="bg-[#2b2b2b9d] rounded-2xl p-5 mb-5">
               <Text className="text-lg font-semibold text-white mb-4">
                 Período de análise
               </Text>
@@ -399,7 +399,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
               {/* Grid de inputs de data */}
               <HStack className="gap-3 mb-4">
                 <VStack className="flex-1">
-                  <Text className="text-sm font-medium text-gray-400 mb-2">
+                  <Text className="text-sm font-medium text-white mb-2">
                     Data inicial
                   </Text>
                   <Pressable
@@ -423,7 +423,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
                 </VStack>
 
                 <VStack className="flex-1">
-                  <Text className="text-sm font-medium text-gray-400 mb-2">
+                  <Text className="text-sm font-medium text-white mb-2">
                     Data final
                   </Text>
                   <Pressable

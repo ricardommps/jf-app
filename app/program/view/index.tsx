@@ -1,9 +1,9 @@
-import HeaderNavigation from "@/components/shared/header-navigation";
+import Header from "@/components/header";
 import Loading from "@/components/shared/loading";
-import { VStack } from "@/components/ui/vstack";
 import { getWorkouts } from "@/services/workouts.service";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
+import { View } from "react-native";
 import GymView from "../screens/gym-view";
 import RunnerView from "../screens/runner-view";
 
@@ -25,10 +25,10 @@ const ProgramView = () => {
   };
 
   return (
-    <VStack className="flex-1 bg-background-0">
-      <HeaderNavigation title="Meus treinos" />
+    <View className="flex-1 bg-black">
+      <Header title="Meus treinos" />
       {isLoading ? <Loading /> : <>{data?.length && renderItem()}</>}
-    </VStack>
+    </View>
   );
 };
 

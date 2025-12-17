@@ -15,6 +15,7 @@ import Loading from "@/components/shared/loading";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { VStack } from "@/components/ui/vstack";
+import YearReview from "@/components/year-review";
 import { useSession } from "@/contexts/Authentication";
 import {
   deviceInfo,
@@ -137,6 +138,34 @@ const Home = () => {
     />
   );
 
+  const getRunnerProgram = () => {
+    return programs?.find((item) => item.type === 1);
+  };
+
+  const shouldShowYearReview = () => {
+    const runnerProgram = getRunnerProgram();
+    if (!runnerProgram) return false;
+    const now = new Date();
+    const month = now.getMonth();
+    const day = now.getDate();
+
+    // 29/12 até 31/12
+    if (month === 11 && day >= 17) {
+      return true;
+    }
+
+    if (month === 11 && day >= 18) {
+      return true;
+    }
+
+    // 01/01 até 04/01
+    // if (month === 0 && day <= 4) {
+    //   return true;
+    // }
+
+    return false;
+  };
+
   useEffect(() => {
     checkAndSyncDeviceInfo();
   }, [customerId]);
@@ -151,6 +180,9 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
+      {shouldShowYearReview() && (
+        <YearReview programId={getRunnerProgram()!.id} />
+      )}
       <FlatList
         data={programs || []}
         renderItem={renderItem}

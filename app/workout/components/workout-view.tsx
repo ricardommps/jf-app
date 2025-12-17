@@ -100,6 +100,7 @@ const WorkoutView = ({
       removeClippedSubviews
       initialNumToRender={5}
       maxToRenderPerBatch={5}
+      ItemSeparatorComponent={() => <View className="h-px bg-gray-800 my-4" />}
     />
   );
 };

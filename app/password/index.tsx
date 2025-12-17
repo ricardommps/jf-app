@@ -1,4 +1,4 @@
-import HeaderNavigation from "@/components/shared/header-navigation";
+import Header from "@/components/header";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
@@ -24,7 +24,7 @@ import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { EyeIcon, EyeOffIcon } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 
 interface ShowPasswordsState {
   current: boolean;
@@ -436,9 +436,9 @@ export default function ResetPasswordScreen() {
   );
 
   return (
-    <VStack space="md" className="flex-1 bg-background-0">
-      <HeaderNavigation title="Alterar Senha" />
+    <View className="flex-1 bg-black">
+      <Header title="Alterar Senha" />
       {renderScreen}
-    </VStack>
+    </View>
   );
 }

@@ -1,16 +1,14 @@
-import HeaderNavigation from "@/components/shared/header-navigation";
+import Header from "@/components/header";
 import Loading from "@/components/shared/loading";
 import { VStack } from "@/components/ui/vstack";
 import { getMyInvoices } from "@/services/invoice.service";
 import { Invoice } from "@/types/invoice";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
-import { FlatList } from "react-native";
+import { FlatList, View } from "react-native";
 import InvoiceItemView from "./components/invoice-item-view";
 
 export default function InvoiceScreen() {
-  const router = useRouter();
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["invoice"],
     queryFn: async () => await getMyInvoices(),
     staleTime: 0,
@@ -27,8 +25,8 @@ export default function InvoiceScreen() {
   }
 
   return (
-    <VStack space="md" className="flex-1 bg-background-0">
-      <HeaderNavigation title="Minhas faturas" />
+    <View className="flex-1 bg-black">
+      <Header title="Minhas faturas" />
       {isLoading ? (
         <Loading />
       ) : (
@@ -46,6 +44,6 @@ export default function InvoiceScreen() {
           />
         </VStack>
       )}
-    </VStack>
+    </View>
   );
 }
