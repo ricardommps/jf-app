@@ -14,14 +14,13 @@ import { StatusBar } from "expo-status-bar";
 import * as TaskManager from "expo-task-manager";
 import * as Updates from "expo-updates";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Dimensions, Modal, StyleSheet, Text, View } from "react-native";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { LocaleConfig } from "react-native-calendars";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import { Button, ButtonText } from "@/components/ui/button";
 import {
   Baloo2_400Regular,
   Baloo2_600SemiBold,
@@ -218,7 +217,6 @@ const MainLayout = () => {
   });
   const [appReady, setAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const [updateVisible, setUpdateVisible] = useState(false);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -226,29 +224,37 @@ const MainLayout = () => {
     }
   }, [fontsLoaded]);
 
-  const handleSplashFinish = () => setShowSplash(false);
-
   useEffect(() => {
-    const checkUpdate = async () => {
+    const runAutoUpdate = async () => {
       try {
+        const isProd =
+          process.env.EXPO_PUBLIC_IS_DEV === "false" &&
+          process.env.APP_ENV === "prod";
+
+        if (!isProd) {
+          return;
+        }
+
         const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) setUpdateVisible(true);
+
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+
+          setTimeout(() => {
+            Updates.reloadAsync();
+          }, 800);
+        }
       } catch (error) {
-        console.error("Erro ao checar atualização:", error);
+        console.error("Erro no OTA automático:", error);
       }
     };
-    if (appReady && !showSplash) checkUpdate();
+
+    if (appReady && !showSplash) {
+      runAutoUpdate();
+    }
   }, [appReady, showSplash]);
 
-  const handleUpdateNow = async () => {
-    setUpdateVisible(false);
-    try {
-      await Updates.fetchUpdateAsync();
-      await Updates.reloadAsync();
-    } catch (error) {
-      console.error("Erro ao atualizar:", error);
-    }
-  };
+  const handleSplashFinish = () => setShowSplash(false);
 
   if (!appReady || showSplash) {
     return <SplashScreenView onFinish={handleSplashFinish} />;
@@ -266,29 +272,6 @@ const MainLayout = () => {
             />
             <Slot />
             <IntegratedNotificationHandler />
-
-            <Modal transparent visible={updateVisible} animationType="fade">
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContainer}>
-                  <Text style={styles.modalTitle}>Nova versão disponível!</Text>
-                  <Text style={styles.modalMessage}>
-                    Uma atualização do app está disponível. Por favor, atualize
-                    para continuar usando.
-                  </Text>
-                  <Button onPress={handleUpdateNow} size="xl" className="mb-5">
-                    <ButtonText>Atualizar agora</ButtonText>
-                  </Button>
-
-                  <Button
-                    onPress={() => setUpdateVisible(false)}
-                    size="xl"
-                    variant="outline"
-                  >
-                    <ButtonText>Mais tarde</ButtonText>
-                  </Button>
-                </View>
-              </View>
-            </Modal>
           </SessionProvider>
         </NotificationProvider>
       </GluestackUIProvider>

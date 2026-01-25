@@ -78,6 +78,8 @@ export type Workout = {
   program: Program;
   title: string;
   subtitle: string;
+  distance: string;
+  link: string;
   description: string;
   heating: string;
   recovery: string;
@@ -87,6 +89,7 @@ export type Workout = {
   finished: boolean;
   unrealized: boolean;
   running: boolean;
+  musclesWorked: boolean;
   datePublished: Date;
   workoutDateOther: Date;
   createdAt: Date;

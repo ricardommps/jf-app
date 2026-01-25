@@ -125,7 +125,7 @@ const GymView = ({ workouts, programId }: Props) => {
 
   const renderItem = useCallback(
     ({ item }: { item: Workout }) => <GymItemView item={item} />,
-    [isDarkMode]
+    [isDarkMode],
   );
 
   const handleClose = () => {
@@ -147,7 +147,7 @@ const GymView = ({ workouts, programId }: Props) => {
     23,
     59,
     59,
-    999
+    999,
   );
 
   const historiesThisMonth = workouts
@@ -156,17 +156,20 @@ const GymView = ({ workouts, programId }: Props) => {
       (item) =>
         item.executionDay &&
         new Date(item.executionDay) >= startOfMonth &&
-        new Date(item.executionDay) <= endOfMonth
+        new Date(item.executionDay) <= endOfMonth,
     );
 
   const executionDates = historiesThisMonth?.map((item) =>
-    dayjs(item.executionDay).startOf("day").format("YYYY-MM-DD")
+    dayjs(item.executionDay).startOf("day").format("YYYY-MM-DD"),
   );
 
-  const markedDates = executionDates.reduce((acc, date) => {
-    acc[date] = { selected: true, marked: false, selectedColor: "#22c55e" };
-    return acc;
-  }, {} as Record<string, any>);
+  const markedDates = executionDates.reduce(
+    (acc, date) => {
+      acc[date] = { selected: true, marked: false, selectedColor: "#22c55e" };
+      return acc;
+    },
+    {} as Record<string, any>,
+  );
 
   // ================= ANIMAÇÃO DOS ÍCONES =================
   const scaleRefs = useRef<Record<TabId, Animated.Value>>({
@@ -229,7 +232,7 @@ const GymView = ({ workouts, programId }: Props) => {
               >
                 {`${fDate(program.startDate, "dd/MM/yyyy")} - ${fDate(
                   program.endDate,
-                  "dd/MM/yyyy"
+                  "dd/MM/yyyy",
                 )}`}
               </Text>
             )}

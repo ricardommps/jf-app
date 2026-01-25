@@ -1,5 +1,5 @@
 // hooks/useCalendar.ts
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { DateData } from "react-native-calendars";
 
 interface UseCalendarOptions {
@@ -55,6 +55,7 @@ export const useCalendar = (
       textColor: string;
       startingDay?: boolean;
       endingDay?: boolean;
+      isCompetition?: boolean;
     };
   }>(markedDatesConfig);
 
@@ -134,6 +135,7 @@ export const useCalendar = (
       const config = markedConfig[date];
       marked[date] = {
         selected: true,
+        isCompetition: config.isCompetition,
         selectedColor: config.color,
         selectedTextColor: config.textColor,
         ...(config.startingDay !== undefined && {

@@ -1,3 +1,5 @@
+import { MusclesWorked } from "./musclesWorked";
+
 export type Media = {
   id: string;
   mediaId: string;
@@ -10,4 +12,6 @@ export type Media = {
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  musclesWorked:MusclesWorked
 };
+

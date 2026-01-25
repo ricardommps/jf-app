@@ -1,12 +1,17 @@
 import Header from "@/components/header";
+import Loading from "@/components/shared/loading";
 import { useSession } from "@/contexts/Authentication";
 import useANotifications from "@/hooks/useNotification";
+import { runnerProgram } from "@/services/program.services";
+import { useQuery } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { useRouter } from "expo-router";
 import {
   Bell,
   CircleDollarSignIcon,
   Settings,
   SquareAsteriskIcon,
+  Ticket,
 } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
@@ -19,15 +24,43 @@ import {
 import Notifications from "../(profile)/components/notifications";
 import AvatarImage from "./avatar-image";
 
+interface ProgramItem {
+  id: number;
+  name: string;
+  pace: string | null;
+  pv: string | null;
+  type: number;
+  startDate: string;
+  endDate: string;
+}
+
 export default function Menu() {
   const isDark = true;
 
   const router = useRouter();
+
+  const { data: runnerProgramData, isLoading: isRunnerProgramLoading } =
+    useQuery<ProgramItem[], AxiosError>({
+      staleTime: 0,
+      gcTime: 0,
+      queryKey: ["runnerProgram"],
+      queryFn: runnerProgram,
+      retry: false,
+    });
+
   const { getProfile, updateProfile } = useSession();
   const { onGetNotifications, notifications } = useANotifications();
   const profile = getProfile();
 
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const handleRunningRaces = () => {
+    const programId = runnerProgramData?.[0]?.id;
+
+    if (programId) {
+      router.push(`/runningRaces?programId=${programId}` as any);
+    }
+  };
 
   const handlePassword = () => {
     router.push("/password" as any);
@@ -48,6 +81,14 @@ export default function Menu() {
   useEffect(() => {
     onGetNotifications();
   }, []);
+
+  if (isRunnerProgramLoading) {
+    return (
+      <View className="flex-1">
+        <Loading />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-black">
@@ -78,62 +119,43 @@ export default function Menu() {
           </View>
 
           {/* Action Cards Grid */}
-          <View className="gap-y-3">
-            <View className="flex-row justify-between">
-              {/* Notificações */}
-              <TouchableOpacity
-                style={{ width: "48.5%" }}
-                className={`${
-                  isDark ? "bg-gray-800" : "bg-white"
-                } rounded-2xl p-4 items-center justify-center relative shadow-sm`}
-                onPress={handleNotifications}
-              >
-                <View className="absolute top-2 right-2 w-5 h-5 bg-red-500 rounded-full items-center justify-center">
-                  <Text className="text-white text-[10px] font-bold">
-                    {notifications?.length}
-                  </Text>
-                </View>
-                <Bell
-                  color={isDark ? "#9CA3AF" : "#4B5563"}
-                  size={28}
-                  strokeWidth={1.5}
-                />
-                <Text
-                  className={`text-xs font-medium mt-2 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Notificações
+          {/* Action Cards Grid */}
+          <View className="flex-row flex-wrap justify-between gap-y-3">
+            {/* Notificações */}
+            <TouchableOpacity
+              style={{ width: "48.5%" }}
+              className={`${
+                isDark ? "bg-gray-800" : "bg-white"
+              } rounded-2xl p-4 items-center justify-center relative shadow-sm`}
+              onPress={handleNotifications}
+            >
+              <View className="absolute top-2 right-2 w-5 h-5 bg-red-500 rounded-full items-center justify-center">
+                <Text className="text-white text-[10px] font-bold">
+                  {notifications?.length}
                 </Text>
-              </TouchableOpacity>
+              </View>
+              <Bell
+                color={isDark ? "#9CA3AF" : "#4B5563"}
+                size={28}
+                strokeWidth={1.5}
+              />
+              <Text
+                className={`text-xs font-medium mt-2 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Notificações
+              </Text>
+            </TouchableOpacity>
 
+            {/* Inscrições (somente se houver programa) */}
+            {runnerProgramData && runnerProgramData.length > 0 && (
               <TouchableOpacity
                 style={{ width: "48.5%" }}
                 className={`${
                   isDark ? "bg-gray-800" : "bg-white"
                 } rounded-2xl p-4 items-center justify-center shadow-sm`}
-                onPress={handleSettings}
-              >
-                <Settings
-                  color={isDark ? "#9CA3AF" : "#4B5563"}
-                  size={28}
-                  strokeWidth={1.5}
-                />
-                <Text
-                  className={`text-xs font-medium mt-2 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Configurações
-                </Text>
-              </TouchableOpacity>
-
-              {/* Inscrições */}
-              {/* <TouchableOpacity
-                style={{ width: "48.5%" }}
-                className={`${
-                  isDark ? "bg-gray-800" : "bg-white"
-                } rounded-2xl p-4 items-center justify-center shadow-sm`}
+                onPress={handleRunningRaces}
               >
                 <Ticket
                   color={isDark ? "#9CA3AF" : "#4B5563"}
@@ -147,78 +169,74 @@ export default function Menu() {
                 >
                   Inscrições
                 </Text>
-              </TouchableOpacity> */}
-            </View>
-
-            <View className="flex-row justify-between gap-3">
-              {/* Senha */}
-              <TouchableOpacity
-                style={{ width: "48.5%" }}
-                className={`${
-                  isDark ? "bg-gray-800" : "bg-white"
-                } rounded-2xl p-4 items-center justify-center shadow-sm`}
-                onPress={handlePassword}
-              >
-                <SquareAsteriskIcon
-                  color={isDark ? "#9CA3AF" : "#4B5563"}
-                  size={28}
-                  strokeWidth={1.5}
-                />
-                <Text
-                  className={`text-xs font-medium mt-2 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Senha
-                </Text>
               </TouchableOpacity>
+            )}
 
-              {/* Financeiro */}
-              <TouchableOpacity
-                style={{ width: "48.5%" }}
-                className={`${
-                  isDark ? "bg-gray-800" : "bg-white"
-                } rounded-2xl p-4 items-center justify-center shadow-sm`}
-                onPress={handleInvoice}
+            {/* Senha */}
+            <TouchableOpacity
+              style={{ width: "48.5%" }}
+              className={`${
+                isDark ? "bg-gray-800" : "bg-white"
+              } rounded-2xl p-4 items-center justify-center shadow-sm`}
+              onPress={handlePassword}
+            >
+              <SquareAsteriskIcon
+                color={isDark ? "#9CA3AF" : "#4B5563"}
+                size={28}
+                strokeWidth={1.5}
+              />
+              <Text
+                className={`text-xs font-medium mt-2 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
               >
-                <CircleDollarSignIcon
-                  color={isDark ? "#9CA3AF" : "#4B5563"}
-                  size={28}
-                  strokeWidth={1.5}
-                />
-                <Text
-                  className={`text-xs font-medium mt-2 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Financeiro
-                </Text>
-              </TouchableOpacity>
-            </View>
+                Senha
+              </Text>
+            </TouchableOpacity>
 
-            <View className="flex-row justify-between">
-              {/* Inscrições (repetido) */}
-              {/* <TouchableOpacity
-                style={{ width: "48.5%" }}
-                className={`${
-                  isDark ? "bg-gray-800" : "bg-white"
-                } rounded-2xl p-4 items-center justify-center shadow-sm`}
-                onPress={handleSettings}
+            {/* Financeiro */}
+            <TouchableOpacity
+              style={{ width: "48.5%" }}
+              className={`${
+                isDark ? "bg-gray-800" : "bg-white"
+              } rounded-2xl p-4 items-center justify-center shadow-sm`}
+              onPress={handleInvoice}
+            >
+              <CircleDollarSignIcon
+                color={isDark ? "#9CA3AF" : "#4B5563"}
+                size={28}
+                strokeWidth={1.5}
+              />
+              <Text
+                className={`text-xs font-medium mt-2 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
               >
-                <Settings
-                  color={isDark ? "#9CA3AF" : "#4B5563"}
-                  size={28}
-                  strokeWidth={1.5}
-                />
-                <Text
-                  className={`text-xs font-medium mt-2 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Configurações
-                </Text>
-              </TouchableOpacity> */}
-            </View>
+                Financeiro
+              </Text>
+            </TouchableOpacity>
+
+            {/* Configurações */}
+            <TouchableOpacity
+              style={{ width: "48.5%" }}
+              className={`${
+                isDark ? "bg-gray-800" : "bg-white"
+              } rounded-2xl p-4 items-center justify-center shadow-sm`}
+              onPress={handleSettings}
+            >
+              <Settings
+                color={isDark ? "#9CA3AF" : "#4B5563"}
+                size={28}
+                strokeWidth={1.5}
+              />
+              <Text
+                className={`text-xs font-medium mt-2 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Configurações
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

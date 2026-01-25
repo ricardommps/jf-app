@@ -19,6 +19,7 @@ export async function getWorkout(workoutId: string) {
   try {
     const url = `/api/v2/workouts/workout?id=${workoutId}`;
     const response = await axiosInstance.get(url);
+
     return response.data;
   } catch (error: any) {
     Sentry.captureException(error, { extra: { workoutId } });

@@ -1,6 +1,7 @@
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
+import { Icon, InfoIcon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { VStack } from "@/components/ui/vstack";
@@ -26,6 +27,7 @@ import { Gesture, GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSharedValue, withSpring } from "react-native-reanimated";
 
 // Importa o novo componente
+import MusclesScreen from "@/components/muscles-screen";
 import VideoPlayerModal from "./VideoPlayerModal";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -35,6 +37,7 @@ interface Props {
   exerciseInfo: MediaInfo[];
   isWorkoutLoad: boolean;
   debug?: boolean;
+  musclesWorked?: boolean;
 }
 
 const getYoutubeId = (url?: string) => {
@@ -54,13 +57,13 @@ const WorkoutItem = ({
   media,
   exerciseInfo,
   isWorkoutLoad,
-  debug = false,
+  musclesWorked,
 }: Props) => {
   const queryClient = useQueryClient();
   const { checkList, handleCheckList } = useWorkouut();
 
   const exerciseInfoById: MediaInfo = exerciseInfo?.find(
-    (item) => item.mediaId === media.id
+    (item) => item.mediaId === media.id,
   )!;
 
   const videoId = useMemo(() => getYoutubeId(media.videoUrl), [media.videoUrl]);
@@ -68,7 +71,7 @@ const WorkoutItem = ({
   // ✅ Memoriza a thumbnail com HTTPS
   const thumbnailUrl = useMemo(
     () => ensureHttps(media.thumbnail),
-    [media.thumbnail]
+    [media.thumbnail],
   );
 
   const [isEditing, setIsEditing] = useState(false);
@@ -79,6 +82,8 @@ const WorkoutItem = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   // Estado para controlar o modo flutuante pequeno e arrastável
   const [minimized, setMinimized] = useState(false);
+
+  const [showMusclesScreen, setShowMusclesScreen] = useState(false);
 
   // Valores para animação de arraste (apenas para o modo minimizado)
   const translateX = useSharedValue(SCREEN_WIDTH - 180); // Posição inicial no canto
@@ -181,9 +186,16 @@ const WorkoutItem = ({
       >
         <VStack className="px-0" space="md">
           <VStack className="gap-3">
-            <Text className="text-typography-900 font-dm-sans-bold text-base">
-              {media.title}
-            </Text>
+            <HStack className="gap-5">
+              <Text className="text-white font-dm-sans-bold text-xl">
+                {media.title}
+              </Text>
+              {media?.musclesWorked && musclesWorked && (
+                <Pressable onPress={() => setShowMusclesScreen(true)}>
+                  <Icon as={InfoIcon} size="xl" className="mt-1" />
+                </Pressable>
+              )}
+            </HStack>
 
             {/* ✅ Usa thumbnailUrl com HTTPS em vez de media.thumbnail */}
             {thumbnailUrl && (
@@ -262,8 +274,8 @@ const WorkoutItem = ({
                         {isLoading
                           ? "Carregando..."
                           : carga
-                          ? carga
-                          : "não definida"}
+                            ? carga
+                            : "não definida"}
                       </Text>
                       <Button size="sm" onPress={() => setIsEditing(true)}>
                         <ButtonText>Editar</ButtonText>
@@ -344,6 +356,14 @@ const WorkoutItem = ({
           />
         </Modal>
       </GestureHandlerRootView>
+
+      {showMusclesScreen && (
+        <MusclesScreen
+          visible={showMusclesScreen}
+          onRequestClose={() => setShowMusclesScreen(false)}
+          musclesWorked={media?.musclesWorked}
+        />
+      )}
     </>
   );
 };

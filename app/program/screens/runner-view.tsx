@@ -176,6 +176,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
         startingDay?: boolean;
         endingDay?: boolean;
         selected?: boolean;
+        isCompetition?: boolean;
       };
     } = {};
     const today = toISOStringWithTimezone(new Date());
@@ -184,6 +185,15 @@ const RunnerView = ({ workouts, programId }: Props) => {
       const workoutDate = toISOStringWithTimezone(
         new Date(workout.datePublished)
       );
+
+      if (workout.title === "COMPETICAO") {
+        config[workoutDate] = {
+          isCompetition: true,
+          color: "#1E40AF",
+          textColor: "#ffffff",
+        };
+        return;
+      }
       const workoutDateOther = workout.workoutDateOther
         ? toISOStringWithTimezone(new Date(workout.workoutDateOther))
         : null;

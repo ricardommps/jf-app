@@ -19,7 +19,7 @@ const GymView = ({ workout }: Props) => {
 
   function handleNavigate() {
     router.push(
-      `/workout/gym-finish?id=${workout.id}&title=${workout.subtitle}` as any
+      `/workout/gym-finish?id=${workout.id}&title=${workout.subtitle}` as any,
     );
   }
 
@@ -40,6 +40,7 @@ const GymView = ({ workout }: Props) => {
         mediaOrder={item.mediaOrder}
         exerciseInfo={item.mediaInfo}
         isWorkoutLoad={item.isWorkoutLoad}
+        musclesWorked={workout.musclesWorked}
       />
     );
   };

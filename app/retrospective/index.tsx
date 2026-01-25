@@ -10,7 +10,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useRef, useState } from "react";
 import {
-  Alert,
   Animated,
   Image,
   ImageBackground,
@@ -20,15 +19,15 @@ import {
   View,
 } from "react-native";
 import { captureRef } from "react-native-view-shot";
+import { ScaleSlider } from "./scale-slider";
 
+/* ===============================
+   ⏱️ Utils
+================================ */
 const formatDurationParts = (seconds: number) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-
-  return {
-    hours,
-    minutes,
-  };
+  return { hours, minutes };
 };
 
 export default function ActivitySummary() {
@@ -39,22 +38,48 @@ export default function ActivitySummary() {
   const [backgroundImage, setBackgroundImage] =
     useState<any>(JFDefaultBackground);
   const [showButtons, setShowButtons] = useState(true);
+  const [isEditingText, setIsEditingText] = useState(false);
+
+  const hideSliderTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const startDate = "2025-01-01";
   const endDate = "2025-12-31";
 
   const { data: review, isLoading } = useQuery({
     queryKey: ["programData", programId],
-    staleTime: 0,
-    gcTime: 0,
     queryFn: async () => await getReview(String(programId), startDate, endDate),
     enabled: !!programId,
   });
 
+  /* ===============================
+     🔀 POSITION
+  =============================== */
   const position = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
 
-  const panResponder = useRef(
+  /* ===============================
+     🔠 SCALE (SEM useState)
+  =============================== */
+  const scale = useRef(new Animated.Value(1)).current;
+  const scaleValue = useRef(1);
+
+  const activateEditing = () => {
+    setIsEditingText(true);
+    //Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (hideSliderTimeout.current) {
+      clearTimeout(hideSliderTimeout.current);
+    }
+
+    hideSliderTimeout.current = setTimeout(() => {
+      setIsEditingText(false);
+    }, 2000);
+  };
+
+  const moveResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => !isEditingText,
+      onPanResponderGrant: activateEditing,
       onPanResponderMove: Animated.event(
         [null, { dx: position.x, dy: position.y }],
         { useNativeDriver: false }
@@ -66,7 +91,7 @@ export default function ActivitySummary() {
   ).current;
 
   /* ===============================
-     🖼️ Ações
+     🖼️ Actions
   =============================== */
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -80,31 +105,20 @@ export default function ActivitySummary() {
     }
   };
 
-  const handleResetImage = () => setBackgroundImage(JFDefaultBackground);
-
   const handleShare = async () => {
     if (!shareViewRef.current) return;
 
     try {
       setShowButtons(false);
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      setIsEditingText(false);
+      await new Promise((r) => setTimeout(r, 400));
 
       const uri = await captureRef(shareViewRef.current, {
         format: "png",
         quality: 1,
-        result: "tmpfile",
       });
 
       setShowButtons(true);
-
-      const available = await Sharing.isAvailableAsync();
-      if (!available) {
-        Alert.alert(
-          "Compartilhamento não disponível",
-          "O recurso não está disponível nesse dispositivo."
-        );
-        return;
-      }
 
       await Sharing.shareAsync(uri, {
         mimeType: "image/png",
@@ -122,9 +136,7 @@ export default function ActivitySummary() {
   return (
     <View ref={shareViewRef} collapsable={false} className="flex-1">
       {isLoading ? (
-        <View className="flex-1">
-          <Loading />
-        </View>
+        <Loading />
       ) : (
         <>
           <ImageBackground
@@ -132,102 +144,82 @@ export default function ActivitySummary() {
             resizeMode="cover"
             className="flex-1 p-2"
           >
-            {/* Estatísticas (ARRASTÁVEL) */}
             <View className="flex-1">
               <Animated.View
-                {...panResponder.panHandlers}
+                {...moveResponder.panHandlers}
                 style={{
-                  transform: position.getTranslateTransform(),
+                  transform: [...position.getTranslateTransform(), { scale }],
                 }}
               >
                 <Box className="mt-[250] ml-[60]">
-                  {backgroundImage === JFDefaultBackground && (
-                    <Text className="text-red-600 font-baloo-bold text-2xl uppercase pb-5">
-                      Retrospectiva 2025
-                    </Text>
-                  )}
                   {review && (
-                    <View className="flex flex-col gap-5">
-                      <View className="flex-row justify-between items-start">
-                        <View>
-                          <Text className="text-white text-lg font-medium mb-1 tracking-wide font-baloo-bold">
-                            Total de dias de atividade
-                          </Text>
-                          <View className="flex-row items-baseline gap-2">
-                            <Text className="text-white text-5xl font-black tracking-tight">
-                              {review.totalDays}
-                            </Text>
-                          </View>
-                        </View>
+                    <View className="gap-5">
+                      <View>
+                        <Text className="text-white text-lg font-baloo-bold">
+                          Total de dias
+                        </Text>
+                        <Text className="text-white text-5xl font-black">
+                          {review.totalDays}
+                        </Text>
                       </View>
-                      <View className="flex-row justify-between items-start">
-                        <View>
-                          <Text className="text-white text-lg font-medium mb-1 tracking-wide font-baloo-bold">
-                            Distância total
-                          </Text>
-                          <View className="flex-row items-baseline gap-2">
-                            <Text className="text-white text-5xl font-black tracking-tight">
-                              {review.totalDistanceInKm}
-                            </Text>
-                            <Text className="text-3xl font-bold text-zinc-300">
-                              {" "}
-                              Km
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                      <View className="flex-row justify-between items-start">
-                        <View>
-                          <Text className="text-white text-lg font-medium mb-1 tracking-wide font-baloo-bold">
-                            Tempo total
-                          </Text>
-                          <View className="flex-row items-baseline gap-2">
-                            {(() => {
-                              const { hours, minutes } = formatDurationParts(
-                                review.totalDurationInSeconds
-                              );
 
-                              return (
-                                <>
-                                  {hours > 0 && (
-                                    <>
-                                      <Text className="text-white text-5xl font-black tracking-tight">
-                                        {hours}
-                                      </Text>
-                                      <Text className="text-3xl font-bold text-zinc-300">
-                                        h
-                                      </Text>
-                                    </>
-                                  )}
-
-                                  {minutes > 0 && (
-                                    <>
-                                      <Text className="text-white text-5xl font-black tracking-tight">
-                                        {minutes}
-                                      </Text>
-                                      <Text className="text-3xl font-bold text-zinc-300">
-                                        min
-                                      </Text>
-                                    </>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </View>
+                      <View>
+                        <Text className="text-white text-lg font-baloo-bold">
+                          Distância total
+                        </Text>
+                        <View className="flex-row items-baseline gap-2">
+                          <Text className="text-white text-5xl font-black">
+                            {review.totalDistanceInKm}
+                          </Text>
+                          <Text className="text-3xl text-zinc-300">km</Text>
                         </View>
                       </View>
+
+                      <View>
+                        <Text className="text-white text-lg font-baloo-bold">
+                          Tempo total
+                        </Text>
+                        <View className="flex-row items-baseline gap-2">
+                          {(() => {
+                            const { hours, minutes } = formatDurationParts(
+                              review.totalDurationInSeconds
+                            );
+                            return (
+                              <>
+                                {hours > 0 && (
+                                  <>
+                                    <Text className="text-white text-5xl font-black">
+                                      {hours}
+                                    </Text>
+                                    <Text className="text-3xl text-zinc-300">
+                                      h
+                                    </Text>
+                                  </>
+                                )}
+                                {minutes > 0 && (
+                                  <>
+                                    <Text className="text-white text-5xl font-black">
+                                      {minutes}
+                                    </Text>
+                                    <Text className="text-3xl text-zinc-300">
+                                      min
+                                    </Text>
+                                  </>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </View>
+                      </View>
+
                       {review.totalRunningRaces > 0 && (
-                        <View className="flex-row justify-between items-start">
-                          <View>
-                            <Text className="text-white text-lg font-medium mb-1 tracking-wide font-baloo-bold">
-                              Total de provas
-                            </Text>
-                            <View className="flex-row items-baseline gap-2">
-                              <Text className="text-white text-5xl font-black tracking-tight">
-                                {review.totalRunningRaces}
-                              </Text>
-                            </View>
-                          </View>
+                        <View>
+                          <Text className="text-white text-lg font-baloo-bold">
+                            Total de provas
+                          </Text>
+                          <Text className="text-white text-5xl font-black">
+                            {review.totalRunningRaces}
+                          </Text>
                         </View>
                       )}
                     </View>
@@ -235,56 +227,43 @@ export default function ActivitySummary() {
                 </Box>
               </Animated.View>
             </View>
-
-            {/* Footer */}
             {backgroundImage !== JFDefaultBackground && (
               <View className="absolute bottom-10 left-0 right-0 items-center">
-                <View className="items-center">
-                  <Image
-                    source={JFHorizontal}
-                    style={{ width: 120, height: 50 }}
-                    resizeMode="contain"
-                  />
-                  <Text className="text-red-600 font-baloo-bold text-sm uppercase -mt-1">
-                    @foltz.assesportiva
-                  </Text>
-                  <Text className="text-red-600 font-baloo-bold text-xl uppercase">
-                    Retrospectiva 2025
-                  </Text>
-                </View>
+                <Image
+                  source={JFHorizontal}
+                  style={{ width: 120, height: 50 }}
+                />
+                <Text className="text-red-600 font-bold">
+                  Retrospectiva 2025
+                </Text>
               </View>
             )}
           </ImageBackground>
 
-          {/* Botões laterais */}
+          {/* 🎚️ SLIDER */}
+          {isEditingText && (
+            <ScaleSlider
+              scale={scaleValue.current}
+              onChange={(value) => {
+                scale.setValue(value);
+                scaleValue.current = value;
+                activateEditing();
+              }}
+            />
+          )}
+
+          {/* 🔘 BOTÕES */}
           {showButtons && (
             <View className="absolute top-1/3 right-4 items-center gap-5">
-              <TouchableOpacity
-                onPress={() => router.back()}
-                className="w-10 h-10 rounded-full bg-black/60 items-center justify-center"
-              >
+              <TouchableOpacity onPress={() => router.back()}>
                 <Ionicons name="arrow-back" size={22} color="white" />
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handlePickImage}
-                className="w-12 h-12 rounded-full bg-black/60 items-center justify-center"
-              >
+
+              <TouchableOpacity onPress={handlePickImage}>
                 <Ionicons name="image-outline" size={24} color="white" />
               </TouchableOpacity>
 
-              {backgroundImage !== JFDefaultBackground && (
-                <TouchableOpacity
-                  onPress={handleResetImage}
-                  className="w-12 h-12 rounded-full bg-black/60 items-center justify-center"
-                >
-                  <Ionicons name="close-outline" size={24} color="white" />
-                </TouchableOpacity>
-              )}
-
-              <TouchableOpacity
-                onPress={handleShare}
-                className="w-12 h-12 rounded-full bg-black/60 items-center justify-center"
-              >
+              <TouchableOpacity onPress={handleShare}>
                 <Ionicons name="share-social-outline" size={24} color="white" />
               </TouchableOpacity>
             </View>
