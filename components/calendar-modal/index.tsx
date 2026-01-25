@@ -1,10 +1,17 @@
+import CompetitionIcon from "@/assets/images/jf_logo_icone_push.png";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import React, { useEffect } from "react";
-import { Modal, Text, TouchableOpacity, View } from "react-native";
+import { Image, Modal, Text, TouchableOpacity, View } from "react-native";
 import { Calendar } from "react-native-calendars";
+import { MarkingProps } from "react-native-calendars/src/calendar/day/marking";
+
+export interface CustomMarkingProps extends MarkingProps {
+  isCompetition?: boolean;
+  icon?: any;
+}
 
 interface CalendarModalScreenProps {
   visible: boolean;
@@ -31,11 +38,7 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
 
   const handleDayPress = (day: any) => {
     const { dateString } = day;
-
-    // Acessa o objeto markedDates com segurança para evitar erros
-    if (!markedDates[dateString]) {
-      return;
-    }
+    // ✅ CORREÇÃO: Removida a verificação que impedia cliques
     setTempSelectedDate(dateString);
   };
 
@@ -47,37 +50,23 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
   }, [tempSelectedDate]);
 
   const markedDates = React.useMemo(() => {
-    // Corrige o erro de tipagem adicionando o tipo correto
     const marked: { [key: string]: any } = {};
-    // 1. Processa as datas de customMarkedDates
+
     Object.keys(customMarkedDates).forEach((date) => {
-      // Para cada data, tratamos ela como um período de um dia
       marked[date] = {
         ...customMarkedDates[date],
-        // Adiciona as propriedades necessárias para o 'period'
-
         color: customMarkedDates[date].selectedColor,
         textColor: customMarkedDates[date].selectedTextColor,
-        // Remove as propriedades que não são usadas pelo 'period'
-        selectedColor: undefined,
-        selectedTextColor: undefined,
       };
     });
 
     if (tempSelectedDate) {
       marked[tempSelectedDate] = {
-        ...marked[tempSelectedDate], // Mantém as propriedades existentes se houver
+        ...marked[tempSelectedDate],
         startingDay: true,
         endingDay: true,
-        color: "#313131",
+        color: "#1E40AF",
         textColor: "#ffffff",
-        // Adiciona um estilo de borda para destacar a seleção
-        customStyles: {
-          container: {
-            borderWidth: 2,
-            borderColor: "#0EA5E9",
-          },
-        },
       };
     }
 
@@ -191,14 +180,90 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
             <Calendar
               onDayPress={handleDayPress}
               markedDates={markedDates}
-              markingType={"period"}
+              markingType="period"
               theme={calendarTheme}
               firstDay={1}
               enableSwipeMonths
               hideExtraDays
-              showWeekNumbers={false}
               minDate={minDate}
               maxDate={maxDate}
+              dayComponent={({ date, state, marking }) => {
+                if (!date) return <View style={{ width: 44, height: 44 }} />;
+
+                const customMarking = marking as CustomMarkingProps | undefined;
+                const isCompetition = customMarking?.isCompetition;
+                const bgColor = customMarking?.color;
+                const isDisabled = state === "disabled";
+
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (!isDisabled) {
+                        handleDayPress({ dateString: date.dateString });
+                      }
+                    }}
+                    disabled={isDisabled}
+                    activeOpacity={0.7}
+                  >
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 6,
+                        backgroundColor: "#F3F4F6",
+                        borderWidth: 1,
+                        borderColor: "#E5E7EB",
+                        opacity: isDisabled ? 0.3 : 1,
+                        padding: 4,
+                      }}
+                    >
+                      {/* ÍCONE / STATUS — TOPO ESQUERDA */}
+                      {isCompetition && (
+                        <Image
+                          source={CompetitionIcon}
+                          style={{
+                            width: 28,
+                            height: 28,
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                          }}
+                          resizeMode="contain"
+                        />
+                      )}
+
+                      {/* CÍRCULO DE COR (se não for competição) */}
+                      {!isCompetition && bgColor && (
+                        <View
+                          style={{
+                            width: 15,
+                            height: 15,
+                            borderRadius: 10,
+                            backgroundColor: bgColor,
+                            position: "absolute",
+                            top: 6,
+                            left: 6,
+                          }}
+                        />
+                      )}
+
+                      {/* DIA — INFERIOR DIREITA */}
+                      <Text
+                        style={{
+                          position: "absolute",
+                          bottom: 4,
+                          right: 4,
+                          fontSize: 12,
+                          color: "#000000",
+                          fontWeight: "500",
+                        }}
+                      >
+                        {date.day}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              }}
             />
           </Box>
 
@@ -239,8 +304,19 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
                   Treino programado
                 </Text>
               </HStack>
+              <HStack className="items-center gap-1">
+                <Image
+                  source={CompetitionIcon}
+                  style={{
+                    width: 25,
+                    height: 25,
+                  }}
+                />
+                <Text className="text-slate-300 text-xs">Prova</Text>
+              </HStack>
             </HStack>
           </Box>
+          <Box></Box>
         </Box>
       </View>
     </Modal>

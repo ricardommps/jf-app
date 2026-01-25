@@ -26,14 +26,14 @@ interface Props {
   media: Media[];
   exerciseInfo: MediaInfo[];
   isWorkoutLoad: boolean;
-  debug?: boolean;
+  musclesWorked?: boolean;
 }
 
 const WorkoutGroup = ({
   media,
   exerciseInfo,
   isWorkoutLoad,
-  debug = false,
+  musclesWorked,
 }: Props) => {
   const [itemHeights, setItemHeights] = useState<number[]>([]);
   const [carouselHeight, setCarouselHeight] = useState(400);
@@ -87,17 +87,17 @@ const WorkoutGroup = ({
         setItemHeights(next);
       }, 50);
     },
-    [itemHeights]
+    [itemHeights],
   );
 
   const goToPrev = useCallback(
     () => ref.current?.scrollTo({ count: -1, animated: true }),
-    []
+    [],
   );
 
   const goToNext = useCallback(
     () => ref.current?.scrollTo({ count: 1, animated: true }),
-    []
+    [],
   );
 
   const renderItem = useCallback(
@@ -109,12 +109,12 @@ const WorkoutGroup = ({
             media={item}
             exerciseInfo={exerciseInfo}
             isWorkoutLoad={isWorkoutLoad}
-            debug={debug}
+            musclesWorked={musclesWorked}
           />
         </View>
       );
     },
-    [media, exerciseInfo, isWorkoutLoad, debug, handleLayout]
+    [media, exerciseInfo, isWorkoutLoad, handleLayout],
   );
 
   if (!media || media.length === 0) {

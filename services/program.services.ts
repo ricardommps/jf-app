@@ -24,3 +24,14 @@ export async function getProgram(programId: string) {
     throw error;
   }
 }
+
+export async function runnerProgram() {
+  try {
+    const response = await axiosInstance.get("/api/v2/program/runnerProgram");
+    return response.data;
+  } catch (error: any) {
+    Sentry.captureException(error, { extra: { context: "runnerProgram" } });
+    console.error("runnerProgram", error);
+    throw error;
+  }
+}

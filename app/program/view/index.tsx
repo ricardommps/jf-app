@@ -6,17 +6,18 @@ import { useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
 import GymView from "../screens/gym-view";
 import RunnerView from "../screens/runner-view";
-
 const ProgramView = () => {
   const { id, type } = useLocalSearchParams();
   const safeId = id as string;
+
   const { data, isLoading } = useQuery({
     queryKey: ["workoutsData", id, type],
+    queryFn: async () => getWorkouts(Number(safeId), Number(type)),
+    enabled: !!id,
     staleTime: 0,
     gcTime: 0,
-    queryFn: async () => await getWorkouts(Number(safeId), Number(type)),
-    enabled: !!id,
   });
+
   const renderItem = () => {
     if (type === "1") {
       return <RunnerView workouts={data} programId={safeId} />;
@@ -27,9 +28,9 @@ const ProgramView = () => {
   return (
     <View className="flex-1 bg-black">
       <Header title="Meus treinos" />
-      {isLoading ? <Loading /> : <>{data?.length && renderItem()}</>}
+
+      {isLoading ? <Loading /> : data && data.length > 0 ? renderItem() : null}
     </View>
   );
 };
-
 export default ProgramView;

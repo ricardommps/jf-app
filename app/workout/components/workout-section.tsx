@@ -22,6 +22,7 @@ interface Props {
   mediaOrder: (number | number[])[];
   exerciseInfo: MediaInfo[];
   isWorkoutLoad: boolean;
+  musclesWorked?: boolean;
 }
 
 const WorkoutSection = ({
@@ -31,6 +32,7 @@ const WorkoutSection = ({
   mediaOrder,
   exerciseInfo,
   isWorkoutLoad,
+  musclesWorked,
 }: Props) => {
   if (!description && (!medias || medias.length === 0 || !mediaOrder?.length))
     return null;
@@ -74,6 +76,7 @@ const WorkoutSection = ({
                 mediaOrder={mediaOrder}
                 exerciseInfo={exerciseInfo}
                 isWorkoutLoad={isWorkoutLoad}
+                musclesWorked={musclesWorked}
               />
             )}
           </View>

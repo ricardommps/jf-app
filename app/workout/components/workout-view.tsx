@@ -12,7 +12,7 @@ interface Props {
   exerciseInfo: MediaInfo[];
   isWorkoutLoad: boolean;
   sectionId?: string;
-  debug?: boolean;
+  musclesWorked?: boolean;
 }
 
 const WorkoutView = ({
@@ -21,7 +21,7 @@ const WorkoutView = ({
   exerciseInfo,
   isWorkoutLoad,
   sectionId = "workout",
-  debug = false,
+  musclesWorked,
 }: Props) => {
   // Mapeia ID -> Media para facilitar lookup
   const mediaMap = useMemo(() => {
@@ -68,7 +68,7 @@ const WorkoutView = ({
               media={item}
               exerciseInfo={exerciseInfo}
               isWorkoutLoad={isWorkoutLoad}
-              debug={debug}
+              musclesWorked={musclesWorked}
             />
           </View>
         );
@@ -80,14 +80,14 @@ const WorkoutView = ({
               media={item[0]}
               exerciseInfo={exerciseInfo}
               isWorkoutLoad={isWorkoutLoad}
-              debug={debug}
+              musclesWorked={musclesWorked}
             />
           </View>
         );
       }
       return null;
     },
-    [exerciseInfo, isWorkoutLoad, debug]
+    [exerciseInfo, isWorkoutLoad],
   );
 
   return (

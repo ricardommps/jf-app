@@ -145,23 +145,19 @@ const Home = () => {
   const shouldShowYearReview = () => {
     const runnerProgram = getRunnerProgram();
     if (!runnerProgram) return false;
+
     const now = new Date();
+    const year = now.getFullYear();
     const month = now.getMonth();
     const day = now.getDate();
 
-    // 29/12 até 31/12
-    if (month === 11 && day >= 17) {
+    if (year === 2025 && month === 11 && day >= 29) {
       return true;
     }
 
-    if (month === 11 && day >= 18) {
+    if (year === 2026 && month === 0 && day <= 4) {
       return true;
     }
-
-    // 01/01 até 04/01
-    // if (month === 0 && day <= 4) {
-    //   return true;
-    // }
 
     return false;
   };
