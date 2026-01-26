@@ -5,10 +5,7 @@ export default {
     name: "FOLTZ",
     slug: "jfapp",
     owner: "jftreinos",
-
-    // 🔒 Só muda quando for nova build na store
-    version: "1.3.1",
-
+    version: "1.3.3",
     orientation: "portrait",
     icon: "./assets/images/jf_icone_app.png",
     scheme: "jfapp",
@@ -16,11 +13,7 @@ export default {
     newArchEnabled: true,
     assetBundlePatterns: ["**/*"],
 
-    // ✅ OTA FUNCIONA AQUI
-    runtimeVersion: {
-      policy: "sdkVersion",
-    },
-
+    runtimeVersion: { policy: "appVersion" },
     updates: {
       enabled: true,
       checkAutomatically: "ON_LOAD",
@@ -38,25 +31,20 @@ export default {
 
     ios: {
       bundleIdentifier: "com.jftreinos.jfapp",
-      buildNumber: "42",
+      buildNumber: "44",
       supportsTablet: false,
       deploymentTarget: "15.1",
-
       infoPlist: {
         NSCameraUsageDescription:
           "Para você tirar uma foto de perfil com a câmera.",
         UIBackgroundModes: ["remote-notification"],
         CFBundleURLTypes: [
-          {
-            CFBundleURLName: "jfapp",
-            CFBundleURLSchemes: ["jfapp"],
-          },
+          { CFBundleURLName: "jfapp", CFBundleURLSchemes: ["jfapp"] },
         ],
         ITSAppUsesNonExemptEncryption: false,
         UIViewControllerBasedStatusBarAppearance: false,
         UIStatusBarStyle: "UIStatusBarStyleLightContent",
       },
-
       associatedDomains: [
         "applinks:connect.garmin.com",
         "applinks:www.strava.com",
@@ -65,19 +53,16 @@ export default {
 
     android: {
       package: "com.jftreinos.jfapp",
-      versionCode: 42,
+      versionCode: 44,
       compileSdkVersion: 35,
       targetSdkVersion: 35,
       minSdkVersion: 21,
       buildToolsVersion: "35.0.0",
-
       adaptiveIcon: {
         foregroundImage: "./assets/images/jf_icone_app.png",
         backgroundColor: "#000000",
       },
-
       softwareKeyboardLayoutMode: "pan",
-
       intentFilters: [
         {
           action: "android.intent.action.VIEW",
@@ -112,7 +97,6 @@ export default {
           },
         },
       ],
-
       permissions: [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -121,7 +105,6 @@ export default {
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO",
       ],
-
       googleServicesFile: "./google-services.json",
     },
 
@@ -134,10 +117,7 @@ export default {
             targetSdkVersion: 35,
             buildToolsVersion: "35.0.0",
           },
-          ios: {
-            useFrameworks: "static",
-            deploymentTarget: "15.1",
-          },
+          ios: { useFrameworks: "static", deploymentTarget: "15.1" },
         },
       ],
       [
@@ -171,19 +151,38 @@ export default {
       "expo-secure-store",
     ],
 
-    experiments: {
-      typedRoutes: true,
-    },
+    experiments: { typedRoutes: true },
 
     extra: {
-      eas: {
-        projectId: "6ddb8b5c-3423-408e-b94b-f7dd9b7b14f7",
-      },
+      eas: { projectId: "6ddb8b5c-3423-408e-b94b-f7dd9b7b14f7" },
+
+      // 🔹 Variáveis de ambiente para runtime
+      APP_ENV: process.env.APP_ENV,
+      EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
+      EXPO_PUBLIC_IS_DEV: process.env.EXPO_PUBLIC_IS_DEV,
+      EXPO_PUBLIC_ENABLE_LINKING: process.env.EXPO_PUBLIC_ENABLE_LINKING,
+      PHONENUMBER: process.env.PHONENUMBER,
+      URLAPP: process.env.URLAPP,
+      EXPO_PUBLIC_SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN,
+      EXPO_PUBLIC_ENVIRONMENT: process.env.EXPO_PUBLIC_ENVIRONMENT,
     },
 
     notification: {
       icon: "./assets/images/jf_logo_icone_push.png",
       color: "#ffffff",
+    },
+
+    hooks: {
+      postPublish: [
+        {
+          file: "sentry-expo/upload-sourcemaps",
+          config: {
+            organization: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+          },
+        },
+      ],
     },
   },
 };
