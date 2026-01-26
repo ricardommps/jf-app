@@ -1,5 +1,6 @@
 import Header from "@/components/header";
 import { VStack } from "@/components/ui/vstack";
+import { ENV } from "@/config/env";
 import { useSession } from "@/contexts/Authentication";
 import { Ionicons } from "@expo/vector-icons";
 import * as Application from "expo-application";
@@ -56,9 +57,10 @@ const Settings = () => {
   };
 
   const handleOpenWhatsApp = async () => {
-    const phoneNumber = process.env.PHONENUMBER;
+    // ✅ Usando ENV.PHONE_NUMBER ao invés de process.env
+    const phoneNumber = ENV.PHONE_NUMBER;
     const message = encodeURIComponent(
-      `Olá! Preciso de ajuda com o app.\n\nUsuário: ${profile?.name}\nE-mail: ${profile?.email}\nPlataforma: ${Platform.OS}\n`
+      `Olá! Preciso de ajuda com o app.\n\nUsuário: ${profile?.name}\nE-mail: ${profile?.email}\nPlataforma: ${Platform.OS}\n`,
     );
     const url = `https://wa.me/${phoneNumber}?text=${message}`;
 

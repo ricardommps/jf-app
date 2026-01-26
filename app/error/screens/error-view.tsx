@@ -3,6 +3,7 @@ import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
 import { VStack } from "@/components/ui/vstack";
+import { ENV } from "@/config/env";
 import { setIsOnErrorPage } from "@/config/navigationState";
 import { useSession } from "@/contexts/Authentication";
 import { FontAwesome } from "@expo/vector-icons";
@@ -42,16 +43,18 @@ const ErrorScreen = () => {
   const handleRetry = () => router.back();
 
   const handleReportError = async () => {
-    const phoneNumber = process.env.PHONENUMBER!;
+    // ✅ Usando ENV.PHONE_NUMBER ao invés de process.env
+    const phoneNumber = ENV.PHONE_NUMBER;
 
     const message = encodeURIComponent(
-      `🚨 Relatório de erro\n\nUsuário: ${profile?.name}\nE-mail: ${profile?.email}\nPlataforma: ${Platform.OS}\nCódigo: ${errorDetails.code}\nMensagem: ${errorDetails.message}`
+      `🚨 Relatório de erro\n\nUsuário: ${profile?.name}\nE-mail: ${profile?.email}\nPlataforma: ${Platform.OS}\nCódigo: ${errorDetails.code}\nMensagem: ${errorDetails.message}`,
     );
     const url = `https://wa.me/${phoneNumber}?text=${message}`;
     await Linking.openURL(url);
   };
-  const urlApp = process.env.URLAPP!;
-  const handleOpenWeb = () => Linking.openURL(urlApp);
+
+  // ✅ Usando ENV.URL_APP ao invés de process.env
+  const handleOpenWeb = () => Linking.openURL(ENV.URL_APP);
 
   const friendlyMsg = (() => {
     switch (errorDetails.code) {
