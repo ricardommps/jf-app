@@ -6,10 +6,12 @@ import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
+import { ENV } from "@/config/env";
 import globalEventEmitter from "@/utils/events";
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 const TIMEOUT = 30000;
+
+console.log("--- ENV.API_URL--", ENV.API_URL);
 
 class APICaller {
   static instance: APICaller | null = null;
@@ -19,7 +21,6 @@ class APICaller {
   private isLoggingOut = false;
   private isNavigatingToError = false;
   private cancelTokenSources: CancelTokenSource[] = [];
-  // NOVO: Flag para indicar que o logout já foi iniciado
   private hasLoggedOut = false;
 
   static getInstance() {
@@ -34,8 +35,9 @@ class APICaller {
   }
 
   constructor() {
+    // ✅ Usando ENV.API_URL ao invés de Constants
     this.client = axios.create({
-      baseURL: BASE_URL,
+      baseURL: ENV.API_URL,
       timeout: TIMEOUT,
       headers: {
         "Content-Type": "application/json",
@@ -61,7 +63,6 @@ class APICaller {
     // Request
     this.client.interceptors.request.use(
       async (config) => {
-        // MODIFICADO: Verifica se já fez logout
         if (this.isLoggingOut || this.hasLoggedOut) {
           return Promise.reject(new axios.Cancel("Logging out"));
         }
@@ -77,7 +78,7 @@ class APICaller {
       (error) => {
         Sentry.captureException(error);
         return Promise.reject(error);
-      }
+      },
     );
 
     // Response
@@ -91,7 +92,6 @@ class APICaller {
           this.removeCancelTokenSource(error.config.cancelToken);
         }
 
-        // NOVO: Se já fez logout, ignora todos os erros silenciosamente
         if (this.hasLoggedOut || this.isLoggingOut) {
           return Promise.reject(new axios.Cancel("Already logged out"));
         }
@@ -100,7 +100,6 @@ class APICaller {
           return Promise.reject(error);
         }
 
-        // MODIFICADO: Não captura exception se já está fazendo logout
         if (!this.isLoggingOut) {
           Sentry.captureException(error);
         }
@@ -142,13 +141,13 @@ class APICaller {
         }
 
         return Promise.reject(error);
-      }
+      },
     );
   }
 
   private removeCancelTokenSource(cancelToken: any) {
     this.cancelTokenSources = this.cancelTokenSources.filter(
-      (source) => source.token !== cancelToken
+      (source) => source.token !== cancelToken,
     );
   }
 
@@ -158,7 +157,6 @@ class APICaller {
     url: string;
     method: string;
   }) {
-    // NOVO: Não navega para erro se já fez logout
     if (this.isNavigatingToError || this.hasLoggedOut) return;
 
     this.isNavigatingToError = true;
@@ -195,10 +193,12 @@ class APICaller {
       if (!refreshToken) throw new Error("No refresh token found");
 
       const pushToken = await this.getPushToken();
+
+      // ✅ Usando ENV.API_URL ao invés de BASE_URL
       const response = await axios.post(
-        `${BASE_URL}/api/v2/auth/refresh-customer`,
+        `${ENV.API_URL}/api/v2/auth/refresh-customer`,
         { refreshToken, ...(pushToken && { pushToken }) },
-        { timeout: 10000 }
+        { timeout: 10000 },
       );
 
       const newAccessToken = response.data.accessToken;
@@ -220,7 +220,7 @@ class APICaller {
             error.code === "ECONNABORTED"
               ? "Tempo de resposta excedido. Verifique sua conexão."
               : "Não foi possível conectar ao servidor.",
-          url: `${BASE_URL}/api/v2/auth/refresh-customer`,
+          url: `${ENV.API_URL}/api/v2/auth/refresh-customer`,
           method: "POST",
         };
         this.handleNetworkError(errorDetails);
@@ -238,7 +238,7 @@ class APICaller {
   private async handleLogout() {
     if (this.isLoggingOut) return;
     this.isLoggingOut = true;
-    this.hasLoggedOut = true; // NOVO: Marca que já foi feito logout
+    this.hasLoggedOut = true;
 
     this.cancelAllRequests();
 
@@ -264,18 +264,16 @@ class APICaller {
       } catch {}
     }
 
-    // NOVO: Reseta a flag após um tempo
     setTimeout(() => {
       this.isLoggingOut = false;
     }, 1000);
   }
 
   public forceLogout() {
-    this.hasLoggedOut = true; // NOVO: Marca antes de cancelar
+    this.hasLoggedOut = true;
     this.cancelAllRequests();
   }
 
-  // NOVO: Método para resetar o estado (útil após novo login)
   public resetLogoutState() {
     this.hasLoggedOut = false;
   }
@@ -325,7 +323,6 @@ class APICaller {
         throw error;
       }
 
-      // NOVO: Não captura exception se já fez logout
       if (!this.hasLoggedOut && !this.isLoggingOut) {
         Sentry.captureException(error);
       }

@@ -1,66 +1,63 @@
 {
   "cli": {
-    "version": ">= 7.8.6",
-    "appVersionSource": "remote"
+    "version": ">= 7.8.6"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      },
-      "env": {
-        "APP_ENV": "dev",
-        "EXPO_PUBLIC_API_URL": "http://192.168.15.59:8001",
-        "EXPO_PUBLIC_IS_DEV": "true",
-        "GOOGLE_SERVICES_JSON": "file:google-services.json"
-      }
-    },
-    "preview": {
-      "distribution": "internal",
-      "ios": {
-        "simulator": true
-      },
-      "env": {
-        "APP_ENV": "dev",
-        "EXPO_PUBLIC_API_URL": "https://jf-app-api.vercel.app",
-        "EXPO_PUBLIC_IS_DEV": "true",
-        "GOOGLE_SERVICES_JSON": "file:google-services.json"
-      }
-    },
     "production": {
       "distribution": "store",
-      "channel": "production",
-      "ios": {
-        "simulator": false
-      },
       "android": {
         "buildType": "app-bundle"
       },
+      "ios": {
+        "simulator": false
+      },
+      "channel": "production",
       "autoIncrement": true,
       "env": {
         "APP_ENV": "prod",
         "EXPO_PUBLIC_API_URL": "https://jf-app-api.vercel.app",
         "EXPO_PUBLIC_IS_DEV": "false",
+        "EXPO_PUBLIC_ENABLE_LINKING": "true",
+        "PHONENUMBER": "5548991781646",
+        "URLAPP": "https://jftreinos.com.br/dashboard/",
+        "EXPO_PUBLIC_ENVIRONMENT": "production",
         "GOOGLE_SERVICES_JSON": "file:google-services.json"
       }
     },
-    "test": {
+    "staging": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "channel": "staging",
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_API_URL": "https://jf-app-api-staging.vercel.app",
+        "EXPO_PUBLIC_IS_DEV": "true",
+        "EXPO_PUBLIC_ENABLE_LINKING": "true",
+        "PHONENUMBER": "5548991781646",
+        "URLAPP": "https://jftreinos.com.br/dashboard/",
+        "EXPO_PUBLIC_ENVIRONMENT": "staging",
+        "GOOGLE_SERVICES_JSON": "file:google-services.json"
+      }
+    },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
       "env": {
         "APP_ENV": "dev",
-        "EXPO_PUBLIC_API_URL": "https://jf-app-api.vercel.app",
+        "EXPO_PUBLIC_API_URL": "http://192.168.1.20:8001/",
         "EXPO_PUBLIC_IS_DEV": "true",
-        "GOOGLE_SERVICES_JSON": "file:google-services.json"
+        "EXPO_PUBLIC_ENABLE_LINKING": "false",
+        "PHONENUMBER": "5548991781646",
+        "URLAPP": "https://jftreinos.com.br/dashboard/",
+        "EXPO_PUBLIC_ENVIRONMENT": "development"
       }
     }
   },
   "submit": {
     "production": {
-      "ios": {
-        "appleId": "ricardommps@gmail.com",
-        "ascAppId": "6750486916"
-      },
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
         "track": "internal"

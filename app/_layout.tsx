@@ -1,5 +1,6 @@
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { Image } from "@/components/ui/image";
+import { ENV } from "@/config/env";
 import { SessionProvider } from "@/contexts/Authentication";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeContext, ThemeProvider } from "@/contexts/theme-context";
@@ -28,8 +29,9 @@ import {
   Baloo2_800ExtraBold,
 } from "@expo-google-fonts/baloo-2";
 
+// ✅ Usando ENV.SENTRY_DSN ao invés de hardcoded
 Sentry.init({
-  dsn: "https://27e9f134adac50771e411adb586a9183@o585732.ingest.us.sentry.io/4510285316292608",
+  dsn: ENV.SENTRY_DSN,
   sendDefaultPii: true,
   enableLogs: true,
   replaysSessionSampleRate: 0.1,
@@ -98,7 +100,7 @@ function IntegratedNotificationHandler() {
           await Notifications.getLastNotificationResponseAsync();
         if (lastNotification?.notification?.request?.content?.data) {
           handleNotificationData(
-            lastNotification.notification.request.content.data
+            lastNotification.notification.request.content.data,
           );
         }
       } catch (error) {
@@ -110,7 +112,7 @@ function IntegratedNotificationHandler() {
     const subscription = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         handleNotificationData(response.notification.request.content.data);
-      }
+      },
     );
 
     return () => {
@@ -227,11 +229,8 @@ const MainLayout = () => {
   useEffect(() => {
     const runAutoUpdate = async () => {
       try {
-        const isProd =
-          process.env.EXPO_PUBLIC_IS_DEV === "false" &&
-          process.env.APP_ENV === "prod";
-
-        if (!isProd) {
+        // ✅ Usando ENV.isProd ao invés de process.env
+        if (!ENV.isProd) {
           return;
         }
 
