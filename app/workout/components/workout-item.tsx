@@ -186,12 +186,20 @@ const WorkoutItem = ({
       >
         <VStack className="px-0" space="md">
           <VStack className="gap-3">
-            <HStack className="gap-5">
-              <Text className="text-white font-dm-sans-bold text-xl">
+            <HStack className="items-start gap-3">
+              <Text
+                className="text-white font-dm-sans-bold text-xl flex-1"
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
                 {media.title}
               </Text>
+
               {media?.musclesWorked && musclesWorked && (
-                <Pressable onPress={() => setShowMusclesScreen(true)}>
+                <Pressable
+                  onPress={() => setShowMusclesScreen(true)}
+                  style={{ flexShrink: 0 }}
+                >
                   <Icon as={InfoIcon} size="xl" className="mt-1" />
                 </Pressable>
               )}

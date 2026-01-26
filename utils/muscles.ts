@@ -2,7 +2,7 @@ export const muscles = [
   {
     id: 1,
     muscle: "Panturrilhas",
-    activeColor: "#E53935", // vermelho
+    activeColor: "#E53935", // vermelho vivo
     tags: [
       "panturrilhas-dir-sup",
       "panturrilhas-esq-inf",
@@ -43,7 +43,7 @@ export const muscles = [
   {
     id: 7,
     muscle: "Abdômen",
-    activeColor: "#3949AB", // azul indigo
+    activeColor: "#3949AB", // azul índigo
     tags: ["abdomen", "abdomen-1", "abdomen-2"],
   },
   {
@@ -68,7 +68,7 @@ export const muscles = [
   {
     id: 10,
     muscle: "Peitoral",
-    activeColor: "#8D1B3D", // marrom
+    activeColor: "#8D1B3D", // vinho
     tags: ["peitoral-dir", "peitoral-esq"],
   },
   {
@@ -87,7 +87,7 @@ export const muscles = [
     id: 13,
     muscle: "Bíceps",
     activeColor: "#7CB342", // verde limão
-    tags: ["biceps-dir", "biceps-dir-2", "biceps-esq", "biceps-esq-2"],
+    tags: ["biceps-dir", "biceps-esq"],
   },
   {
     id: 14,
@@ -99,5 +99,11 @@ export const muscles = [
       "antebraco-esq",
       "antebraco-esq-2",
     ],
+  },
+  {
+    id: 15,
+    muscle: "Tríceps",
+    activeColor: "#006064", // azul petróleo
+    tags: ["triceps-dir", "triceps-esq"],
   },
 ];
