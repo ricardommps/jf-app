@@ -11,8 +11,6 @@ import globalEventEmitter from "@/utils/events";
 
 const TIMEOUT = 30000;
 
-console.log("--- ENV.API_URL--", ENV.API_URL);
-
 class APICaller {
   static instance: APICaller | null = null;
   private client;
