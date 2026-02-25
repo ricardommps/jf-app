@@ -1,7 +1,5 @@
-import Comments from "@/components/comments";
-import { RpeDisplay } from "@/components/rpe-display";
+import Comments from "@/app/(tabs)/(history)/components/comments";
 import { Box } from "@/components/ui/box";
-import { Divider } from "@/components/ui/divider";
 import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Pressable } from "@/components/ui/pressable";
@@ -9,24 +7,16 @@ import { Text } from "@/components/ui/text";
 import TreadmillIcon from "@/components/ui/treadmill-icon";
 import { VStack } from "@/components/ui/vstack";
 import useANotifications from "@/hooks/useNotification";
+import { getComments } from "@/services/comment.service";
+import { CommentItem } from "@/types/commnets.type";
 import { FinishedHistory } from "@/types/finished";
-import {
-  convertMetersToKilometersFormat,
-  convertPaceToSpeed,
-  convertSecondsToHourMinuteFormat,
-} from "@/utils/convertValues";
 import { moduleName } from "@/utils/module-name";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  Clock10Icon,
-  FootprintsIcon,
-  MessageCircleIcon,
-  RouteIcon,
-} from "lucide-react-native";
+import { MessageCircleIcon } from "lucide-react-native";
 import { useState } from "react";
-import { View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 interface Props {
   finishedItem: FinishedHistory;
@@ -34,41 +24,79 @@ interface Props {
 }
 
 const getLastWorkoutInfo = (executionDay: string) => {
-  if (!executionDay) {
-    return null;
-  }
+  if (!executionDay) return null;
 
   try {
-    const isoFormatted = executionDay.replace(" ", "T"); // "2025-07-26T12:00:00.00"
+    const isoFormatted = executionDay.replace(" ", "T");
     const parsedDate = parseISO(isoFormatted);
     const day = format(parsedDate, "dd");
     const monthYear = format(parsedDate, "MMMM", { locale: ptBR });
 
-    if (day && monthYear) {
-      return { day, monthYear };
-    }
+    if (day && monthYear) return { day, monthYear };
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
 
 export default function FeedbackViewScreen({ finishedItem, id }: Props) {
   const { onReadAt } = useANotifications();
-  const [openComments, setOpenComments] = useState<boolean>(false);
+
+  const [openComments, setOpenComments] = useState(false);
+  const [comments, setComments] = useState<CommentItem[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+
   const feedback =
     typeof finishedItem?.feedback === "string" ? finishedItem.feedback : null;
+
   const lastWorkoutInfo = getLastWorkoutInfo(finishedItem.executionDay);
+
+  /**
+   * 🔥 Função igual ao HistoryModal
+   */
+  const reloadComments = async () => {
+    setLoadingComments(true);
+
+    try {
+      const response = await getComments(finishedItem.id);
+
+      // 🔒 blindagem absoluta
+      const safeComments = Array.isArray(response) ? response : [];
+
+      setComments(safeComments);
+
+      return safeComments;
+    } catch {
+      setComments([]);
+      return [];
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  /**
+   * 🔥 Quando abrir comentários, já busca atualizado
+   */
+  const handleOpenComments = async () => {
+    onReadAt(id);
+    setOpenComments(true);
+    await reloadComments();
+  };
+  /**
+   * 🔥 Quando fechar, refaz também
+   */
+  const handleCloseComments = async () => {
+    await reloadComments();
+    setOpenComments(false);
+  };
+
+  const hasUnreadFromUser = comments.some((c) => c.isAdmin && !c.read);
+
   const renderIconType = () => {
     if (finishedItem?.outdoor) {
       return <MaterialCommunityIcons name="road" size={25} color="white" />;
     }
     return <TreadmillIcon size={25} color="#fff" strokeWidth={2.5} />;
-  };
-
-  const handleOpenComments = () => {
-    onReadAt(id);
-    setOpenComments(true);
   };
 
   return (
@@ -91,9 +119,11 @@ export default function FeedbackViewScreen({ finishedItem, id }: Props) {
             >
               {moduleName(finishedItem.trainingName) || ""}
             </Text>
+
             <Text className="text-base">
               {finishedItem.trainingSubtitle || ""}
             </Text>
+
             {feedback ? (
               <HStack className="gap-6 pt-3 flex-wrap">
                 <Pressable onPress={handleOpenComments}>
@@ -103,9 +133,22 @@ export default function FeedbackViewScreen({ finishedItem, id }: Props) {
                       className="text-typography-700"
                       size="xl"
                     />
-                    <Box className="absolute -right-1 -top-1 bg-success-500 rounded-full w-5 h-5 items-center justify-center">
-                      <Text className="text-white text-xs font-bold">1</Text>
-                    </Box>
+
+                    {loadingComments ? (
+                      <Box className="absolute -right-1 -top-1">
+                        <ActivityIndicator size={12} color="#fff" />
+                      </Box>
+                    ) : comments.length > 0 ? (
+                      <Box
+                        className={`absolute -right-1 -top-1 rounded-full w-5 h-5 items-center justify-center ${
+                          hasUnreadFromUser ? "bg-orange-500" : "bg-success-500"
+                        }`}
+                      >
+                        <Text className="text-white text-xs font-bold">
+                          {comments.length}
+                        </Text>
+                      </Box>
+                    ) : null}
                   </Box>
                 </Pressable>
               </HStack>
@@ -113,6 +156,7 @@ export default function FeedbackViewScreen({ finishedItem, id }: Props) {
               <Text className="pt-5 text-[#e96b10]">Aguardando feedback</Text>
             )}
           </VStack>
+
           {lastWorkoutInfo?.day && lastWorkoutInfo?.monthYear && (
             <VStack
               className="items-center justify-center"
@@ -120,103 +164,23 @@ export default function FeedbackViewScreen({ finishedItem, id }: Props) {
             >
               <Text className="text-center text-sm">Realizado em</Text>
               <Text className="text-typography-900 text-sm text-center capitalize">
-                {lastWorkoutInfo?.monthYear}
+                {lastWorkoutInfo.monthYear}
               </Text>
               <Text className="text-typography-900 text-xl font-bold text-center">
-                {lastWorkoutInfo?.day}
+                {lastWorkoutInfo.day}
               </Text>
             </VStack>
           )}
-          {finishedItem.type === 1 && (
-            <Box className="w-full max-w-[400px] self-center">
-              <HStack className="justify-around items-center pt-2">
-                <VStack className="items-center">
-                  <Icon
-                    as={RouteIcon}
-                    size="xl"
-                    className="text-background-700"
-                  />
-                  <Text className="text-xs text-typography-700 mt-1">
-                    Distância
-                  </Text>
-                  <Text className="text-xs text-typography-900">
-                    {convertMetersToKilometersFormat(
-                      finishedItem?.distanceInMeters || 0
-                    )}
-                  </Text>
-                </VStack>
-
-                <Divider
-                  orientation="vertical"
-                  className="bg-gray-300 rounded h-12"
-                />
-
-                <VStack className="items-center">
-                  <Icon
-                    as={FootprintsIcon}
-                    size="xl"
-                    className="text-background-700"
-                  />
-                  <Text className="text-xs text-typography-700 mt-1">
-                    Pace Médio
-                  </Text>
-                  <Text className="text-xs text-typography-900">
-                    {convertPaceToSpeed(finishedItem?.paceInSeconds || 0, true)}
-                  </Text>
-                </VStack>
-
-                <Divider
-                  orientation="vertical"
-                  className="bg-gray-300 rounded h-12"
-                />
-
-                <VStack className="items-center">
-                  <Icon
-                    as={Clock10Icon}
-                    size="xl"
-                    className="text-background-700"
-                  />
-                  <Text className="text-xs text-typography-700 mt-1">
-                    Tempo
-                  </Text>
-                  <Text className="text-xs text-typography-900">
-                    {convertSecondsToHourMinuteFormat(
-                      finishedItem?.durationInSeconds || 0
-                    )}
-                  </Text>
-                </VStack>
-
-                <Divider
-                  orientation="vertical"
-                  className="bg-gray-300 rounded h-12"
-                />
-
-                <VStack className="items-center">
-                  <RpeDisplay rpe={finishedItem.rpe || 0} />
-                </VStack>
-
-                <Divider
-                  orientation="vertical"
-                  className="bg-gray-300 rounded"
-                />
-
-                <VStack className="items-center">
-                  {renderIconType()}
-                  <Text className="text-xs text-typography-700 mt-1">
-                    {finishedItem?.outdoor ? "Outdoor" : "Indoor"}
-                  </Text>
-                </VStack>
-              </HStack>
-            </Box>
-          )}
         </HStack>
       </Box>
+
       <Comments
         open={openComments}
-        onClose={() => setOpenComments(false)}
+        onClose={handleCloseComments}
+        finishedId={finishedItem.id}
+        onCommentSent={reloadComments}
         content={{
-          feedback: finishedItem.feedback || "",
-          comments: finishedItem.comments || "",
+          comments, // 👈 agora sempre array
           executionDay: finishedItem.executionDay || "",
           updatedAt: finishedItem.updatedAt || "",
         }}

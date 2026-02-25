@@ -12,18 +12,19 @@ import { Divider } from "../ui/divider";
 
 interface Props {
   item: FinishedHistory;
-  setComments: (comments: {
-    feedback: string;
-    comments: string;
-    executionDay: string;
-    updatedAt: string;
-  }) => void;
+  setSelectedItem: (item: FinishedHistory) => void;
   day: string;
   month: string;
 }
 
-export const HistoryGymItem = ({ item, setComments, day, month }: Props) => {
+export const HistoryGymItem = ({
+  item,
+  setSelectedItem,
+  day,
+  month,
+}: Props) => {
   const feedback = typeof item?.feedback === "string" ? item.feedback : null;
+
   return (
     <Box className="bg-[#2b2b2b9d] rounded-xl p-4 mb-2 min-h-[100px]">
       <HStack
@@ -46,26 +47,21 @@ export const HistoryGymItem = ({ item, setComments, day, month }: Props) => {
 
           {feedback ? (
             <HStack className="gap-6 pt-2 flex-wrap">
-              <Pressable
-                hitSlop={10}
-                onPress={() =>
-                  setComments({
-                    feedback: item.feedback || "",
-                    comments: item.comments || "",
-                    executionDay: item.executionDay || "",
-                    updatedAt: item.updatedAt || "",
-                  })
-                }
-              >
+              <Pressable hitSlop={10} onPress={() => setSelectedItem(item)}>
                 <Box className="relative">
                   <Icon
                     as={MessageCircleIcon}
                     className="text-typography-700"
                     size="xl"
                   />
-                  <Box className="absolute -right-1 -top-1 bg-success-500 rounded-full w-5 h-5 items-center justify-center">
-                    <Text className="text-white text-xs font-bold">1</Text>
-                  </Box>
+
+                  {item.comments?.length ? (
+                    <Box className="absolute -right-1 -top-1 bg-success-500 rounded-full w-5 h-5 items-center justify-center">
+                      <Text className="text-white text-xs font-bold">
+                        {item.comments.length}
+                      </Text>
+                    </Box>
+                  ) : null}
                 </Box>
               </Pressable>
             </HStack>
@@ -89,17 +85,26 @@ export const HistoryGymItem = ({ item, setComments, day, month }: Props) => {
           </VStack>
         )}
       </HStack>
+
       <HStack className="items-start pt-2 pl-3 gap-5">
-        {item?.durationInSeconds && (
-          <VStack className="items-center">
-            <Icon as={Clock10Icon} size="xl" className="text-background-700" />
-            <Text className="text-xs text-typography-700 mt-1">Tempo</Text>
-            <Text className="text-xs text-typography-900">
-              {convertSecondsToHourMinuteFormat(item?.durationInSeconds || 0)}
-            </Text>
-          </VStack>
-        )}
-        <Divider orientation="vertical" className="bg-gray-300 rounded h-12" />
+        {item?.durationInSeconds ? (
+          <>
+            <VStack className="items-center">
+              <Icon
+                as={Clock10Icon}
+                size="xl"
+                className="text-background-700"
+              />
+              <Text className="text-xs mt-1">Tempo</Text>
+              <Text className="text-xs">
+                {convertSecondsToHourMinuteFormat(item.durationInSeconds || 0)}
+              </Text>
+            </VStack>
+
+            <Divider orientation="vertical" className="h-12" />
+          </>
+        ) : null}
+
         <VStack className="items-center">
           <RpeDisplay rpe={item.rpe || 0} />
         </VStack>

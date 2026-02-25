@@ -1,4 +1,4 @@
-import Comments from "@/components/comments";
+import Comments from "@/app/(tabs)/(history)/components/comments";
 import { RpeDisplay } from "@/components/rpe-display";
 import { Box } from "@/components/ui/box";
 import { Heading } from "@/components/ui/heading";
@@ -8,23 +8,23 @@ import { Pressable } from "@/components/ui/pressable";
 import { Text } from "@/components/ui/text";
 import { View } from "@/components/ui/view";
 import { VStack } from "@/components/ui/vstack";
+import { getComments } from "@/services/comment.service";
+import { CommentItem } from "@/types/commnets.type";
 import { Finished } from "@/types/finished";
 import { convertSecondsToHourMinuteFormat } from "@/utils/convertValues";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Clock10Icon, MessageCircleIcon } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   ListRenderItem,
   Modal,
   StatusBar,
   TouchableOpacity,
 } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Props {
   visible: boolean;
@@ -41,42 +41,97 @@ const HistoryModal: React.FC<Props> = ({
 }) => {
   const [selectedItem, setSelectedItem] = useState<Finished | null>(null);
   const [openCommentsIds, setOpenCommentsIds] = useState<Set<number>>(
-    new Set()
+    new Set(),
   );
-  const insets = useSafeAreaInsets();
+  const [loadedComments, setLoadedComments] = useState<CommentItem[]>([]);
+  const [commentsMap, setCommentsMap] = useState<Record<number, CommentItem[]>>(
+    {},
+  );
+  const [loadingCommentsMap, setLoadingCommentsMap] = useState<
+    Record<number, boolean>
+  >({});
 
-  const toggleComments = (item: Finished) => {
-    setSelectedItem(item);
-    setOpenCommentsIds((prev) => new Set([item.id])); // Só mantém um aberto por vez
+  /**
+   * 🔥 Função isolada para buscar comentários
+   */
+  const reloadComments = async (finishedId: number) => {
+    setLoadingCommentsMap((prev) => ({ ...prev, [finishedId]: true }));
+    try {
+      const comments = await getComments(finishedId);
+
+      setCommentsMap((prev) => ({
+        ...prev,
+        [finishedId]: comments ?? [],
+      }));
+
+      return comments ?? [];
+    } catch {
+      setCommentsMap((prev) => ({
+        ...prev,
+        [finishedId]: [],
+      }));
+      return [];
+    } finally {
+      setLoadingCommentsMap((prev) => ({
+        ...prev,
+        [finishedId]: false,
+      }));
+    }
   };
 
-  const closeComments = () => {
+  /**
+   * 🔥 Carrega comentários quando modal abre
+   */
+  useEffect(() => {
+    if (!visible || !history?.length) return;
+
+    const itemsWithFeedback = history.filter((item) => item.feedback);
+
+    itemsWithFeedback.forEach((item) => {
+      reloadComments(item.id);
+    });
+  }, [visible]);
+
+  const toggleComments = (item: Finished, comments: CommentItem[]) => {
+    setSelectedItem(item);
+    setOpenCommentsIds(new Set([item.id]));
+    setLoadedComments(comments);
+  };
+
+  /**
+   * 🔥 Aqui está o ajuste principal
+   * Ao fechar, refaz getComments do item
+   */
+  const closeComments = async () => {
+    if (selectedItem) {
+      const updatedComments = await reloadComments(selectedItem.id);
+      setLoadedComments(updatedComments);
+    }
+
     setSelectedItem(null);
     setOpenCommentsIds(new Set());
   };
 
   const getLastWorkoutInfo = (executionDay: string) => {
-    if (!executionDay) {
-      return null;
-    }
-
+    if (!executionDay) return null;
     try {
-      const isoFormatted = executionDay.replace(" ", "T"); // "2025-07-26T12:00:00.00"
+      const isoFormatted = executionDay.replace(" ", "T");
       const parsedDate = parseISO(isoFormatted);
       const day = format(parsedDate, "dd");
       const monthYear = format(parsedDate, "MMMM", { locale: ptBR });
-
-      if (day && monthYear) {
-        return { day, monthYear };
-      }
+      if (day && monthYear) return { day, monthYear };
       return null;
-    } catch (error) {
+    } catch {
       return null;
     }
   };
 
-  const renderItem: ListRenderItem<Finished> = ({ item, index }) => {
+  const renderItem: ListRenderItem<Finished> = ({ item }) => {
     const lastWorkoutInfo = getLastWorkoutInfo(item.executionDay);
+    const itemComments = commentsMap[item.id] ?? [];
+    const isLoadingComments = loadingCommentsMap[item.id] ?? false;
+    const hasUnreadFromUser = itemComments.some((c) => c.isAdmin && !c.read);
+
     return (
       <View>
         <Box className="bg-[#2b2b2b9d] rounded-xl p-4 mb-2 min-h-[100px]">
@@ -97,22 +152,34 @@ const HistoryModal: React.FC<Props> = ({
               >
                 {subtitle || ""}
               </Text>
+
               {item.feedback ? (
                 <HStack className="gap-6 pt-2 flex-wrap">
-                  <Pressable
-                    onPress={() => {
-                      toggleComments(item);
-                    }}
-                  >
+                  <Pressable onPress={() => toggleComments(item, itemComments)}>
                     <Box className="relative">
                       <Icon
                         as={MessageCircleIcon}
                         className="text-typography-700"
                         size="xl"
                       />
-                      <Box className="absolute -right-1 -top-1 bg-success-500 rounded-full w-5 h-5 items-center justify-center">
-                        <Text className="text-white text-xs font-bold">1</Text>
-                      </Box>
+
+                      {isLoadingComments ? (
+                        <Box className="absolute -right-1 -top-1">
+                          <ActivityIndicator size={12} color="#fff" />
+                        </Box>
+                      ) : itemComments.length > 0 ? (
+                        <Box
+                          className={`absolute -right-1 -top-1 rounded-full w-5 h-5 items-center justify-center ${
+                            hasUnreadFromUser
+                              ? "bg-orange-500"
+                              : "bg-success-500"
+                          }`}
+                        >
+                          <Text className="text-white text-xs font-bold">
+                            {itemComments.length}
+                          </Text>
+                        </Box>
+                      ) : null}
                     </Box>
                   </Pressable>
                 </HStack>
@@ -120,6 +187,7 @@ const HistoryModal: React.FC<Props> = ({
                 <Text className="pt-5 text-[#e96b10]">Aguardando feedback</Text>
               )}
             </VStack>
+
             {lastWorkoutInfo?.day && lastWorkoutInfo?.monthYear && (
               <VStack
                 className="items-center justify-center"
@@ -127,40 +195,38 @@ const HistoryModal: React.FC<Props> = ({
               >
                 <Text className="text-center text-sm">Realizado em</Text>
                 <Text className="text-typography-900 text-sm text-center capitalize">
-                  {lastWorkoutInfo?.monthYear}
+                  {lastWorkoutInfo.monthYear}
                 </Text>
                 <Text className="text-typography-900 text-xl font-bold text-center">
-                  {lastWorkoutInfo?.day}
+                  {lastWorkoutInfo.day}
                 </Text>
               </VStack>
             )}
           </HStack>
-          {item?.durationInSeconds && item.rpe && (
-            <>
-              <HStack className="items-start pt-2 pl-3 gap-5">
-                {item?.durationInSeconds && (
-                  <VStack className="items-center">
-                    <Icon
-                      as={Clock10Icon}
-                      size="xl"
-                      className="text-background-700"
-                    />
-                    <Text className="text-xs text-typography-700 mt-1">
-                      Tempo
-                    </Text>
-                    <Text className="text-xs text-typography-900">
-                      {convertSecondsToHourMinuteFormat(
-                        item?.durationInSeconds || 0
-                      )}
-                    </Text>
-                  </VStack>
-                )}
 
+          {item?.durationInSeconds && item.rpe && (
+            <HStack className="items-start pt-2 pl-3 gap-5">
+              {item?.durationInSeconds && (
                 <VStack className="items-center">
-                  <RpeDisplay rpe={item.rpe || 0} />
+                  <Icon
+                    as={Clock10Icon}
+                    size="xl"
+                    className="text-background-700"
+                  />
+                  <Text className="text-xs text-typography-700 mt-1">
+                    Tempo
+                  </Text>
+                  <Text className="text-xs text-typography-900">
+                    {convertSecondsToHourMinuteFormat(
+                      item.durationInSeconds ?? 0,
+                    )}
+                  </Text>
                 </VStack>
-              </HStack>
-            </>
+              )}
+              <VStack className="items-center">
+                <RpeDisplay rpe={item.rpe ?? 0} />
+              </VStack>
+            </HStack>
           )}
         </Box>
       </View>
@@ -175,7 +241,6 @@ const HistoryModal: React.FC<Props> = ({
       visible={visible}
       onRequestClose={onRequestClose}
     >
-      {/* Configuração do StatusBar específica para o modal */}
       <StatusBar
         barStyle="light-content"
         backgroundColor="#000"
@@ -191,32 +256,24 @@ const HistoryModal: React.FC<Props> = ({
         }}
       >
         <VStack className="flex-1 p-2">
-          {/* Header */}
           <HStack className="justify-between items-center mb-6">
             <Heading size="lg" className="text-white">
               Histórico
             </Heading>
-            <TouchableOpacity
-              onPress={onRequestClose}
-              activeOpacity={0.7}
-              accessible={true}
-              accessibilityLabel="Fechar modal"
-              accessibilityRole="button"
-            >
+            <TouchableOpacity onPress={onRequestClose}>
               <Text className="text-2xl text-white">✕</Text>
             </TouchableOpacity>
           </HStack>
 
-          {/* Conteúdo principal */}
           <Box>
             <FlatList<Finished>
               data={[...(history || [])].sort(
                 (a, b) =>
                   new Date(b.executionDay.replace(" ", "T")).getTime() -
-                  new Date(a.executionDay.replace(" ", "T")).getTime()
+                  new Date(a.executionDay.replace(" ", "T")).getTime(),
               )}
               renderItem={renderItem}
-              keyExtractor={(item, index) => index.toString()}
+              keyExtractor={(item) => item.id.toString()}
               ListEmptyComponent={() => (
                 <Box style={{ marginTop: 48, alignItems: "center" }}>
                   <Text style={{ color: "#999" }}>Nenhum item encontrado</Text>
@@ -231,9 +288,13 @@ const HistoryModal: React.FC<Props> = ({
         <Comments
           open={openCommentsIds.has(selectedItem.id)}
           onClose={closeComments}
+          finishedId={selectedItem.id}
+          onCommentSent={async () => {
+            const updated = await reloadComments(selectedItem.id);
+            setLoadedComments(updated); // 👈 ESSENCIAL
+          }}
           content={{
-            feedback: selectedItem.feedback || "",
-            comments: selectedItem.comments || "",
+            comments: loadedComments,
             executionDay: selectedItem.executionDay,
             updatedAt: selectedItem.updatedAt
               ? selectedItem.updatedAt instanceof Date

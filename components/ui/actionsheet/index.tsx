@@ -40,7 +40,7 @@ type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
   MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
 
 const AnimatedPressable = createMotionAnimatedComponent(
-  Pressable
+  Pressable,
 ) as React.ComponentType<IAnimatedPressableProps>;
 
 export const UIActionsheet = createActionsheet({
@@ -103,10 +103,10 @@ cssInterop(PrimitiveIcon, {
   },
 });
 
-const actionsheetStyle = tva({ base: "w-full h-full web:pointer-events-none" });
+const actionsheetStyle = tva({ base: "flex-1 w-full h-full" });
 
 const actionsheetContentStyle = tva({
-  base: "items-center rounded-tl-3xl rounded-tr-3xl p-5 pt-2 bg-background-0 web:pointer-events-auto web:select-none shadow-hard-5 border border-b-0 border-outline-100 pb-safe",
+  base: "flex-1 w-full h-full bg-background-0 web:pointer-events-auto",
 });
 
 const actionsheetItemStyle = tva({
@@ -346,7 +346,7 @@ const ActionsheetItemText = React.forwardRef<
     className,
     ...props
   },
-  ref
+  ref,
 ) {
   return (
     <UIActionsheet.ItemText
@@ -494,7 +494,7 @@ const ActionsheetSectionHeaderText = React.forwardRef<
     highlight,
     ...props
   },
-  ref
+  ref,
 ) {
   return (
     <UIActionsheet.SectionHeaderText

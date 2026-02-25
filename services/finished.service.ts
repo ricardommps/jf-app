@@ -16,7 +16,9 @@ export async function finishedWorkout(payload: any) {
 
 export async function history() {
   try {
-    const response = await axiosInstance.get("/api/v2/finished/history");
+    const response = await axiosInstance.get(
+      "/api/v2/finished/historyComments",
+    );
     return response.data;
   } catch (error: any) {
     Sentry.captureException(error, { extra: { context: "history" } });

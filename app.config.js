@@ -5,7 +5,7 @@ export default {
     name: "FOLTZ",
     slug: "jfapp",
     owner: "jftreinos",
-    version: "1.3.3",
+    version: "1.3.4",
     orientation: "portrait",
     icon: "./assets/images/jf_icone_app.png",
     scheme: "jfapp",
@@ -31,7 +31,7 @@ export default {
 
     ios: {
       bundleIdentifier: "com.jftreinos.jfapp",
-      buildNumber: "44",
+      buildNumber: "45",
       supportsTablet: false,
       deploymentTarget: "15.1",
       infoPlist: {
@@ -53,7 +53,7 @@ export default {
 
     android: {
       package: "com.jftreinos.jfapp",
-      versionCode: 44,
+      versionCode: 45,
       compileSdkVersion: 35,
       targetSdkVersion: 35,
       minSdkVersion: 21,

@@ -28,41 +28,43 @@ import {
   MessageCircleIcon,
   RouteIcon,
 } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RefreshControl, View } from "react-native";
 import Comments from "./components/comments";
 
+type SetSelectedItem = React.Dispatch<
+  React.SetStateAction<FinishedHistory | null>
+>;
+
+/* =========================================================
+   GYM CARD
+========================================================= */
+
 const renderCardGym = (
-  setComments: (comments: {
-    feedback: string;
-    comments: string;
-    executionDay: string;
-    updatedAt: string;
-  }) => void,
+  setSelectedItem: SetSelectedItem,
   item: FinishedHistory,
   day: string,
-  month: string
+  month: string,
 ) => {
   return (
     <HistoryGymItem
       item={item}
-      setComments={setComments}
+      setSelectedItem={setSelectedItem}
       day={day}
       month={month}
     />
   );
 };
 
+/* =========================================================
+   RUNNER CARD
+========================================================= */
+
 const renderCardRunner = (
-  setComments: (comments: {
-    feedback: string;
-    comments: string;
-    executionDay: string;
-    updatedAt: string;
-  }) => void,
+  setSelectedItem: SetSelectedItem,
   item: FinishedHistory,
   day: string,
-  month: string
+  month: string,
 ) => {
   const renderIconType = () => {
     if (item?.outdoor) {
@@ -95,26 +97,20 @@ const renderCardRunner = (
 
           {feedback ? (
             <HStack className="gap-6 pt-2 flex-wrap">
-              <Pressable
-                hitSlop={10}
-                onPress={() =>
-                  setComments({
-                    feedback: item.feedback || "",
-                    comments: item.comments || "",
-                    executionDay: item.executionDay || "",
-                    updatedAt: item.updatedAt || "",
-                  })
-                }
-              >
+              <Pressable hitSlop={10} onPress={() => setSelectedItem(item)}>
                 <Box className="relative">
                   <Icon
                     as={MessageCircleIcon}
                     className="text-typography-700"
                     size="xl"
                   />
-                  <Box className="absolute -right-1 -top-1 bg-success-500 rounded-full w-5 h-5 items-center justify-center">
-                    <Text className="text-white text-xs font-bold">1</Text>
-                  </Box>
+                  {item.comments?.length ? (
+                    <Box className="absolute -right-1 -top-1 bg-success-500 rounded-full w-5 h-5 items-center justify-center">
+                      <Text className="text-white text-xs font-bold">
+                        {item.comments.length}
+                      </Text>
+                    </Box>
+                  ) : null}
                 </Box>
               </Pressable>
             </HStack>
@@ -140,64 +136,48 @@ const renderCardRunner = (
           </VStack>
         )}
       </HStack>
-      {item.unrealized ? (
-        <Box>
-          <Text className="text-red-700 font-bold">Treino não realizado</Text>
-        </Box>
-      ) : (
+
+      {!item.unrealized && (
         <HStack className="justify-around items-center pt-2">
           <VStack className="items-center">
-            <Icon as={RouteIcon} size="xl" className="text-background-700" />
-            <Text className="text-xs text-typography-700 mt-1">Distância</Text>
-            <Text className="text-xs text-typography-900">
+            <Icon as={RouteIcon} size="xl" />
+            <Text className="text-xs mt-1">Distância</Text>
+            <Text className="text-xs">
               {convertMetersToKilometersFormat(item?.distanceInMeters || 0)}
             </Text>
           </VStack>
 
-          <Divider
-            orientation="vertical"
-            className="bg-gray-300 rounded h-12"
-          />
+          <Divider orientation="vertical" className="h-12" />
 
           <VStack className="items-center">
-            <Icon
-              as={FootprintsIcon}
-              size="xl"
-              className="text-background-700"
-            />
-            <Text className="text-xs text-typography-700 mt-1">Pace Médio</Text>
-            <Text className="text-xs text-typography-900">
+            <Icon as={FootprintsIcon} size="xl" />
+            <Text className="text-xs mt-1">Pace Médio</Text>
+            <Text className="text-xs">
               {convertPaceToSpeed(item?.paceInSeconds || 0, true)}
             </Text>
           </VStack>
 
-          <Divider
-            orientation="vertical"
-            className="bg-gray-300 rounded h-12"
-          />
+          <Divider orientation="vertical" className="h-12" />
 
           <VStack className="items-center">
-            <Icon as={Clock10Icon} size="xl" className="text-background-700" />
-            <Text className="text-xs text-typography-700 mt-1">Tempo</Text>
-            <Text className="text-xs text-typography-900">
+            <Icon as={Clock10Icon} size="xl" />
+            <Text className="text-xs mt-1">Tempo</Text>
+            <Text className="text-xs">
               {convertSecondsToHourMinuteFormat(item?.durationInSeconds || 0)}
             </Text>
           </VStack>
 
-          <Divider
-            orientation="vertical"
-            className="bg-gray-300 rounded h-12"
-          />
+          <Divider orientation="vertical" className="h-12" />
 
           <VStack className="items-center">
             <RpeDisplay rpe={item.rpe || 0} />
           </VStack>
 
-          <Divider orientation="vertical" className="bg-gray-300 rounded" />
+          <Divider orientation="vertical" />
 
           <VStack className="items-center">
             {renderIconType()}
-            <Text className="text-xs text-typography-700 mt-1">
+            <Text className="text-xs mt-1">
               {item?.outdoor ? "Outdoor" : "Indoor"}
             </Text>
           </VStack>
@@ -207,56 +187,42 @@ const renderCardRunner = (
   );
 };
 
-const createRenderItem = (
-  setComments: React.Dispatch<
-    React.SetStateAction<{
-      feedback: string;
-      comments: string;
-      executionDay: string;
-      updatedAt: string;
-    } | null>
-  >
-): ListRenderItem<FinishedHistory> => {
-  return ({ item, index }) => {
-    const parsedDate = parseISO(item.executionDay);
-    const day = format(parsedDate, "dd");
-    const month = format(parsedDate, "MMMM", { locale: ptBR });
+/* =========================================================
+   SCREEN
+========================================================= */
 
-    return (
-      <View>
-        {item.trainingRunninge
-          ? renderCardRunner(setComments, item, day, month)
-          : renderCardGym(setComments, item, day, month)}
-      </View>
-    );
-  };
-};
+const HistoryScreen = () => {
+  const [selectedItem, setSelectedItem] = useState<FinishedHistory | null>(
+    null,
+  );
 
-const History = () => {
-  const [comments, setComments] = useState<{
-    feedback: string;
-    comments: string;
-    executionDay: string;
-    updatedAt: string;
-  } | null>(null);
-  const [refreshing] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<FinishedHistory[]>({
     queryKey: ["history"],
     queryFn: history,
-    staleTime: 0,
-    gcTime: 0,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
-  const onRefresh = async () => {
-    try {
-      queryClient.removeQueries({ queryKey: ["history"] });
-      await queryClient.invalidateQueries({ queryKey: ["history"] });
-    } catch (error) {
-      console.warn(error);
+
+  /* =========================================================
+     🔥 SINCRONIZA selectedItem COM NOVO DATA
+  ========================================================= */
+
+  useEffect(() => {
+    if (!selectedItem || !data) return;
+
+    const updatedItem = data.find((item) => item.id === selectedItem.id);
+
+    if (updatedItem) {
+      setSelectedItem(updatedItem);
     }
+  }, [data]);
+
+  const onRefresh = async () => {
+    await queryClient.invalidateQueries({
+      queryKey: ["history"],
+    });
   };
 
   if (isLoading) {
@@ -266,43 +232,60 @@ const History = () => {
       </View>
     );
   }
+  const renderItem: ListRenderItem<FinishedHistory> = ({ item }) => {
+    const parsedDate = parseISO(item.executionDay);
+    const day = format(parsedDate, "dd");
+    const month = format(parsedDate, "MMMM", { locale: ptBR });
+
+    return (
+      <View>
+        {item.trainingRunning
+          ? renderCardRunner(setSelectedItem, item, day, month)
+          : renderCardGym(setSelectedItem, item, day, month)}
+      </View>
+    );
+  };
 
   return (
     <View className="flex-1 bg-[#000] pt-3">
-      <Text
-        size="2xl"
-        className="text-typography-900 font-roboto text-center mb-5"
-      >
+      <Text size="2xl" className="text-typography-900 text-center mb-5">
         Histórico dos últimos 30 dias
       </Text>
 
-      <FlashList<FinishedHistory>
-        data={data || []}
-        renderItem={createRenderItem(setComments)}
+      <FlashList
+        data={data ?? []}
+        renderItem={renderItem}
         keyExtractor={(item) => String(item.id)}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#2b2b2b9d"]}
-            tintColor="#2b2b2b9d"
-          />
+          <RefreshControl refreshing={false} onRefresh={onRefresh} />
         }
         ListEmptyComponent={() => (
           <View style={{ marginTop: 48, alignItems: "center" }}>
             <Text style={{ color: "#999" }}>Nenhum item encontrado</Text>
           </View>
         )}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 32 }}
+        contentContainerStyle={{
+          paddingHorizontal: 12,
+          paddingBottom: 32,
+        }}
       />
 
       <Comments
-        open={Boolean(comments)}
-        onClose={() => setComments(null)}
-        content={comments}
+        open={Boolean(selectedItem)}
+        onClose={() => setSelectedItem(null)}
+        finishedId={selectedItem?.id ?? null}
+        content={
+          selectedItem
+            ? {
+                executionDay: selectedItem.executionDay,
+                updatedAt: selectedItem.updatedAt,
+                comments: selectedItem.comments ?? [],
+              }
+            : null
+        }
       />
     </View>
   );
 };
 
-export default History;
+export default HistoryScreen;

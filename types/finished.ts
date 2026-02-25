@@ -1,3 +1,5 @@
+import { CommentItem } from "./commnets.type";
+
 export type Finished = {
   id: number;
   workoutsId: number;
@@ -9,7 +11,7 @@ export type Finished = {
   rpe: number | null;
   trimp: string | null;
   review: boolean | null;
-  comments: string | null;
+  comments?: CommentItem[];
   feedback: string | null;
   unrealized: boolean;
   outdoor: boolean;
@@ -34,7 +36,7 @@ export type FinishedHistory = {
   rpe: number | null;
   trimp: number | null;
   review: string | null;
-  comments: string;
+  comments?: CommentItem[];
   feedback: string | null;
   unrealized: boolean;
   intensities: string | null;
@@ -56,7 +58,7 @@ export type FinishedHistory = {
   trainingName: string;
   trainingSubtitle: string;
   trainingDesc: string;
-  trainingRunninge: boolean;
+  trainingRunning: boolean;
   trainingDatePublished: string | null;
   trainingId: string;
   programName: string;

@@ -110,9 +110,7 @@ const Settings = () => {
           </VStack>
 
           <View className="py-4">
-            <Text className="text-center text-white text-sm">
-              Versão {appVersion}
-            </Text>
+            <Text className="text-center text-white text-sm">{appVersion}</Text>
           </View>
         </View>
       </View>

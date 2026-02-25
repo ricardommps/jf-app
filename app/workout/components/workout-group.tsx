@@ -1,3 +1,4 @@
+import StopwatchTimer from "@/components/stopwatchTimer";
 import { Alert, AlertIcon, AlertText } from "@/components/ui/alert";
 import { Box } from "@/components/ui/box";
 import {
@@ -35,6 +36,12 @@ const WorkoutGroup = ({
   isWorkoutLoad,
   musclesWorked,
 }: Props) => {
+  const lastMedia = media?.[media.length - 1];
+
+  const exerciseInfoById: MediaInfo | undefined = exerciseInfo?.find(
+    (item) => item.mediaId === lastMedia?.id,
+  );
+
   const [itemHeights, setItemHeights] = useState<number[]>([]);
   const [carouselHeight, setCarouselHeight] = useState(400);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -127,6 +134,9 @@ const WorkoutGroup = ({
       style={{ borderColor: "#2b2b2bc9", minHeight: "auto" }}
     >
       {handleType}
+      <Box className="mb-3 mt-5">
+        <StopwatchTimer resetSeconds={exerciseInfoById?.reset ?? undefined} />
+      </Box>
 
       {/* Navegação e contador */}
       <Box className="flex-row items-center justify-center mt-4 w-full gap-x-2 mb-4">
@@ -161,18 +171,17 @@ const WorkoutGroup = ({
 
       {/* Carousel */}
       <Box
-        className="items-center justify-center relative"
+        className="items-center justify-center"
         style={{ minHeight: carouselHeight }}
       >
         <Carousel
           data={media}
           height={carouselHeight}
+          width={window.width - 40} // largura real do item
           loop={false}
           pagingEnabled
           snapEnabled
-          width={window.width - 40}
           ref={ref}
-          style={{ width: window.width }}
           mode="horizontal-stack"
           modeConfig={{ snapDirection: "left", stackInterval: 0 }}
           onProgressChange={progress}

@@ -28,6 +28,7 @@ import { useSharedValue, withSpring } from "react-native-reanimated";
 
 // Importa o novo componente
 import MusclesScreen from "@/components/muscles-screen";
+import StopwatchTimer from "@/components/stopwatchTimer";
 import VideoPlayerModal from "./VideoPlayerModal";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -38,6 +39,7 @@ interface Props {
   isWorkoutLoad: boolean;
   debug?: boolean;
   musclesWorked?: boolean;
+  stopwatch?: boolean;
 }
 
 const getYoutubeId = (url?: string) => {
@@ -58,6 +60,7 @@ const WorkoutItem = ({
   exerciseInfo,
   isWorkoutLoad,
   musclesWorked,
+  stopwatch,
 }: Props) => {
   const queryClient = useQueryClient();
   const { checkList, handleCheckList } = useWorkouut();
@@ -123,7 +126,7 @@ const WorkoutItem = ({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["workoutLoad", media.id],
+    queryKey: ["exerciseInfoById", exerciseInfoById],
     queryFn: async () => await getWorkoutLoad(media.id),
     retry: 3,
     enabled: !!media.id,
@@ -176,7 +179,6 @@ const WorkoutItem = ({
       setMinimized(false);
     }
   };
-
   return (
     <>
       <Box
@@ -184,6 +186,14 @@ const WorkoutItem = ({
           checkList.includes(Number(media.id)) ? "border border-green-300" : ""
         }`}
       >
+        {stopwatch && (
+          <Box className="mb-3">
+            <StopwatchTimer
+              resetSeconds={exerciseInfoById?.reset ?? undefined}
+            />
+          </Box>
+        )}
+
         <VStack className="px-0" space="md">
           <VStack className="gap-3">
             <HStack className="items-start gap-3">

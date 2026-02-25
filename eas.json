@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 7.8.6"
+    "version": ">= 7.8.6",
+    "appVersionSource": "remote"
   },
   "build": {
     "production": {
@@ -32,7 +33,7 @@
       "channel": "staging",
       "env": {
         "APP_ENV": "staging",
-        "EXPO_PUBLIC_API_URL": "https://jf-app-api-staging.vercel.app",
+        "EXPO_PUBLIC_API_URL": "https://jf-app-api.vercel.app",
         "EXPO_PUBLIC_IS_DEV": "true",
         "EXPO_PUBLIC_ENABLE_LINKING": "true",
         "PHONENUMBER": "5548991781646",

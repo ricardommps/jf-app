@@ -81,6 +81,7 @@ const WorkoutView = ({
               exerciseInfo={exerciseInfo}
               isWorkoutLoad={isWorkoutLoad}
               musclesWorked={musclesWorked}
+              stopwatch={true}
             />
           </View>
         );

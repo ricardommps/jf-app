@@ -7,6 +7,7 @@ import { ThemeContext, ThemeProvider } from "@/contexts/theme-context";
 import "@/global.css";
 import * as Sentry from "@sentry/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Audio } from "expo-av";
 import { useFonts } from "expo-font";
 import * as Notifications from "expo-notifications";
 import { Slot, usePathname, useRouter } from "expo-router";
@@ -252,6 +253,13 @@ const MainLayout = () => {
       runAutoUpdate();
     }
   }, [appReady, showSplash]);
+
+  useEffect(() => {
+    Audio.setAudioModeAsync({
+      playsInSilentModeIOS: true,
+      allowsRecordingIOS: false,
+    });
+  }, []);
 
   const handleSplashFinish = () => setShowSplash(false);
 

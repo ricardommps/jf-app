@@ -27,11 +27,6 @@ const GymItemView = ({ item }: Props) => {
   );
   const [selectedItem, setSelectedItem] = useState<Finished | null>(null);
 
-  const toggleComments = (item: Finished) => {
-    setSelectedItem(item);
-    setOpenCommentsIds((prev) => new Set([item.id])); // Só mantém um aberto por vez
-  };
-
   const closeComments = () => {
     setSelectedItem(null);
     setOpenCommentsIds(new Set());
@@ -93,7 +88,6 @@ const GymItemView = ({ item }: Props) => {
   };
   const allMusclesIds = getAllMusclesFromWorkout(item);
   const activeSvgIds = getActiveSvgIds(allMusclesIds);
-
   return (
     <>
       <Box className="bg-[#2b2b2b9d] rounded-xl p-4 mb-2 min-h-[100px]">
@@ -180,7 +174,7 @@ const GymItemView = ({ item }: Props) => {
           onClose={closeComments}
           content={{
             feedback: selectedItem.feedback || "",
-            comments: selectedItem.comments || "",
+            comments: selectedItem.comments || [],
             executionDay: selectedItem.executionDay,
             updatedAt: selectedItem.updatedAt
               ? selectedItem.updatedAt instanceof Date
