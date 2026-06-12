@@ -23,7 +23,7 @@ const Header = ({ title }: HeaderProps) => {
 
   return (
     <View className="bg-black border-b border-gray-800 px-4">
-      <View className="h-14 justify-center">
+      <View className={`${title ? "h-[68px]" : "h-16"} justify-center`}>
         {title ? (
           <View className="flex-row items-center justify-between">
             {/* Botão voltar */}
@@ -35,11 +35,11 @@ const Header = ({ title }: HeaderProps) => {
             </TouchableOpacity>
 
             {/* Logo + Título */}
-            <View className="flex-row items-center gap-2">
+            <View className="flex-row items-center gap-3">
               <Image
-                source={require("@/assets/images/jf_icone_v1.png")}
+                source={require("@/assets/images/copa/jf_icone_v1.png")}
                 alt="logo"
-                className="h-7 w-7"
+                className="h-12 w-12"
                 resizeMode="contain"
               />
               <Text className="text-white text-lg font-semibold">{title}</Text>
@@ -53,9 +53,9 @@ const Header = ({ title }: HeaderProps) => {
             {/* Logo CENTRAL */}
             <View className="absolute left-0 right-0 items-center">
               <Image
-                source={require("@/assets/images/jf_reducao_bc.png")}
+                source={require("@/assets/images/copa/jf_reducao_bc.png")}
                 alt="image"
-                className="h-24 w-24"
+                className="h-14 w-40"
                 resizeMode="contain"
               />
             </View>

@@ -103,10 +103,10 @@ const RunnerView = ({ workouts, programId }: Props) => {
   const [showActionsheet, setShowActionsheet] = useState(false);
   const [showVolumeModal, setShowVolumeModal] = useState(false);
   const [filteredWorkouts, setFilteredWorkouts] = useState<Workout[] | null>(
-    null
+    null,
   );
   const [selectedDate, setSelectedDate] = useState<string>(
-    toISOStringWithTimezone(today)
+    toISOStringWithTimezone(today),
   );
   const [activeTab, setActiveTab] = useState<TabId | null>(null);
 
@@ -146,11 +146,11 @@ const RunnerView = ({ workouts, programId }: Props) => {
 
   function getFilteredWorkoutsByDate(
     workouts_: Workout[],
-    targetDate: string
+    targetDate: string,
   ): Workout[] {
     return workouts_.filter((workout) => {
       const datePublished = toISOStringWithTimezone(
-        new Date(workout.datePublished)
+        new Date(workout.datePublished),
       );
       const workoutDateOther = workout.workoutDateOther
         ? toISOStringWithTimezone(new Date(workout.workoutDateOther))
@@ -183,7 +183,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
 
     workouts.forEach((workout) => {
       const workoutDate = toISOStringWithTimezone(
-        new Date(workout.datePublished)
+        new Date(workout.datePublished),
       );
 
       if (workout.title === "COMPETICAO") {
@@ -303,10 +303,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
 
   const renderItem = useCallback<
     NonNullable<FlatListProps<Workout>["renderItem"]>
-  >(
-    ({ item }) => <RunnerItemView isDarkMode={isDarkMode} item={item} />,
-    [isDarkMode]
-  );
+  >(({ item }) => <RunnerItemView item={item} />, []);
 
   // ================= ANIMAÇÃO DOS ÍCONES =================
   const scaleRefs = useRef<Record<TabId, Animated.Value>>({

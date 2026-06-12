@@ -32,6 +32,7 @@ import { Controller, useForm } from "react-hook-form";
 import {
   Modal,
   ScrollView,
+  TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
@@ -44,10 +45,16 @@ import {
   ToastTitle,
   useToast,
 } from "@/components/ui/toast";
-import { finishedWorkout } from "@/services/finished.service";
 
+import { ActivityMap } from "@/components/activity-map";
 import Header from "@/components/header";
+import {
+  useStravaActivities,
+  useStravaStatus,
+} from "@/hooks/useConnectStrava/useConnectStrava";
+import { finishedWorkout } from "@/services/finished.service";
 import { calendarBaseTheme } from "@/utils/calendar-base-theme";
+import { FontAwesome5 } from "@expo/vector-icons";
 
 interface FormData {
   activityUrl: string;
@@ -61,6 +68,7 @@ const workoutSchema = z.object({
   rpe: z.number(),
   trimp: z.number(),
   link: z.string(),
+  linkstrava: z.string(),
   comments: z.string(),
   outdoor: z.boolean(),
   distanceInMeters: z
@@ -95,6 +103,9 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
   const { colorMode }: any = useContext(ThemeContext);
   const isDarkMode = colorMode === "dark";
 
+  const { data: stravaData } = useStravaStatus();
+  const isConnected = stravaData?.connected ?? false;
+
   const [modalVisible, setModalVisible] = useState(false);
 
   const [showDistancePicker, setDistanceShowPicker] = useState(false);
@@ -104,11 +115,20 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [toastId, setToastId] = useState<string>("");
 
+  const [isImporting, setIsImporting] = useState(false);
+  const [stravaImportMessage, setStravaImportMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const [activityPolyline, setActivityPolyline] = useState<string | null>(null);
+
   const defaultValues = useMemo(
     () => ({
       rpe: 0,
       trimp: 0,
       link: "",
+      linkstrava: "",
       comments: "",
       workoutsId: safeId,
       outdoor: true,
@@ -117,7 +137,7 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
       paceInSeconds: 0,
       executionDay: "",
     }),
-    [safeId]
+    [safeId],
   );
 
   const {
@@ -138,6 +158,10 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
   const paceInSeconds = watch("paceInSeconds");
   const watchedRpe = watch("rpe");
   const trimp = watch("trimp");
+  const watchedLinkStrava = watch("linkstrava");
+
+  const { refetch: refetchStravaActivities } =
+    useStravaActivities(watchedExecutionDay);
 
   const calendarProps = useMemo(() => {
     const baseTheme = { ...calendarBaseTheme };
@@ -151,6 +175,69 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
     setModalVisible(false);
   };
 
+  const clearStravaFields = () => {
+    setValue("distanceInMeters", 0);
+    setValue("durationInSeconds", 0);
+    setValue("paceInSeconds", 0);
+    setValue("linkstrava", "");
+    setActivityPolyline(null); // 👈 importante
+  };
+
+  // Atualize o handleImportFromStrava
+  const handleImportFromStrava = async (event?: any) => {
+    event?.stopPropagation?.();
+    event?.preventDefault?.();
+
+    if (!watchedExecutionDay) return;
+
+    setIsImporting(true); // ✅ controle manual
+    setStravaImportMessage(null);
+
+    try {
+      const { data } = await refetchStravaActivities();
+
+      if (!data || data.type !== "Run" || !data.map?.summary_polyline) {
+        clearStravaFields();
+        setStravaImportMessage({
+          type: "error",
+          text: "Nenhum treino de corrida encontrado para o dia informado.",
+        });
+        return;
+      }
+
+      const adjustedDistance = Math.round(data.distance / 10);
+
+      let paceForPicker = 0;
+      if (data.moving_time > 0 && data.distance > 0) {
+        const distanceKm = data.distance / 1000;
+        const totalPaceSeconds = Math.round(data.moving_time / distanceKm);
+        const paceMinutes = Math.floor(totalPaceSeconds / 60);
+        const paceSeconds = totalPaceSeconds % 60;
+        paceForPicker = paceMinutes * 100 + paceSeconds;
+      }
+
+      setValue("distanceInMeters", adjustedDistance);
+      setValue("durationInSeconds", data.moving_time);
+      setValue("paceInSeconds", paceForPicker);
+      setValue("linkstrava", `https://www.strava.com/activities/${data.id}`);
+
+      setActivityPolyline(data.map.summary_polyline);
+
+      setStravaImportMessage({
+        type: "success",
+        text: "Dados importados do Strava com sucesso ✅",
+      });
+    } catch (error) {
+      clearStravaFields(); // ✅ limpa quando der erro na requisição
+
+      setStravaImportMessage({
+        type: "error",
+        text: "Erro ao importar dados do Strava.",
+      });
+    } finally {
+      setIsImporting(false); // ✅ sempre limpa ao terminar
+    }
+  };
   async function onSubmit(data: WorkoutFormData) {
     setIsLoading(true);
     try {
@@ -160,12 +247,13 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
       payload.durationInSeconds = Number(payload.durationInSeconds);
       payload.rpe = Number(payload.rpe);
       payload.link = payload.link;
+      payload.linkstrava = payload.linkstrava;
       payload.paceInSeconds = Number(payload.paceInSeconds);
       payload.executionDay = convertDate(payload.executionDay);
       await finishedWorkout(payload);
       router.push(
         `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}
-        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}&subtitle=${subtitle}&trimp=${payload.trimp}` as any
+        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}&subtitle=${subtitle}&trimp=${payload.trimp}` as any,
       );
     } catch (err) {
       const parsedError = err as Error;
@@ -294,9 +382,73 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
             </Text>
           )}
         </Box>
+        {isConnected && watchedExecutionDay && (
+          <>
+            <Box className="px-4 pt-2">
+              <TouchableOpacity
+                activeOpacity={0.8}
+                className="flex-row items-center justify-center bg-[#FC4C02] py-3 rounded-xl gap-2"
+                onPress={(e) => handleImportFromStrava(e)}
+                disabled={isImporting} // ✅ aqui
+              >
+                <FontAwesome5 name="strava" size={18} color="#fff" />
+                <Text className="text-white font-semibold text-sm">
+                  {isImporting ? "Importando..." : "Importar treino do Strava"}
+                </Text>
+              </TouchableOpacity>
+
+              {stravaImportMessage && (
+                <Text
+                  className={`text-sm mt-2 text-center ${
+                    stravaImportMessage.type === "success"
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {stravaImportMessage.text}
+                </Text>
+              )}
+            </Box>
+            {activityPolyline && (
+              <Box className="px-4 pt-4">
+                <ActivityMap encodedPolyline={activityPolyline} />
+              </Box>
+            )}
+            {watchedLinkStrava && (
+              <Box className="px-4 pt-2">
+                <Text className="text-typography-600 text-base mb-1">
+                  Link do Strava
+                </Text>
+                <Controller
+                  control={control}
+                  name="linkstrava"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      variant="rounded"
+                      className="border-0 bg-[#2b2b2b9d] rounded-md mt-1 mb-1 w-full"
+                      size="lg"
+                      isDisabled
+                    >
+                      <InputField
+                        editable
+                        value={value}
+                        onChangeText={onChange}
+                        placeholder="Link do Strava"
+                        className="placeholder:text-typography-400"
+                        autoComplete="off"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                      />
+                    </Input>
+                  )}
+                />
+              </Box>
+            )}
+          </>
+        )}
         <Box className="px-4 pt-5">
           <Text className="text-typography-600 text-base mb-1">
-            Link da atividade
+            Link do relógio
           </Text>
           <Controller
             control={control}
@@ -326,6 +478,7 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
           <Pressable
             className="w-full"
             onPress={() => setDistanceShowPicker(true)}
+            disabled={isImporting}
           >
             <Box pointerEvents="none">
               <Text className="text-typography-600 text-base">
@@ -355,7 +508,11 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
         </Box>
         {/* Campo de duração */}
         <Box className="px-4 pt-2">
-          <Pressable className="w-full" onPress={() => setTimeShowPicker(true)}>
+          <Pressable
+            className="w-full"
+            onPress={() => setTimeShowPicker(true)}
+            disabled={isImporting}
+          >
             <Box pointerEvents="none">
               <Text className="text-typography-600 text-base">
                 Duração (hh:mm:ss)
@@ -384,7 +541,11 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
         </Box>
         {/* Campo de pace */}
         <Box className="px-4 pt-2">
-          <Pressable className="w-full" onPress={() => setPaceShowPicker(true)}>
+          <Pressable
+            className="w-full"
+            onPress={() => setPaceShowPicker(true)}
+            disabled={isImporting}
+          >
             <Box pointerEvents="none">
               <Text className="text-typography-600 text-base">Pace (km)</Text>
               <Input
@@ -501,7 +662,14 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
           <Button variant="outline" size="md" onPress={() => router.back()}>
             <ButtonText>Fechar</ButtonText>
           </Button>
-          <Button action="primary" size="md" onPress={handleSubmit(onSubmit)}>
+          <Button
+            action="primary"
+            size="md"
+            onPress={(e) => {
+              e?.stopPropagation?.();
+              handleSubmit(onSubmit)();
+            }}
+          >
             <ButtonText>Salvar</ButtonText>
           </Button>
         </HStack>

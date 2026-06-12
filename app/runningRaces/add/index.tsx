@@ -13,6 +13,7 @@ import {
   ToastTitle,
   useToast,
 } from "@/components/ui/toast";
+import { useStravaStatus } from "@/hooks/useConnectStrava/useConnectStrava";
 import {
   createRunningRaces,
   updateRunningRaces,
@@ -26,6 +27,7 @@ import { CalendarDays, Loader2 } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  ActivityIndicator,
   Modal,
   ScrollView,
   TouchableWithoutFeedback,
@@ -57,6 +59,9 @@ export default function AddRunningRacesScreen() {
   const router = useRouter();
   const toast = useToast();
   const isEditMode = !!workoutId;
+  const { data: stravaData, isLoading: stravaDataIsLoading } =
+    useStravaStatus();
+  const isConnected = stravaData?.connected ?? false;
 
   // Query para buscar dados do workout quando estiver em modo de edição
   const { data: workoutData, isLoading: isLoadingWorkout } = useQuery({
@@ -75,7 +80,7 @@ export default function AddRunningRacesScreen() {
       link: "",
       datePublished: "",
     }),
-    [programId]
+    [programId],
   );
 
   const calendarTheme = useMemo(
@@ -103,7 +108,7 @@ export default function AddRunningRacesScreen() {
       textMonthFontSize: 18,
       textDayHeaderFontSize: 14,
     }),
-    []
+    [],
   );
 
   const {
@@ -167,7 +172,7 @@ export default function AddRunningRacesScreen() {
       const action = isEditMode ? "atualizar" : "salvar";
       showNewToast(
         `Não foi possível ${action} a prova. ${parsedError}`,
-        "error"
+        "error",
       );
     } finally {
       setIsLoading(false);
@@ -176,7 +181,7 @@ export default function AddRunningRacesScreen() {
 
   const showNewToast = (
     message: string,
-    type: "success" | "error" = "error"
+    type: "success" | "error" = "error",
   ) => {
     const newId = Math.random().toString();
     toast.show({
@@ -195,6 +200,13 @@ export default function AddRunningRacesScreen() {
     });
   };
 
+  if (stravaDataIsLoading) {
+    return (
+      <View className="flex-1 bg-neutral-900 items-center justify-center">
+        <ActivityIndicator size="large" color="#FC4C02" />
+      </View>
+    );
+  }
   // Mostra loading enquanto carrega os dados
   if (isLoadingWorkout && isEditMode) {
     return (
@@ -351,8 +363,8 @@ export default function AddRunningRacesScreen() {
                     ? "Atualizando..."
                     : "Salvando..."
                   : isEditMode
-                  ? "Atualizar"
-                  : "Salvar"}
+                    ? "Atualizar"
+                    : "Salvar"}
               </ButtonText>
             </Button>
           </HStack>

@@ -74,7 +74,7 @@ const workoutSchema = z.object({
     z
       .number()
       .nonnegative("Intensidade deve ser um valor positivo")
-      .finite("Intensidade deve ser um número válido")
+      .finite("Intensidade deve ser um número válido"),
   ),
   warmUpDuration: z.number(),
   warmUpIntensities: z.number(),
@@ -125,7 +125,7 @@ const IndoorScreen = ({ safeId, titleStr }: Props) => {
       coolDownDuration: 0,
       coolDownIntensities: 0,
     }),
-    [safeId]
+    [safeId],
   );
 
   const {
@@ -176,7 +176,7 @@ const IndoorScreen = ({ safeId, titleStr }: Props) => {
       payload.executionDay = convertDate(payload.executionDay);
       await finishedWorkout(payload);
       router.push(
-        `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}&rpe=${payload.rpe}&title=${titleStr}&trimp=${payload.trimp}` as any
+        `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}&rpe=${payload.rpe}&title=${titleStr}&trimp=${payload.trimp}` as any,
       );
     } catch (err) {
       const parsedError = err as Error;

@@ -34,7 +34,7 @@ export async function gerarTemplateHtml(
 
   try {
     const logoBase64 = await loadAssetAsBase64(
-      require("@/assets/images/jf_logo_full.png")
+      require("@/assets/images/copa/jf_logo_full.png")
     );
     logoDataUri_ = `data:image/png;base64,${logoBase64}`;
   } catch (error) {

@@ -5,9 +5,9 @@ export default {
     name: "FOLTZ",
     slug: "jfapp",
     owner: "jftreinos",
-    version: "1.3.4",
+    version: "1.3.5",
     orientation: "portrait",
-    icon: "./assets/images/jf_icone_app.png",
+    icon: "./assets/images/copa/jf_icone_app.png",
     scheme: "jfapp",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
@@ -22,16 +22,12 @@ export default {
     },
 
     linking: {
-      prefixes: [
-        "jfapp://",
-        "https://connect.garmin.com",
-        "https://www.strava.com",
-      ],
+      prefixes: ["jfapp://"],
     },
 
     ios: {
       bundleIdentifier: "com.jftreinos.jfapp",
-      buildNumber: "45",
+      buildNumber: "46",
       supportsTablet: false,
       deploymentTarget: "15.1",
       infoPlist: {
@@ -45,21 +41,17 @@ export default {
         UIViewControllerBasedStatusBarAppearance: false,
         UIStatusBarStyle: "UIStatusBarStyleLightContent",
       },
-      associatedDomains: [
-        "applinks:connect.garmin.com",
-        "applinks:www.strava.com",
-      ],
     },
 
     android: {
       package: "com.jftreinos.jfapp",
-      versionCode: 45,
+      versionCode: 46,
       compileSdkVersion: 35,
       targetSdkVersion: 35,
       minSdkVersion: 21,
       buildToolsVersion: "35.0.0",
       adaptiveIcon: {
-        foregroundImage: "./assets/images/jf_icone_app.png",
+        foregroundImage: "./assets/images/copa/jf_icone_app.png",
         backgroundColor: "#000000",
       },
       softwareKeyboardLayoutMode: "pan",
@@ -70,30 +62,9 @@ export default {
             "android.intent.category.DEFAULT",
             "android.intent.category.BROWSABLE",
           ],
-          data: { scheme: "jfapp" },
-        },
-        {
-          action: "android.intent.action.VIEW",
-          category: [
-            "android.intent.category.DEFAULT",
-            "android.intent.category.BROWSABLE",
-          ],
           data: {
-            scheme: "https",
-            host: "connect.garmin.com",
-            pathPrefix: "/modern/activity",
-          },
-        },
-        {
-          action: "android.intent.action.VIEW",
-          category: [
-            "android.intent.category.DEFAULT",
-            "android.intent.category.BROWSABLE",
-          ],
-          data: {
-            scheme: "https",
-            host: "www.strava.com",
-            pathPrefix: "/activities",
+            scheme: "jfapp",
+            host: "strava-success",
           },
         },
       ],
@@ -123,7 +94,7 @@ export default {
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/jf_icone_app.png",
+          image: "./assets/images/copa/jf_icone_app.png",
           imageWidth: 300,
           resizeMode: "contain",
           backgroundColor: "#000000",
@@ -132,7 +103,7 @@ export default {
       [
         "expo-notifications",
         {
-          icon: "./assets/images/jf_logo_icone_push.png",
+          icon: "./assets/images/copa/jf_logo_icone_push.png",
           color: "#ffffff",
           defaultChannel: "default",
           enableBackgroundRemoteNotifications: true,
@@ -168,7 +139,7 @@ export default {
     },
 
     notification: {
-      icon: "./assets/images/jf_logo_icone_push.png",
+      icon: "./assets/images/copa/jf_logo_icone_push.png",
       color: "#ffffff",
     },
 

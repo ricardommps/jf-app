@@ -37,3 +37,15 @@ export async function getFinishedById(id: string) {
     throw error;
   }
 }
+
+export async function getFinishedHistory(id: string) {
+  try {
+    const response = await axiosInstance.get(`/api/v2/finished/history/${id}`);
+    return response.data;
+  } catch (error: any) {
+    Sentry.captureException(error, {
+      extra: { context: "getFinishedHistory", id },
+    });
+    throw error;
+  }
+}

@@ -649,7 +649,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
         <View className="flex-1 bg-black">
           <View ref={shareViewRef} collapsable={false} className="flex-1">
             <ImageBackground
-              source={require("@/assets/images/foltz_tela.png")}
+              source={require("@/assets/images/copa/foltz_tela.png")}
               resizeMode="cover"
               className="flex-1 p-2"
             >

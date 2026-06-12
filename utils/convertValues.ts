@@ -6,12 +6,12 @@ const formatter = new Intl.NumberFormat("pt-BR", {
 export function convertMetersToKilometersFormat(
   meters: number,
   hideKm: boolean = false,
-  formatterStr?: string
+  formatterStr?: string,
 ): string {
   const kilometers = meters / 100;
   const formatted = formatter.format(kilometers);
 
-  const suffix = hideKm ? "" : formatterStr ?? "km/h";
+  const suffix = hideKm ? "" : (formatterStr ?? "km/h");
 
   return `${formatted}${suffix ? ` ${suffix}` : ""}`;
 }
@@ -19,12 +19,12 @@ export function convertMetersToKilometersFormat(
 export function convertDistanceSave(
   meters: number,
   hideKm: boolean = false,
-  formatterStr?: string
+  formatterStr?: string,
 ): string {
   const kilometers = meters / 1000;
   const formatted = formatter.format(kilometers);
 
-  const suffix = hideKm ? "" : formatterStr ?? "km/h";
+  const suffix = hideKm ? "" : (formatterStr ?? "km/h");
 
   return `${formatted}${suffix ? ` ${suffix}` : ""}`;
 }
@@ -45,7 +45,7 @@ export function convertSecondsToHourMinuteFormat(seconds: number): string {
 
 export function convertPaceToSpeed(
   meters: number,
-  hideKm: boolean = false
+  hideKm: boolean = false,
 ): string {
   const kilometers = meters / 100;
   const formatted = formatter.format(kilometers);

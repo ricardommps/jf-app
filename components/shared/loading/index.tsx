@@ -15,7 +15,7 @@ const Loading = () => {
         style={styles.content}
       >
         <Image
-          source={require("@/assets/images/jf_logo_full.png")}
+          source={require("@/assets/images/copa/jf_logo_full.png")}
           alt="logo"
           resizeMode="contain"
           className="w-[400px] h-[200px]"

@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import TreadmillIcon from "@/components/ui/treadmill-icon";
 import { VStack } from "@/components/ui/vstack";
+import { useFinishedHistory } from "@/hooks/useFinished/useFinished";
 import { Workout } from "@/types/workout";
 import {
   convertMetersToKilometersFormat,
@@ -16,18 +17,27 @@ import {
 } from "@/utils/convertValues";
 import { moduleName } from "@/utils/module-name";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { format, parse } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { format } from "date-fns";
 import { useRouter } from "expo-router";
 import { Clock10Icon, FootprintsIcon, RouteIcon } from "lucide-react-native";
 
 interface Props {
-  isDarkMode: boolean;
   item: Workout;
 }
 
-const RunnerItemView = ({ isDarkMode, item }: Props) => {
+const RunnerItemView = ({ item }: Props) => {
   const router = useRouter();
+
+  const { data: finishedHistoryData } = useFinishedHistory(item.id, {
+    enabled: item.finished,
+  });
+
+  const history =
+    item.finished && Array.isArray(finishedHistoryData)
+      ? finishedHistoryData
+      : (item.history ?? []);
+
+  const firstHistory = history[0];
   const handleNavigate = (id: string) => {
     router.push(`/workout/view?id=${id}&type=1` as any);
   };
@@ -111,25 +121,8 @@ const RunnerItemView = ({ isDarkMode, item }: Props) => {
   };
 
   const renderCard = () => {
-    let day = "";
-    let monthYear = "";
-
-    if (item?.history.length > 0 && item?.history[0].executionDay) {
-      try {
-        const parsedDate = parse(
-          item?.history[0].executionDay,
-          "dd/MM/yyyy",
-          new Date()
-        );
-        day = format(parsedDate, "dd");
-        monthYear = format(parsedDate, "MMMM", { locale: ptBR });
-      } catch (error) {
-        console.warn("Data inválida:", item?.history[0].executionDay);
-      }
-    }
-
     const renderIconType = () => {
-      if (item?.history[0].outdoor) {
+      if (firstHistory.outdoor) {
         return (
           <MaterialCommunityIcons
             name={"road" as any}
@@ -158,63 +151,81 @@ const RunnerItemView = ({ isDarkMode, item }: Props) => {
           )}
           <Box className="py-5">{statusTraining()}</Box>
           {item?.finished && item?.history?.length > 0 ? (
-            <HStack className="pt-2 justify-around">
-              <VStack className="items-center">
-                <Icon
-                  as={RouteIcon}
-                  size="xl"
-                  className="text-background-700"
+            <>
+              {/* {firstHistory.summaryPolyline && (
+                <Box className="px-1 pt-1">
+                  <ActivityMap encodedPolyline={firstHistory.summaryPolyline} />
+                </Box>
+              )} */}
+              <HStack className="pt-5 justify-around">
+                <VStack className="items-center">
+                  <Icon
+                    as={RouteIcon}
+                    size="xl"
+                    className="text-background-700"
+                  />
+                  <Text className="text-xs text-typography-700 mt-1">
+                    Distância
+                  </Text>
+                  <Text className="text-xs text-typography-900">
+                    {convertMetersToKilometersFormat(
+                      firstHistory.distanceInMeters || 0,
+                    )}
+                  </Text>
+                </VStack>
+                <Divider
+                  orientation="vertical"
+                  className="bg-gray-300 rounded"
                 />
-                <Text className="text-xs text-typography-700 mt-1">
-                  Distância
-                </Text>
-                <Text className="text-xs text-typography-900">
-                  {convertMetersToKilometersFormat(
-                    item?.history[0].distanceInMeters || 0
-                  )}
-                </Text>
-              </VStack>
-              <Divider orientation="vertical" className="bg-gray-300 rounded" />
-              <VStack className="items-center">
-                <Icon
-                  as={FootprintsIcon}
-                  size="xl"
-                  className="text-background-700"
+                <VStack className="items-center">
+                  <Icon
+                    as={FootprintsIcon}
+                    size="xl"
+                    className="text-background-700"
+                  />
+                  <Text className="text-xs text-typography-700 mt-1">
+                    Pace Médio
+                  </Text>
+                  <Text className="text-xs text-typography-900">
+                    {convertPaceToSpeed(firstHistory.paceInSeconds || 0, true)}
+                  </Text>
+                </VStack>
+                <Divider
+                  orientation="vertical"
+                  className="bg-gray-300 rounded"
                 />
-                <Text className="text-xs text-typography-700 mt-1">
-                  Pace Médio
-                </Text>
-                <Text className="text-xs text-typography-900">
-                  {convertPaceToSpeed(
-                    item?.history[0].paceInSeconds || 0,
-                    true
-                  )}
-                </Text>
-              </VStack>
-              <Divider orientation="vertical" className="bg-gray-300 rounded" />
-              <VStack className="items-center">
-                <Icon
-                  as={Clock10Icon}
-                  size="xl"
-                  className="text-background-700"
+                <VStack className="items-center">
+                  <Icon
+                    as={Clock10Icon}
+                    size="xl"
+                    className="text-background-700"
+                  />
+                  <Text className="text-xs text-typography-700 mt-1">
+                    Tempo
+                  </Text>
+                  <Text className="text-xs text-typography-900">
+                    {convertSecondsToHourMinuteFormat(
+                      firstHistory.durationInSeconds || 0,
+                    )}
+                  </Text>
+                </VStack>
+                <Divider
+                  orientation="vertical"
+                  className="bg-gray-300 rounded"
                 />
-                <Text className="text-xs text-typography-700 mt-1">Tempo</Text>
-                <Text className="text-xs text-typography-900">
-                  {convertSecondsToHourMinuteFormat(
-                    item?.history[0].durationInSeconds || 0
-                  )}
-                </Text>
-              </VStack>
-              <Divider orientation="vertical" className="bg-gray-300 rounded" />
-              <RpeDisplay rpe={item?.history[0].rpe || 0} />
-              <Divider orientation="vertical" className="bg-gray-300 rounded" />
-              <VStack className="items-center">
-                {renderIconType()}
-                <Text className="text-xs text-typography-700 mt-1">
-                  {item?.history[0].outdoor ? "Outdoor" : "Indoor"}
-                </Text>
-              </VStack>
-            </HStack>
+                <RpeDisplay rpe={firstHistory.rpe || 0} />
+                <Divider
+                  orientation="vertical"
+                  className="bg-gray-300 rounded"
+                />
+                <VStack className="items-center">
+                  {renderIconType()}
+                  <Text className="text-xs text-typography-700 mt-1">
+                    {firstHistory.outdoor ? "Outdoor" : "Indoor"}
+                  </Text>
+                </VStack>
+              </HStack>
+            </>
           ) : (
             <HStack className="gap-4 pt-2">
               <Button

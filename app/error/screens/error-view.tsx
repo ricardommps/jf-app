@@ -151,7 +151,7 @@ const ErrorScreen = () => {
         {/* Logo no rodapé */}
         <View className="mt-8 opacity-80">
           <Image
-            source={require("@/assets/images/jf_logo_full.png")}
+            source={require("@/assets/images/copa/jf_logo_full.png")}
             alt="logo"
             resizeMode="contain"
             className="w-[180px] h-[100px]"

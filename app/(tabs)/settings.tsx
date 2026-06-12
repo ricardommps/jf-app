@@ -1,3 +1,4 @@
+// Settings.tsx
 import Header from "@/components/header";
 import { VStack } from "@/components/ui/vstack";
 import { ENV } from "@/config/env";
@@ -41,6 +42,7 @@ const Settings = () => {
     loadPreference();
   }, []);
 
+  // Toggle push notifications
   const togglePush = async () => {
     const newValue = !pushEnabled;
     setPushEnabled(newValue);
@@ -56,8 +58,8 @@ const Settings = () => {
     }
   };
 
+  // Abrir WhatsApp
   const handleOpenWhatsApp = async () => {
-    // ✅ Usando ENV.PHONE_NUMBER ao invés de process.env
     const phoneNumber = ENV.PHONE_NUMBER;
     const message = encodeURIComponent(
       `Olá! Preciso de ajuda com o app.\n\nUsuário: ${profile?.name}\nE-mail: ${profile?.email}\nPlataforma: ${Platform.OS}\n`,
@@ -92,7 +94,8 @@ const Settings = () => {
 
         {/* Bloco inferior */}
         <View>
-          <VStack className="items-center mb-2">
+          <VStack className="items-center mb-2 space-y-3 gap-2">
+            {/* WhatsApp */}
             <TouchableOpacity
               onPress={handleOpenWhatsApp}
               activeOpacity={0.8}
@@ -103,10 +106,6 @@ const Settings = () => {
                 Falar com o suporte
               </Text>
             </TouchableOpacity>
-
-            <Text className="text-center text-gray-400 text-xs mt-2">
-              Atendimento via WhatsApp
-            </Text>
           </VStack>
 
           <View className="py-4">

@@ -105,7 +105,7 @@ export default function LoginScreen() {
               }`}
             >
               <Image
-                source={require("@/assets/images/jf_logo_full.png")}
+                source={require("@/assets/images/copa/jf_logo_full.png")}
                 alt="logo"
                 resizeMode="contain"
                 className={`${isSmallDevice ? "w-80 h-32" : "w-96 h-48"}`}

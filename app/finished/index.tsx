@@ -95,7 +95,7 @@ export default function CongratulationScreen() {
   return (
     <View className="flex-1" ref={shareViewRef} collapsable={false}>
       <ImageBackground
-        source={require("@/assets/images/foltz_tela.png")}
+        source={require("@/assets/images/copa/foltz_tela.png")}
         resizeMode="cover"
         className="flex-1 p-2"
       >

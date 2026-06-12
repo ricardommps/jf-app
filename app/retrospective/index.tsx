@@ -1,5 +1,5 @@
-import JFDefaultBackground from "@/assets/images/foltz_tela.png";
-import JFHorizontal from "@/assets/images/jf_branding.png";
+import JFDefaultBackground from "@/assets/images/copa/foltz_tela.png";
+import JFHorizontal from "@/assets/images/copa/jf_branding.png";
 import Loading from "@/components/shared/loading";
 import { Box } from "@/components/ui/box";
 import { getReview } from "@/services/review.service";

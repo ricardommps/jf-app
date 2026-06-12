@@ -10,7 +10,7 @@ const ProgramView = () => {
   const { id, type } = useLocalSearchParams();
   const safeId = id as string;
 
-  const { data, isLoading } = useQuery({
+  const { data: workoutData, isLoading } = useQuery({
     queryKey: ["workoutsData", id, type],
     queryFn: async () => getWorkouts(Number(safeId), Number(type)),
     enabled: !!id,
@@ -20,16 +20,19 @@ const ProgramView = () => {
 
   const renderItem = () => {
     if (type === "1") {
-      return <RunnerView workouts={data} programId={safeId} />;
+      return <RunnerView workouts={workoutData} programId={safeId} />;
     }
-    return <GymView workouts={data} programId={safeId} />;
+    return <GymView workouts={workoutData} programId={safeId} />;
   };
-
   return (
     <View className="flex-1 bg-black">
       <Header title="Meus treinos" />
 
-      {isLoading ? <Loading /> : data && data.length > 0 ? renderItem() : null}
+      {isLoading ? (
+        <Loading />
+      ) : workoutData && workoutData.length > 0 ? (
+        renderItem()
+      ) : null}
     </View>
   );
 };

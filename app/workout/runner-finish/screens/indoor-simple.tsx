@@ -108,7 +108,7 @@ const IndoorSimpleScreen = ({ safeId, titleStr }: Props) => {
       paceInSeconds: 0,
       executionDay: "",
     }),
-    [safeId]
+    [safeId],
   );
 
   const {
@@ -156,7 +156,7 @@ const IndoorSimpleScreen = ({ safeId, titleStr }: Props) => {
       await finishedWorkout(payload);
       router.push(
         `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}
-        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}&trimp=${payload.trimp}` as any
+        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}&trimp=${payload.trimp}` as any,
       );
     } catch (err) {
       const parsedError = err as Error;

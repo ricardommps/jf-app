@@ -3,6 +3,7 @@ import Loading from "@/components/shared/loading";
 import { useSession } from "@/contexts/Authentication";
 import useANotifications from "@/hooks/useNotification";
 import { runnerProgram } from "@/services/program.services";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useRouter } from "expo-router";
@@ -68,6 +69,10 @@ export default function Menu() {
 
   const handleInvoice = () => {
     router.push(`/invoice` as any);
+  };
+
+  const handleStravaConnect = () => {
+    router.push("/stravaConnect/" as any);
   };
 
   const handleSettings = () => {
@@ -150,26 +155,45 @@ export default function Menu() {
 
             {/* Inscrições (somente se houver programa) */}
             {runnerProgramData && runnerProgramData.length > 0 && (
-              <TouchableOpacity
-                style={{ width: "48.5%" }}
-                className={`${
-                  isDark ? "bg-gray-800" : "bg-white"
-                } rounded-2xl p-4 items-center justify-center shadow-sm`}
-                onPress={handleRunningRaces}
-              >
-                <Ticket
-                  color={isDark ? "#9CA3AF" : "#4B5563"}
-                  size={28}
-                  strokeWidth={1.5}
-                />
-                <Text
-                  className={`text-xs font-medium mt-2 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
+              <>
+                <TouchableOpacity
+                  style={{ width: "48.5%" }}
+                  className={`${
+                    isDark ? "bg-gray-800" : "bg-white"
+                  } rounded-2xl p-4 items-center justify-center shadow-sm`}
+                  onPress={handleRunningRaces}
                 >
-                  Inscrições
-                </Text>
-              </TouchableOpacity>
+                  <Ticket
+                    color={isDark ? "#9CA3AF" : "#4B5563"}
+                    size={28}
+                    strokeWidth={1.5}
+                  />
+                  <Text
+                    className={`text-xs font-medium mt-2 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Inscrições
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{ width: "48.5%" }}
+                  className={`${
+                    isDark ? "bg-gray-800" : "bg-white"
+                  } rounded-2xl p-4 items-center justify-center shadow-sm`}
+                  onPress={handleStravaConnect}
+                >
+                  <FontAwesome5 name="strava" size={28} color="#FC4C02" />
+                  <Text
+                    className={`text-xs font-medium mt-2 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    Strava
+                  </Text>
+                </TouchableOpacity>
+              </>
             )}
 
             {/* Senha */}

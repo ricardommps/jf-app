@@ -174,7 +174,7 @@ const Comments = ({
         {isAdmin && (
           <Avatar className="h-12 w-12 mr-2">
             <AvatarImage
-              source={require("@/assets/images/jf_icone_app.png")}
+              source={require("@/assets/images/copa/jf_icone_app.png")}
               className="h-12 w-12 rounded-full"
             />
           </Avatar>

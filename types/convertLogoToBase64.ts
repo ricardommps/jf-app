@@ -3,7 +3,9 @@ import { Asset } from "expo-asset";
 
 export async function convertLogoToBase64(): Promise<string> {
   try {
-    const asset = Asset.fromModule(require("../assets/images/jf_icone_v1.png"));
+    const asset = Asset.fromModule(
+      require("../assets/images/copa/jf_icone_v1.png")
+    );
 
     // Sempre baixa para garantir caminho file://
     await asset.downloadAsync();

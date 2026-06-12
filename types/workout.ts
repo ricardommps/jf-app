@@ -80,6 +80,8 @@ export type Workout = {
   subtitle: string;
   distance: string;
   link: string;
+  linkstrava?: string;
+  summaryPolyline?: string;
   description: string;
   heating: string;
   recovery: string;

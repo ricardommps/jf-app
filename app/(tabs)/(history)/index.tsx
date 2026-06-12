@@ -138,50 +138,57 @@ const renderCardRunner = (
       </HStack>
 
       {!item.unrealized && (
-        <HStack className="justify-around items-center pt-2">
-          <VStack className="items-center">
-            <Icon as={RouteIcon} size="xl" />
-            <Text className="text-xs mt-1">Distância</Text>
-            <Text className="text-xs">
-              {convertMetersToKilometersFormat(item?.distanceInMeters || 0)}
-            </Text>
-          </VStack>
+        <>
+          {/* {item.summaryPolyline && (
+            <Box className="px-1 pt-1">
+              <ActivityMap encodedPolyline={item.summaryPolyline} />
+            </Box>
+          )} */}
+          <HStack className="justify-around items-center pt-5">
+            <VStack className="items-center">
+              <Icon as={RouteIcon} size="xl" />
+              <Text className="text-xs mt-1">Distância</Text>
+              <Text className="text-xs">
+                {convertMetersToKilometersFormat(item?.distanceInMeters || 0)}
+              </Text>
+            </VStack>
 
-          <Divider orientation="vertical" className="h-12" />
+            <Divider orientation="vertical" className="h-12" />
 
-          <VStack className="items-center">
-            <Icon as={FootprintsIcon} size="xl" />
-            <Text className="text-xs mt-1">Pace Médio</Text>
-            <Text className="text-xs">
-              {convertPaceToSpeed(item?.paceInSeconds || 0, true)}
-            </Text>
-          </VStack>
+            <VStack className="items-center">
+              <Icon as={FootprintsIcon} size="xl" />
+              <Text className="text-xs mt-1">Pace Médio</Text>
+              <Text className="text-xs">
+                {convertPaceToSpeed(item?.paceInSeconds || 0, true)}
+              </Text>
+            </VStack>
 
-          <Divider orientation="vertical" className="h-12" />
+            <Divider orientation="vertical" className="h-12" />
 
-          <VStack className="items-center">
-            <Icon as={Clock10Icon} size="xl" />
-            <Text className="text-xs mt-1">Tempo</Text>
-            <Text className="text-xs">
-              {convertSecondsToHourMinuteFormat(item?.durationInSeconds || 0)}
-            </Text>
-          </VStack>
+            <VStack className="items-center">
+              <Icon as={Clock10Icon} size="xl" />
+              <Text className="text-xs mt-1">Tempo</Text>
+              <Text className="text-xs">
+                {convertSecondsToHourMinuteFormat(item?.durationInSeconds || 0)}
+              </Text>
+            </VStack>
 
-          <Divider orientation="vertical" className="h-12" />
+            <Divider orientation="vertical" className="h-12" />
 
-          <VStack className="items-center">
-            <RpeDisplay rpe={item.rpe || 0} />
-          </VStack>
+            <VStack className="items-center">
+              <RpeDisplay rpe={item.rpe || 0} />
+            </VStack>
 
-          <Divider orientation="vertical" />
+            <Divider orientation="vertical" />
 
-          <VStack className="items-center">
-            {renderIconType()}
-            <Text className="text-xs mt-1">
-              {item?.outdoor ? "Outdoor" : "Indoor"}
-            </Text>
-          </VStack>
-        </HStack>
+            <VStack className="items-center">
+              {renderIconType()}
+              <Text className="text-xs mt-1">
+                {item?.outdoor ? "Outdoor" : "Indoor"}
+              </Text>
+            </VStack>
+          </HStack>
+        </>
       )}
     </Box>
   );
@@ -236,7 +243,6 @@ const HistoryScreen = () => {
     const parsedDate = parseISO(item.executionDay);
     const day = format(parsedDate, "dd");
     const month = format(parsedDate, "MMMM", { locale: ptBR });
-
     return (
       <View>
         {item.trainingRunning

@@ -1,4 +1,4 @@
-import CompetitionIcon from "@/assets/images/jf_logo_icone_push.png";
+import CompetitionIcon from "@/assets/images/copa/jf_logo_icone_push.png";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";

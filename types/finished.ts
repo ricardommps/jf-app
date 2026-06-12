@@ -8,6 +8,8 @@ export type Finished = {
   duration: number | null;
   pace: string | null;
   link: string | null;
+  linkstrava: string | null;
+  summaryPolyline: string | null;
   rpe: number | null;
   trimp: string | null;
   review: boolean | null;
@@ -24,6 +26,9 @@ export type Finished = {
   paceInSeconds: number | null;
   createdAt: Date;
   updatedAt: Date;
+  workout?: {
+    subtitle: string;
+  };
 };
 
 export type FinishedHistory = {
@@ -33,6 +38,8 @@ export type FinishedHistory = {
   duration: number | null;
   pace: number | null;
   link: string | null;
+  linkstrava: string | null;
+  summaryPolyline: string | null;
   rpe: number | null;
   trimp: number | null;
   review: string | null;

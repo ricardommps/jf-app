@@ -12,7 +12,7 @@ import { getActiveSvgIds } from "@/utils/getActiveMuscleTags";
 import { format, parseISO } from "date-fns";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import HistoryModal from "../components/history-modal";
+import HistoryView from "../components/histort-view";
 
 interface Props {
   item: Workout;
@@ -185,11 +185,10 @@ const GymItemView = ({ item }: Props) => {
         />
       )}
 
-      <HistoryModal
+      <HistoryView
         visible={showHistoryModal}
         onRequestClose={() => setShowHistoryModal(false)}
-        history={item.history}
-        subtitle={item.subtitle}
+        id={item.id}
       />
     </>
   );

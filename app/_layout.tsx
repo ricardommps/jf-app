@@ -147,16 +147,17 @@ const SplashScreenView: React.FC<SplashScreenProps> = ({ onFinish }) => {
         {
           paddingTop: insets.top + 20,
           paddingBottom: insets.bottom + 20,
-          paddingLeft: insets.left + 28,
-          paddingRight: insets.right + 28,
+          paddingLeft: insets.left + 12,
+          paddingRight: insets.right + 12,
         },
       ]}
     >
       <StatusBar style="light" backgroundColor="#000000" translucent={false} />
       <View style={styles.logoContainer}>
         <Image
-          source={require("@/assets/images/jf_logo_full.png")}
+          source={require("@/assets/images/copa/jf_logo_full.png")}
           alt="logo"
+          size="none"
           resizeMode="contain"
           style={styles.logoImage}
         />
@@ -306,11 +307,11 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 80,
+    marginBottom: 24,
   },
   logoImage: {
-    width: Math.min(Dimensions.get("window").width * 0.8, 400),
-    height: Math.min(Dimensions.get("window").height * 0.25, 200),
+    width: Math.min(Dimensions.get("window").width * 1.18, 640),
+    height: Math.min(Dimensions.get("window").height * 0.5, 380),
   },
   loadingText: {
     fontSize: 24,
