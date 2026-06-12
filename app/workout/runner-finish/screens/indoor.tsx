@@ -463,7 +463,7 @@ const IndoorScreen = ({ safeId, titleStr }: Props) => {
           >
             <Box pointerEvents="none">
               <Text className="text-typography-600 text-base">
-                Distância (km/h)
+                Distância (km)
               </Text>
               <Input
                 variant="rounded"
