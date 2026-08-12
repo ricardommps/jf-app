@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/actionsheet";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
-import { CloseIcon, Icon, InfoIcon } from "@/components/ui/icon";
+import { CloseIcon, Icon, InfoIcon, VolumeIcon } from "@/components/ui/icon";
 import { Pressable } from "@/components/ui/pressable";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -27,7 +27,7 @@ import { fDate } from "@/utils/format-time";
 import { useQuery } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import { useRouter } from "expo-router";
-import { CalendarDays, FootprintsIcon } from "lucide-react-native";
+import { CalendarDays } from "lucide-react-native";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -70,8 +70,8 @@ const tabItems: TabItem[] = [
   {
     id: "volume",
     label: "Volume",
-    inActiveIcon: FootprintsIcon,
-    icon: FootprintsIcon,
+    inActiveIcon: VolumeIcon,
+    icon: VolumeIcon,
   },
   {
     id: "info",
@@ -189,7 +189,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
       if (workout.title === "COMPETICAO") {
         config[workoutDate] = {
           isCompetition: true,
-          color: "#1E40AF",
+          color: "#60A5FA",
           textColor: "#ffffff",
         };
         return;
@@ -198,16 +198,6 @@ const RunnerView = ({ workouts, programId }: Props) => {
         ? toISOStringWithTimezone(new Date(workout.workoutDateOther))
         : null;
 
-      if (workoutDate === today) {
-        config[workoutDate] = {
-          color: "#1E40AF",
-          textColor: "#ffffff",
-          selected: true,
-          startingDay: true,
-          endingDay: true,
-        };
-        return;
-      }
       if (config[workoutDate]) {
         if (config[workoutDate].color === "#4ADE80") {
           return;
@@ -250,7 +240,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
       } else if (
         !workout.finished &&
         (workout.unrealized === false || workout.unrealized === null) &&
-        workoutDate > today
+        workoutDate >= today
       ) {
         if (workoutDateOther) {
           config[workoutDateOther] = {
@@ -283,6 +273,10 @@ const RunnerView = ({ workouts, programId }: Props) => {
     },
     markedDatesConfig: generateMarkedDatesConfig(workouts),
   });
+
+  useEffect(() => {
+    calendar.openModal();
+  }, []);
 
   const handleDateSelect = (date: string) => {
     const filtered = getFilteredWorkoutsByDate(workouts, date);
@@ -438,7 +432,7 @@ const RunnerView = ({ workouts, programId }: Props) => {
             return (
               <Pressable
                 key={item.id}
-                className="flex-1 items-center justify-center"
+                className="flex-1 items-center justify-center gap-1"
                 onPress={() => setActiveTab(item.id)}
               >
                 <Animated.View
@@ -452,6 +446,16 @@ const RunnerView = ({ workouts, programId }: Props) => {
                     }`}
                   />
                 </Animated.View>
+                <Text
+                  size="xs"
+                  className={`${
+                    isActive
+                      ? "text-primary-800 font-dm-sans-bold"
+                      : "text-background-500 font-dm-sans-medium"
+                  }`}
+                >
+                  {item.label}
+                </Text>
               </Pressable>
             );
           })}

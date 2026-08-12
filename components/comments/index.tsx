@@ -102,7 +102,7 @@ const Comments = ({ open, onClose, content }: Props) => {
               style={{ flexShrink: 0 }}
             >
               <AvatarImage
-                source={require("@/assets/images/copa/jf_icone_v1.png")}
+                source={require("@/assets/images/jf_icone_v1.png")}
                 resizeMode="contain"
                 className="h-9 w-9"
               />

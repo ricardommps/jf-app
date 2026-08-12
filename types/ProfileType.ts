@@ -6,6 +6,7 @@ export type ProfileType = {
   temporaryPassword: boolean;
   isYoungLife: boolean;
   phone: string;
+  createdAt?: string | null;
 };
 
 export type UserType = {
@@ -16,4 +17,5 @@ export type UserType = {
   temporaryPassword: boolean;
   isYoungLife: boolean;
   phone: string;
+  createdAt?: string | null;
 };

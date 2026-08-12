@@ -60,6 +60,7 @@ export const ENV = {
 
   // Features
   ENABLE_LINKING: extra?.EXPO_PUBLIC_ENABLE_LINKING === "true",
+  STRAVA_REDIRECT_URI: extra?.EXPO_PUBLIC_STRAVA_REDIRECT_URI as string | undefined,
 
   // App Info
   PHONE_NUMBER: extra?.PHONENUMBER as string,

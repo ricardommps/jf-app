@@ -29,7 +29,7 @@ export default function YearReview({ programId }: YearReviewProps) {
       {/* Centralizando e ajustando altura da imagem */}
       <View className="flex-1 justify-end items-center">
         <ImageBackground
-          source={require("@/assets/images/copa/jf_logo_full.png")}
+          source={require("@/assets/images/jf_logo_full.png")}
           resizeMode="contain"
           style={{ width: screenWidth, height: 300 }}
         >

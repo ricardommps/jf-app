@@ -22,7 +22,8 @@
         "PHONENUMBER": "5548991781646",
         "URLAPP": "https://jftreinos.com.br/dashboard/",
         "EXPO_PUBLIC_ENVIRONMENT": "production",
-        "GOOGLE_SERVICES_JSON": "file:google-services.json"
+        "GOOGLE_SERVICES_JSON": "file:google-services.json",
+        "EXPO_PUBLIC_STRAVA_REDIRECT_URI": "jfapp://strava-success"
       }
     },
     "staging": {

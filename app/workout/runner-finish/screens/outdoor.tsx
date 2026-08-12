@@ -71,6 +71,31 @@ const workoutSchema = z.object({
   linkstrava: z.string(),
   comments: z.string(),
   outdoor: z.boolean(),
+  source: z.string().optional(),
+  externalId: z.number().nullable().optional(),
+  summaryPolyline: z.string().nullable().optional(),
+  stravaActivityName: z.string().nullable().optional(),
+  stravaActivityType: z.string().nullable().optional(),
+  stravaSportType: z.string().nullable().optional(),
+  stravaWorkoutType: z.number().nullable().optional(),
+  stravaDeviceName: z.string().nullable().optional(),
+  stravaTimezone: z.string().nullable().optional(),
+  stravaStartDate: z.string().nullable().optional(),
+  stravaStartDateLocal: z.string().nullable().optional(),
+  elapsedTimeInSeconds: z.number().nullable().optional(),
+  totalElevationGain: z.number().nullable().optional(),
+  averageHeartrate: z.number().nullable().optional(),
+  maxHeartrate: z.number().nullable().optional(),
+  averageCadence: z.number().nullable().optional(),
+  calories: z.number().nullable().optional(),
+  startLatitude: z.number().nullable().optional(),
+  startLongitude: z.number().nullable().optional(),
+  endLatitude: z.number().nullable().optional(),
+  endLongitude: z.number().nullable().optional(),
+  locationLabel: z.string().nullable().optional(),
+  locationCity: z.string().nullable().optional(),
+  locationState: z.string().nullable().optional(),
+  locationCountry: z.string().nullable().optional(),
   distanceInMeters: z
     .number()
     .min(1, "A distância deve ser maior que 0")
@@ -94,6 +119,66 @@ interface Props {
   safeId: string;
   titleStr?: string;
   subtitle?: string;
+}
+
+type StravaImportedActivity = {
+  id?: number;
+  name?: string | null;
+  type?: string | null;
+  sport_type?: string | null;
+  workout_type?: number | null;
+  device_name?: string | null;
+  timezone?: string | null;
+  start_date?: string | null;
+  start_date_local?: string | null;
+  moving_time?: number | null;
+  elapsed_time?: number | null;
+  total_elevation_gain?: number | null;
+  average_heartrate?: number | null;
+  max_heartrate?: number | null;
+  average_cadence?: number | null;
+  calories?: number | null;
+  distance?: number | null;
+  location_city?: string | null;
+  location_state?: string | null;
+  location_country?: string | null;
+  map?: {
+    summary_polyline?: string | null;
+  } | null;
+  start_latlng?: [number, number] | null;
+  end_latlng?: [number, number] | null;
+};
+
+const formatIntegerMetricLabel = (
+  value?: number | null,
+  suffix?: string,
+): string => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return "-";
+  }
+
+  const formattedValue = new Intl.NumberFormat("pt-BR", {
+    maximumFractionDigits: 0,
+  }).format(Math.round(value));
+
+  return suffix ? `${formattedValue} ${suffix}` : formattedValue;
+};
+
+function ImportedMetricLabel({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <View className="mb-3 w-1/2 pr-2">
+      <Text className="text-[12px] font-semibold tracking-[0.4px] text-[#818898]">
+        {label}
+      </Text>
+      <Text className="mt-1 text-[20px] font-bold text-white">{value}</Text>
+    </View>
+  );
 }
 
 const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
@@ -132,6 +217,31 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
       comments: "",
       workoutsId: safeId,
       outdoor: true,
+      source: "",
+      externalId: null,
+      summaryPolyline: null,
+      stravaActivityName: null,
+      stravaActivityType: null,
+      stravaSportType: null,
+      stravaWorkoutType: null,
+      stravaDeviceName: null,
+      stravaTimezone: null,
+      stravaStartDate: null,
+      stravaStartDateLocal: null,
+      elapsedTimeInSeconds: null,
+      totalElevationGain: null,
+      averageHeartrate: null,
+      maxHeartrate: null,
+      averageCadence: null,
+      calories: null,
+      startLatitude: null,
+      startLongitude: null,
+      endLatitude: null,
+      endLongitude: null,
+      locationLabel: null,
+      locationCity: null,
+      locationState: null,
+      locationCountry: null,
       distanceInMeters: 0,
       durationInSeconds: 0,
       paceInSeconds: 0,
@@ -159,6 +269,10 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
   const watchedRpe = watch("rpe");
   const trimp = watch("trimp");
   const watchedLinkStrava = watch("linkstrava");
+  const watchedTotalElevationGain = watch("totalElevationGain");
+  const watchedAverageHeartrate = watch("averageHeartrate");
+  const watchedAverageCadence = watch("averageCadence");
+  const watchedCalories = watch("calories");
 
   const { refetch: refetchStravaActivities } =
     useStravaActivities(watchedExecutionDay);
@@ -180,6 +294,31 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
     setValue("durationInSeconds", 0);
     setValue("paceInSeconds", 0);
     setValue("linkstrava", "");
+    setValue("source", "");
+    setValue("externalId", null);
+    setValue("summaryPolyline", null);
+    setValue("stravaActivityName", null);
+    setValue("stravaActivityType", null);
+    setValue("stravaSportType", null);
+    setValue("stravaWorkoutType", null);
+    setValue("stravaDeviceName", null);
+    setValue("stravaTimezone", null);
+    setValue("stravaStartDate", null);
+    setValue("stravaStartDateLocal", null);
+    setValue("elapsedTimeInSeconds", null);
+    setValue("totalElevationGain", null);
+    setValue("averageHeartrate", null);
+    setValue("maxHeartrate", null);
+    setValue("averageCadence", null);
+    setValue("calories", null);
+    setValue("startLatitude", null);
+    setValue("startLongitude", null);
+    setValue("endLatitude", null);
+    setValue("endLongitude", null);
+    setValue("locationLabel", null);
+    setValue("locationCity", null);
+    setValue("locationState", null);
+    setValue("locationCountry", null);
     setActivityPolyline(null); // 👈 importante
   };
 
@@ -195,8 +334,9 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
 
     try {
       const { data } = await refetchStravaActivities();
+      const importedActivity = data as StravaImportedActivity | null;
 
-      if (!data || data.type !== "Run" || !data.map?.summary_polyline) {
+      if (!importedActivity || importedActivity.type !== "Run") {
         clearStravaFields();
         setStravaImportMessage({
           type: "error",
@@ -205,23 +345,86 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
         return;
       }
 
-      const adjustedDistance = Math.round(data.distance / 10);
+      const adjustedDistance = Math.round(
+        Number(importedActivity.distance ?? 0) / 10,
+      );
 
       let paceForPicker = 0;
-      if (data.moving_time > 0 && data.distance > 0) {
-        const distanceKm = data.distance / 1000;
-        const totalPaceSeconds = Math.round(data.moving_time / distanceKm);
+      if (
+        Number(importedActivity.moving_time ?? 0) > 0 &&
+        Number(importedActivity.distance ?? 0) > 0
+      ) {
+        const distanceKm = Number(importedActivity.distance) / 1000;
+        const totalPaceSeconds = Math.round(
+          Number(importedActivity.moving_time) / distanceKm,
+        );
         const paceMinutes = Math.floor(totalPaceSeconds / 60);
         const paceSeconds = totalPaceSeconds % 60;
         paceForPicker = paceMinutes * 100 + paceSeconds;
       }
 
-      setValue("distanceInMeters", adjustedDistance);
-      setValue("durationInSeconds", data.moving_time);
-      setValue("paceInSeconds", paceForPicker);
-      setValue("linkstrava", `https://www.strava.com/activities/${data.id}`);
+      const locationParts = [
+        importedActivity.location_city?.trim(),
+        importedActivity.location_state?.trim(),
+        importedActivity.location_country?.trim(),
+      ].filter(Boolean);
 
-      setActivityPolyline(data.map.summary_polyline);
+      const locationLabel = locationParts.length
+        ? locationParts.join(", ")
+        : null;
+
+      setValue("distanceInMeters", adjustedDistance);
+      setValue("durationInSeconds", Number(importedActivity.moving_time ?? 0));
+      setValue("paceInSeconds", paceForPicker);
+      setValue(
+        "linkstrava",
+        `https://www.strava.com/activities/${importedActivity.id}`,
+      );
+      setValue("source", "strava");
+      setValue("externalId", importedActivity.id ?? null);
+      setValue(
+        "summaryPolyline",
+        importedActivity.map?.summary_polyline?.trim() ?? null,
+      );
+      setValue("stravaActivityName", importedActivity.name?.trim() ?? null);
+      setValue("stravaActivityType", importedActivity.type?.trim() ?? null);
+      setValue("stravaSportType", importedActivity.sport_type?.trim() ?? null);
+      setValue("stravaWorkoutType", importedActivity.workout_type ?? null);
+      setValue(
+        "stravaDeviceName",
+        importedActivity.device_name?.trim() ?? null,
+      );
+      setValue("stravaTimezone", importedActivity.timezone?.trim() ?? null);
+      setValue("stravaStartDate", importedActivity.start_date ?? null);
+      setValue(
+        "stravaStartDateLocal",
+        importedActivity.start_date_local ?? null,
+      );
+      setValue("elapsedTimeInSeconds", importedActivity.elapsed_time ?? null);
+      setValue(
+        "totalElevationGain",
+        importedActivity.total_elevation_gain ?? null,
+      );
+      setValue("averageHeartrate", importedActivity.average_heartrate ?? null);
+      setValue("maxHeartrate", importedActivity.max_heartrate ?? null);
+      setValue("averageCadence", importedActivity.average_cadence ?? null);
+      setValue("calories", importedActivity.calories ?? null);
+      setValue("startLatitude", importedActivity.start_latlng?.[0] ?? null);
+      setValue("startLongitude", importedActivity.start_latlng?.[1] ?? null);
+      setValue("endLatitude", importedActivity.end_latlng?.[0] ?? null);
+      setValue("endLongitude", importedActivity.end_latlng?.[1] ?? null);
+      setValue("locationLabel", locationLabel);
+      setValue("locationCity", importedActivity.location_city?.trim() ?? null);
+      setValue(
+        "locationState",
+        importedActivity.location_state?.trim() ?? null,
+      );
+      setValue(
+        "locationCountry",
+        importedActivity.location_country?.trim() ?? null,
+      );
+
+      setActivityPolyline(importedActivity.map?.summary_polyline ?? null);
 
       setStravaImportMessage({
         type: "success",
@@ -442,6 +645,44 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
                     </Input>
                   )}
                 />
+              </Box>
+            )}
+            {watchedLinkStrava && (
+              <Box className="px-4 pt-3">
+                <Text className="text-typography-600 text-base mb-2">
+                  Dados importados do Strava
+                </Text>
+                <View className="rounded-xl bg-[#191b20] px-4 py-4">
+                  <View className="flex-row flex-wrap">
+                    <ImportedMetricLabel
+                      label="GANHO DE ELEVAÇÃO"
+                      value={formatIntegerMetricLabel(
+                        watchedTotalElevationGain,
+                        "m",
+                      )}
+                    />
+                    <ImportedMetricLabel
+                      label="FC MÉDIA"
+                      value={formatIntegerMetricLabel(
+                        watchedAverageHeartrate,
+                        "bpm",
+                      )}
+                    />
+                    <ImportedMetricLabel
+                      label="CADÊNCIA"
+                      value={formatIntegerMetricLabel(
+                        typeof watchedAverageCadence === "number"
+                          ? watchedAverageCadence * 2
+                          : null,
+                        "spm",
+                      )}
+                    />
+                    <ImportedMetricLabel
+                      label="CALORIAS"
+                      value={formatIntegerMetricLabel(watchedCalories)}
+                    />
+                  </View>
+                </View>
               </Box>
             )}
           </>

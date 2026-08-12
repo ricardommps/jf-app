@@ -1,5 +1,5 @@
-import JFDefaultBackground from "@/assets/images/copa/foltz_tela.png";
-import JFHorizontal from "@/assets/images/copa/jf_branding.png";
+import JFDefaultBackground from "@/assets/images/foltz_tela.png";
+import JFHorizontal from "@/assets/images/jf_branding.png";
 import Loading from "@/components/shared/loading";
 import { Box } from "@/components/ui/box";
 import { getReview } from "@/services/review.service";
@@ -82,12 +82,12 @@ export default function ActivitySummary() {
       onPanResponderGrant: activateEditing,
       onPanResponderMove: Animated.event(
         [null, { dx: position.x, dy: position.y }],
-        { useNativeDriver: false }
+        { useNativeDriver: false },
       ),
       onPanResponderRelease: () => {
         position.extractOffset();
       },
-    })
+    }),
   ).current;
 
   /* ===============================
@@ -182,7 +182,7 @@ export default function ActivitySummary() {
                         <View className="flex-row items-baseline gap-2">
                           {(() => {
                             const { hours, minutes } = formatDurationParts(
-                              review.totalDurationInSeconds
+                              review.totalDurationInSeconds,
                             );
                             return (
                               <>

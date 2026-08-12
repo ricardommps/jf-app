@@ -1,6 +1,6 @@
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import tabItems from "./tabItems";
 
 const Footer: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
@@ -15,7 +15,7 @@ const Footer: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
         elevation: 10,
       }}
     >
-      <View className="max-w-xl mx-auto flex-row items-center justify-around px-4 py-2 min-h-[70px]">
+      <View className="max-w-xl mx-auto flex-row items-center justify-around px-4 py-2 min-h-[74px]">
         {tabItems.map((item) => {
           const isActive = state.routeNames[state.index] === item.name;
 
@@ -30,11 +30,20 @@ const Footer: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
           return (
             <TouchableOpacity
               key={item.name}
-              className="flex-1 items-center justify-center"
+              className="flex-1 items-center justify-center gap-1"
               onPress={onPress}
               activeOpacity={0.7}
             >
-              <IconComponent size={24} color={isActive ? "white" : "#9CA3AF"} />
+              <IconComponent size={22} color={isActive ? "white" : "#9CA3AF"} />
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: isActive ? "600" : "500",
+                  color: isActive ? "white" : "#9CA3AF",
+                }}
+              >
+                {item.label}
+              </Text>
             </TouchableOpacity>
           );
         })}

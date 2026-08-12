@@ -5,9 +5,9 @@ export default {
     name: "FOLTZ",
     slug: "jfapp",
     owner: "jftreinos",
-    version: "1.3.5",
+    version: "1.3.6",
     orientation: "portrait",
-    icon: "./assets/images/copa/jf_icone_app.png",
+    icon: "./assets/images/jf_icone_app.png",
     scheme: "jfapp",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
@@ -51,7 +51,7 @@ export default {
       minSdkVersion: 21,
       buildToolsVersion: "35.0.0",
       adaptiveIcon: {
-        foregroundImage: "./assets/images/copa/jf_icone_app.png",
+        foregroundImage: "./assets/images/jf_icone_app.png",
         backgroundColor: "#000000",
       },
       softwareKeyboardLayoutMode: "pan",
@@ -94,7 +94,7 @@ export default {
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/copa/jf_icone_app.png",
+          image: "./assets/images/jf_icone_app.png",
           imageWidth: 300,
           resizeMode: "contain",
           backgroundColor: "#000000",
@@ -103,7 +103,7 @@ export default {
       [
         "expo-notifications",
         {
-          icon: "./assets/images/copa/jf_logo_icone_push.png",
+          icon: "./assets/images/jf_logo_icone_push.png",
           color: "#ffffff",
           defaultChannel: "default",
           enableBackgroundRemoteNotifications: true,
@@ -132,6 +132,7 @@ export default {
       EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
       EXPO_PUBLIC_IS_DEV: process.env.EXPO_PUBLIC_IS_DEV,
       EXPO_PUBLIC_ENABLE_LINKING: process.env.EXPO_PUBLIC_ENABLE_LINKING,
+      EXPO_PUBLIC_STRAVA_REDIRECT_URI: process.env.EXPO_PUBLIC_STRAVA_REDIRECT_URI,
       PHONENUMBER: process.env.PHONENUMBER,
       URLAPP: process.env.URLAPP,
       EXPO_PUBLIC_SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -139,7 +140,7 @@ export default {
     },
 
     notification: {
-      icon: "./assets/images/copa/jf_logo_icone_push.png",
+      icon: "./assets/images/jf_logo_icone_push.png",
       color: "#ffffff",
     },
 

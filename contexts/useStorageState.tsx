@@ -1,12 +1,75 @@
 import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Platform } from "react-native";
 
-// Função segura para set/get/delete no SecureStore
+async function getWebStorage() {
+  if (typeof globalThis === "undefined" || !("localStorage" in globalThis)) {
+    return null;
+  }
+
+  return globalThis.localStorage;
+}
+
+function normalizeStorageKey(key: string) {
+  const trimmedKey = key?.trim() ?? "";
+
+  if (!trimmedKey) {
+    console.warn("Storage key inválida: valor vazio recebido.");
+    return null;
+  }
+
+  const normalizedKey = trimmedKey.replace(/[^A-Za-z0-9._-]/g, "_");
+
+  if (normalizedKey !== trimmedKey) {
+    console.warn(
+      `Storage key normalizada de "${trimmedKey}" para "${normalizedKey}".`,
+    );
+  }
+
+  return normalizedKey;
+}
+
+export async function getStorageItemAsync(key: string) {
+  const storageKey = normalizeStorageKey(key);
+
+  if (!storageKey) {
+    return null;
+  }
+
+  if (Platform.OS === "web") {
+    const storage = await getWebStorage();
+    return storage?.getItem(storageKey) ?? null;
+  }
+
+  return getItemAsync(storageKey);
+}
+
+// Função segura para set/get/delete em storage local
 export async function setStorageItemAsync(key: string, value: string | null) {
+  const storageKey = normalizeStorageKey(key);
+
+  if (!storageKey) {
+    return;
+  }
+
+  if (Platform.OS === "web") {
+    const storage = await getWebStorage();
+
+    if (!storage) return;
+
+    if (value == null) {
+      storage.removeItem(storageKey);
+    } else {
+      storage.setItem(storageKey, value);
+    }
+
+    return;
+  }
+
   if (value == null) {
-    await deleteItemAsync(key);
+    await deleteItemAsync(storageKey);
   } else {
-    await setItemAsync(key, value);
+    await setItemAsync(storageKey, value);
   }
 }
 
@@ -22,7 +85,7 @@ export function useStorageState(
 
     (async () => {
       try {
-        const value = await getItemAsync(key);
+        const value = await getStorageItemAsync(key);
         if (isMounted.current) {
           setState([false, value]);
         }

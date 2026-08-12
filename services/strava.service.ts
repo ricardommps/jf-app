@@ -22,6 +22,16 @@ export async function getStravaStatus() {
     throw error?.response?.data ?? error;
   }
 }
+
+export async function disconnectStrava() {
+  try {
+    const response = await axiosInstance.delete(`/api/v2/strava/disconnect`);
+    return response.data;
+  } catch (error: any) {
+    throw error?.response?.data ?? error;
+  }
+}
+
 export async function getStravaActivities(date: string) {
   if (!date) throw new Error("date is required");
 

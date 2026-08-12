@@ -98,12 +98,12 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
 
   const formattedStartDate = useMemo(
     () => (startDate ? format(startDate, ISO_DATE_FORMAT) : ""),
-    [startDate]
+    [startDate],
   );
 
   const formattedEndDate = useMemo(
     () => (endDate ? format(endDate, ISO_DATE_FORMAT) : ""),
-    [endDate]
+    [endDate],
   );
 
   const {
@@ -133,7 +133,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
       console.error("Erro ao buscar volume:", queryError);
       Alert.alert(
         "Erro",
-        "Não foi possível buscar os dados do volume. Tente novamente."
+        "Não foi possível buscar os dados do volume. Tente novamente.",
       );
     }
   }, [isError, queryError]);
@@ -183,7 +183,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
 
       setShowCalendar(false);
     },
-    [selectedInputType, today, startDate, endDate]
+    [selectedInputType, today, startDate, endDate],
   );
 
   const handleClearDates = useCallback(() => {
@@ -249,7 +249,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
       if (!available) {
         Alert.alert(
           "Compartilhamento não disponível",
-          "O recurso de compartilhamento não está disponível nesse dispositivo."
+          "O recurso de compartilhamento não está disponível nesse dispositivo.",
         );
         return;
       }
@@ -559,7 +559,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
                           const formattedDate = format(
                             new Date(item.executionDay),
                             "dd/MM/yyyy",
-                            { locale: ptBR }
+                            { locale: ptBR },
                           );
 
                           return (
@@ -649,7 +649,7 @@ const VolumeModalScreen: React.FC<VolumeModalScreenProps> = ({
         <View className="flex-1 bg-black">
           <View ref={shareViewRef} collapsable={false} className="flex-1">
             <ImageBackground
-              source={require("@/assets/images/copa/foltz_tela.png")}
+              source={require("@/assets/images/foltz_tela.png")}
               resizeMode="cover"
               className="flex-1 p-2"
             >

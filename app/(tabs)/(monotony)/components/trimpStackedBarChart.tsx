@@ -97,7 +97,7 @@ export default function TrimpStackedBarChart({ data }: Props) {
           </TouchableOpacity>
         </View>
 
-        <View style={{ flexDirection: "row", height: 260 }}>
+        <View style={{ flexDirection: "row", height: 220 }}>
           <YAxis
             data={chartData.map((d) => d.running + d.nonRunning)}
             contentInset={contentInset}
@@ -119,7 +119,7 @@ export default function TrimpStackedBarChart({ data }: Props) {
               style={{ marginTop: 6 }}
               data={chartData}
               scale={scale.scaleBand}
-              formatLabel={(value, index: any) => chartData[index].label}
+              formatLabel={(_value: number, index: number) => chartData[index].label}
               svg={{ fill: "white", fontSize: 10 }}
             />
           </View>

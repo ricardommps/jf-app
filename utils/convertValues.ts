@@ -11,7 +11,7 @@ export function convertMetersToKilometersFormat(
   const kilometers = meters / 100;
   const formatted = formatter.format(kilometers);
 
-  const suffix = hideKm ? "" : (formatterStr ?? "km/h");
+  const suffix = hideKm ? "" : (formatterStr ?? "km");
 
   return `${formatted}${suffix ? ` ${suffix}` : ""}`;
 }
@@ -24,7 +24,7 @@ export function convertDistanceSave(
   const kilometers = meters / 1000;
   const formatted = formatter.format(kilometers);
 
-  const suffix = hideKm ? "" : (formatterStr ?? "km/h");
+  const suffix = hideKm ? "" : (formatterStr ?? "km");
 
   return `${formatted}${suffix ? ` ${suffix}` : ""}`;
 }

@@ -6,13 +6,13 @@ import React from "react";
 import { Modal, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface ZoneData {
-  pv: number;
-  pace: number;
-  vla: number;
-  paceVla: number;
-  vlan: number;
-  paceVlan: number;
+export interface ZoneData {
+  pv?: number | string | null;
+  pace?: number | string | null;
+  vla?: number | string | null;
+  paceVla?: number | string | null;
+  vlan?: number | string | null;
+  paceVlan?: number | string | null;
 }
 
 interface Props {
@@ -21,7 +21,12 @@ interface Props {
   data: ZoneData;
 }
 
-const ExertionZone: React.FC<Props> = ({ visible, onRequestClose, data }) => {
+const formatValue = (label: string, value?: number | string | null) =>
+  value === null || value === undefined || value === ""
+    ? null
+    : `${label}: ${value}`;
+
+export const ExertionZoneContent = ({ data }: { data: ZoneData }) => {
   const zones = [
     {
       id: "Z1",
@@ -34,8 +39,8 @@ const ExertionZone: React.FC<Props> = ({ visible, onRequestClose, data }) => {
       label: "Moderado",
       color: "#06B6D4",
       values: {
-        main: `Vla: ${data.vla}`,
-        pace: `Pace Vla: ${data.paceVla}`,
+        main: formatValue("Vla", data.vla),
+        pace: formatValue("Pace Vla", data.paceVla),
       },
     },
     {
@@ -43,8 +48,8 @@ const ExertionZone: React.FC<Props> = ({ visible, onRequestClose, data }) => {
       label: "Pesado",
       color: "#8B5CF6",
       values: {
-        main: `Vlan: ${data.vlan}`,
-        pace: `Pace Vlan: ${data.paceVlan}`,
+        main: formatValue("Vlan", data.vlan),
+        pace: formatValue("Pace Vlan", data.paceVlan),
       },
     },
     {
@@ -52,8 +57,8 @@ const ExertionZone: React.FC<Props> = ({ visible, onRequestClose, data }) => {
       label: "Severo",
       color: "#F59E0B",
       values: {
-        main: `Pv: ${data.pv}`,
-        pace: `Pace Pv: ${data.pace}`,
+        main: formatValue("Pv", data.pv),
+        pace: formatValue("Pace Pv", data.pace),
       },
     },
     {
@@ -65,11 +70,147 @@ const ExertionZone: React.FC<Props> = ({ visible, onRequestClose, data }) => {
   ];
 
   return (
-    <Modal
-      animationType="slide"
-      visible={visible}
-      onRequestClose={onRequestClose}
+    <View
+      style={{
+        backgroundColor: "#2b2b2b9d",
+        borderRadius: 24,
+        padding: 24,
+      }}
     >
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginBottom: 24,
+        }}
+      >
+        <Text style={{ color: "#fff", fontWeight: "600", marginLeft: 50 }}>
+          Limiar
+        </Text>
+        <Text style={{ color: "#fff", fontWeight: "600" }}>Zona</Text>
+        <Text
+          style={{
+            color: "#fff",
+            fontWeight: "600",
+            textAlign: "right",
+          }}
+        >
+          Domínio de {"\n"}
+          intensidade
+        </Text>
+      </View>
+
+      {zones.map((zone, index) => (
+        <View key={zone.id} style={{ position: "relative", marginBottom: 48 }}>
+          {index < zones.length - 1 && (
+            <View
+              style={{
+                position: "absolute",
+                left: "50%",
+                marginLeft: -15,
+                top: 20,
+                height: 80,
+                width: 1,
+                backgroundColor: "#475569",
+                zIndex: 0,
+              }}
+            />
+          )}
+
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View
+              style={{
+                flex: 1,
+                alignItems: "flex-end",
+                paddingRight: 25,
+              }}
+            >
+              {zone.values?.main ? (
+                <View style={{ alignItems: "flex-end" }}>
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontWeight: "600",
+                      fontSize: 15,
+                    }}
+                  >
+                    {zone.values.main}
+                  </Text>
+
+                  {zone.values.pace ? (
+                    <Text
+                      style={{
+                        color: "#94a3b8",
+                        fontSize: 13,
+                        marginTop: 2,
+                      }}
+                    >
+                      {zone.values.pace}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
+
+            <View
+              style={{
+                alignItems: "center",
+                flexDirection: "row",
+                gap: 8,
+              }}
+            >
+              <View
+                style={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: 8,
+                  backgroundColor: zone.color,
+                }}
+              />
+              <Text
+                style={{
+                  fontSize: 17,
+                  fontWeight: "700",
+                  color: "#fff",
+                }}
+              >
+                {zone.id}
+              </Text>
+            </View>
+
+            <View
+              style={{
+                flex: 1,
+                paddingLeft: 25,
+                alignItems: "flex-end",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 17,
+                  fontWeight: "700",
+                  color: "#fff",
+                }}
+              >
+                {zone.label}
+              </Text>
+            </View>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};
+
+const ExertionZone: React.FC<Props> = ({ visible, onRequestClose, data }) => {
+  return (
+    <Modal animationType="slide" visible={visible} onRequestClose={onRequestClose}>
       <StatusBar
         barStyle="light-content"
         backgroundColor="#000"
@@ -86,7 +227,6 @@ const ExertionZone: React.FC<Props> = ({ visible, onRequestClose, data }) => {
       >
         <Box className="flex-1 bg-background-0 px-1">
           <VStack className="flex-1 p-1">
-            {/* Header */}
             <HStack className="justify-between items-center mb-6 p-3">
               <Heading size="lg" className="text-white">
                 Zona de esforço
@@ -101,143 +241,8 @@ const ExertionZone: React.FC<Props> = ({ visible, onRequestClose, data }) => {
                 <Text className="text-2xl text-white">✕</Text>
               </TouchableOpacity>
             </HStack>
-            <View
-              style={{ flex: 1, backgroundColor: "#2b2b2b9d", padding: 24 }}
-            >
-              {/* Header */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginBottom: 24,
-                }}
-              >
-                <Text
-                  style={{ color: "#fff", fontWeight: "600", marginLeft: 50 }}
-                >
-                  Limiar
-                </Text>
-                <Text style={{ color: "#fff", fontWeight: "600" }}>Zona</Text>
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontWeight: "600",
-                    textAlign: "right",
-                  }}
-                >
-                  Domínio de {"\n"}intensidade
-                </Text>
-              </View>
 
-              {/* Lista de zonas */}
-              {zones.map((zone, index) => (
-                <View
-                  key={zone.id}
-                  style={{ position: "relative", marginBottom: 48 }}
-                >
-                  {/* Linha vertical */}
-                  {index < zones.length - 1 && (
-                    <View
-                      style={{
-                        position: "absolute",
-                        left: "50%",
-                        marginLeft: -15, // half of width (1px)
-                        top: 20,
-                        height: 80,
-                        width: 1,
-                        backgroundColor: "#475569",
-                        zIndex: 0,
-                      }}
-                    />
-                  )}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    {/* Limiar */}
-                    <View
-                      style={{
-                        flex: 1,
-                        alignItems: "flex-end",
-                        paddingRight: 25,
-                      }}
-                    >
-                      {zone.values && (
-                        <View style={{ alignItems: "flex-end" }}>
-                          <Text
-                            style={{
-                              color: "#fff",
-                              fontWeight: "600",
-                              fontSize: 15,
-                            }}
-                          >
-                            {zone.values.main}
-                          </Text>
-                          <Text
-                            style={{
-                              color: "#94a3b8",
-                              fontSize: 13,
-                              marginTop: 2,
-                            }}
-                          >
-                            {zone.values.pace}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-
-                    {/* Zona */}
-                    <View
-                      style={{
-                        alignItems: "center",
-                        flexDirection: "row",
-                        gap: 8,
-                      }}
-                    >
-                      <View
-                        style={{
-                          width: 16,
-                          height: 16,
-                          borderRadius: 8,
-                          backgroundColor: zone.color,
-                        }}
-                      />
-                      <Text
-                        style={{
-                          fontSize: 17,
-                          fontWeight: "700",
-                          color: "#fff",
-                        }}
-                      >
-                        {zone.id}
-                      </Text>
-                    </View>
-
-                    {/* Intensidade */}
-                    <View
-                      style={{
-                        flex: 1,
-                        paddingLeft: 25,
-                        alignItems: "flex-end",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 17,
-                          fontWeight: "700",
-                          color: "#fff",
-                        }}
-                      >
-                        {zone.label}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </View>
+            <ExertionZoneContent data={data} />
           </VStack>
         </Box>
       </SafeAreaView>

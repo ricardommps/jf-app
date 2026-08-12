@@ -1,4 +1,3 @@
-import { Avatar, AvatarImage as Image } from "@/components/ui/avatar";
 import { Icon } from "@/components/ui/icon";
 import { Pressable } from "@/components/ui/pressable";
 import {
@@ -11,9 +10,10 @@ import { uploadFile } from "@/services/upload.service";
 import { ProfileType, UserType } from "@/types/ProfileType";
 import * as ImagePicker from "expo-image-picker";
 import { CameraIcon } from "lucide-react-native";
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import {
   ActivityIndicator,
+  Image as RNImage,
   Modal,
   Platform,
   StyleSheet,
@@ -22,219 +22,269 @@ import {
   View,
 } from "react-native";
 
+export interface AvatarImageHandle {
+  openPicker: () => void;
+}
+
 interface AvatarImageProps {
   profile: ProfileType | null;
   updateProfile: (updatedUser: Partial<UserType>) => Promise<void>;
+  size?: number;
+  showTrigger?: boolean;
+  borderColor?: string;
 }
 
-export default function AvatarImage({
-  profile,
-  updateProfile,
-}: AvatarImageProps) {
-  const isDark = true;
-  const [modalVisible, setModalVisible] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const toast = useToast();
+const getInitials = (profile: ProfileType | null) =>
+  (profile?.name || profile?.email || "User")
+    .split(" ")
+    .map((part) => part.charAt(0))
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
 
-  const handleAvatarUpload = () => {
-    setModalVisible(true);
-  };
-
-  const showNewToast = (
-    message: string,
-    type: "success" | "error" = "error"
+const AvatarImage = forwardRef<AvatarImageHandle, AvatarImageProps>(
+  (
+    {
+      profile,
+      updateProfile,
+      size = 112,
+      showTrigger = true,
+      borderColor,
+    },
+    ref,
   ) => {
-    const newId = Math.random().toString();
-    toast.show({
-      id: newId,
-      placement: "top",
-      duration: 9000,
-      render: ({ id }) => {
-        const uniqueToastId = "toast-" + id;
-        return (
-          <Toast nativeID={uniqueToastId} action={type} variant="solid">
-            <ToastTitle>{type === "success" ? "Sucesso" : "Erro"}</ToastTitle>
-            <ToastDescription>{message}</ToastDescription>
-          </Toast>
-        );
-      },
-    });
-  };
+    const isDark = true;
+    const [modalVisible, setModalVisible] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const toast = useToast();
 
-  const uploadAvatar = async (imageAsset: ImagePicker.ImagePickerAsset) => {
-    try {
-      setIsUploading(true);
-      const formData = new FormData();
-      formData.append("file", {
-        uri: imageAsset.uri,
-        type: imageAsset.mimeType || "image/jpeg",
-        name: "avatar.jpg",
-      } as any);
+    useImperativeHandle(ref, () => ({
+      openPicker: () => setModalVisible(true),
+    }));
 
-      const data = await uploadFile(formData);
-      await updateProfile({
-        avatar: data.url || data.avatar || data.imageUrl,
+    const handleAvatarUpload = () => {
+      setModalVisible(true);
+    };
+
+    const showNewToast = (
+      message: string,
+      type: "success" | "error" = "error",
+    ) => {
+      const newId = Math.random().toString();
+      toast.show({
+        id: newId,
+        placement: "top",
+        duration: 9000,
+        render: ({ id }) => {
+          const uniqueToastId = "toast-" + id;
+          return (
+            <Toast nativeID={uniqueToastId} action={type} variant="solid">
+              <ToastTitle>{type === "success" ? "Sucesso" : "Erro"}</ToastTitle>
+              <ToastDescription>{message}</ToastDescription>
+            </Toast>
+          );
+        },
       });
+    };
 
-      showNewToast("Foto do perfil atualizada com sucesso!", "success");
-    } catch (error) {
-      showNewToast(
-        `Não foi possível atualizar a foto do perfil. ${error}`,
-        "error"
-      );
-    } finally {
-      setIsUploading(false);
-    }
-  };
+    const uploadAvatar = async (imageAsset: ImagePicker.ImagePickerAsset) => {
+      try {
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append("file", {
+          uri: imageAsset.uri,
+          type: imageAsset.mimeType || "image/jpeg",
+          name: "avatar.jpg",
+        } as any);
 
-  const pickImageFromGallery = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-        allowsMultipleSelection: false,
-        selectionLimit: 1,
-      });
-
-      if (!result.canceled && result.assets?.[0]) {
-        // ✅ fecha o modal imediatamente
-        setModalVisible(false);
-
-        // pequena espera para evitar flicker visual
-        requestAnimationFrame(async () => {
-          await uploadAvatar(result.assets[0]);
+        const data = await uploadFile(formData);
+        await updateProfile({
+          avatar: data.url || data.avatar || data.imageUrl,
         });
-      } else {
-        setModalVisible(false);
-      }
-    } catch (error) {
-      setModalVisible(false);
-      showNewToast("Não foi possível selecionar a imagem.", "error");
-    }
-  };
 
-  const pickImageFromCamera = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-
-      if (status !== "granted") {
+        showNewToast("Foto do perfil atualizada com sucesso!", "success");
+      } catch (error) {
         showNewToast(
-          "Precisamos de acesso à câmera para tirar uma foto.",
-          "error"
+          `Não foi possível atualizar a foto do perfil. ${error}`,
+          "error",
         );
-        return;
+      } finally {
+        setIsUploading(false);
       }
+    };
 
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: "images",
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets?.[0]) {
-        // ✅ fecha o modal imediatamente
-        setModalVisible(false);
-
-        requestAnimationFrame(async () => {
-          await uploadAvatar(result.assets[0]);
+    const pickImageFromGallery = async () => {
+      try {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: "images",
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+          allowsMultipleSelection: false,
+          selectionLimit: 1,
         });
-      } else {
-        setModalVisible(false);
-      }
-    } catch (error) {
-      setModalVisible(false);
-      showNewToast("Não foi possível tirar a foto.", "error");
-    }
-  };
 
-  return (
-    <>
-      <View
-        className={`w-28 h-28 rounded-full ${
-          isDark ? "bg-gray-700" : "bg-gray-200"
-        } items-center justify-center mb-4 border-4 ${
-          isDark ? "border-gray-600" : "border-gray-300"
-        }`}
-      >
-        <Avatar
-          size="2xl"
-          className="bg-[#2b2b2b9d] items-center justify-center"
+        if (!result.canceled && result.assets?.[0]) {
+          setModalVisible(false);
+
+          requestAnimationFrame(async () => {
+            await uploadAvatar(result.assets[0]);
+          });
+        } else {
+          setModalVisible(false);
+        }
+      } catch (error) {
+        setModalVisible(false);
+        showNewToast("Não foi possível selecionar a imagem.", "error");
+      }
+    };
+
+    const pickImageFromCamera = async () => {
+      try {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+
+        if (status !== "granted") {
+          showNewToast(
+            "Precisamos de acesso à câmera para tirar uma foto.",
+            "error",
+          );
+          return;
+        }
+
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: "images",
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets?.[0]) {
+          setModalVisible(false);
+
+          requestAnimationFrame(async () => {
+            await uploadAvatar(result.assets[0]);
+          });
+        } else {
+          setModalVisible(false);
+        }
+      } catch (error) {
+        setModalVisible(false);
+        showNewToast("Não foi possível tirar a foto.", "error");
+      }
+    };
+
+    return (
+      <>
+        <View
+          style={[
+            styles.avatarFrame,
+            {
+              width: size,
+              height: size,
+              borderRadius: size / 2,
+              borderWidth: borderColor ? 3 : 0,
+              borderColor: borderColor ?? "transparent",
+              backgroundColor: isDark ? "#122130" : "#E5E7EB",
+            },
+          ]}
         >
           {profile?.avatar ? (
-            <Image
-              source={{
-                uri: profile.avatar,
+            <RNImage
+              source={{ uri: profile.avatar }}
+              resizeMode="cover"
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: size / 2,
               }}
             />
           ) : (
             <Text className="text-white font-bold text-3xl">
-              {(profile?.name || profile?.email || "User")
-                .split(" ")
-                .map((n) => n.charAt(0))
-                .join("")
-                .substring(0, 2)
-                .toUpperCase()}
+              {getInitials(profile)}
             </Text>
           )}
-        </Avatar>
-        <Pressable
-          onPress={handleAvatarUpload}
-          className="absolute -bottom-2 -right-2 bg-primary-800 rounded-full p-2 border-2 border-white"
-        >
-          {isUploading ? (
-            <ActivityIndicator size="small" color="#000" />
-          ) : (
-            <Icon as={CameraIcon} className="text-black" size="sm" />
-          )}
-        </Pressable>
-      </View>
-      <Modal
-        transparent
-        animationType="fade"
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Escolha uma opção</Text>
 
-            <TouchableOpacity
-              style={styles.optionButton}
-              onPress={pickImageFromGallery}
+          {showTrigger ? (
+            <Pressable
+              onPress={handleAvatarUpload}
+              style={styles.triggerButton}
+              className="border-2 border-white"
             >
-              <Text style={styles.optionText}>📸 Galeria</Text>
-            </TouchableOpacity>
-
-            <View style={styles.divider} />
-
-            <TouchableOpacity
-              style={styles.optionButton}
-              onPress={pickImageFromCamera}
-            >
-              <Text style={styles.optionText}>📷 Câmera</Text>
-            </TouchableOpacity>
-
-            <View style={styles.divider} />
-
-            <TouchableOpacity
-              style={[styles.optionButton, styles.cancelButton]}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={[styles.optionText, styles.cancelText]}>
-                Cancelar
-              </Text>
-            </TouchableOpacity>
-          </View>
+              {isUploading ? (
+                <ActivityIndicator size="small" color="#000" />
+              ) : (
+                <Icon as={CameraIcon} className="text-black" size="sm" />
+              )}
+            </Pressable>
+          ) : null}
         </View>
-      </Modal>
-    </>
-  );
-}
+
+        <Modal
+          transparent
+          animationType="fade"
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Escolha uma opção</Text>
+
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={pickImageFromGallery}
+              >
+                <Text style={styles.optionText}>Galeria</Text>
+              </TouchableOpacity>
+
+              <View style={styles.divider} />
+
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={pickImageFromCamera}
+              >
+                <Text style={styles.optionText}>Câmera</Text>
+              </TouchableOpacity>
+
+              <View style={styles.divider} />
+
+              <TouchableOpacity
+                style={[styles.optionButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={[styles.optionText, styles.cancelText]}>
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </>
+    );
+  },
+);
+
+AvatarImage.displayName = "AvatarImage";
+
+export default AvatarImage;
 
 const styles = StyleSheet.create({
+  avatarFrame: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    overflow: "hidden",
+  },
+  triggerButton: {
+    position: "absolute",
+    right: -4,
+    bottom: -4,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#37DEBC",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -259,34 +309,30 @@ const styles = StyleSheet.create({
     }),
   },
   modalTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
-    color: "#333",
     textAlign: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    marginVertical: 16,
+    color: "#111827",
   },
   optionButton: {
     paddingVertical: 16,
-    paddingHorizontal: 24,
     alignItems: "center",
   },
   optionText: {
-    fontSize: 18,
-    color: "#007AFF",
+    fontSize: 16,
+    color: "#111827",
     fontWeight: "500",
   },
-
   divider: {
     height: 1,
-    backgroundColor: "#E5E5E5",
+    backgroundColor: "#e5e7eb",
     marginHorizontal: 16,
   },
   cancelButton: {
     marginTop: 4,
   },
   cancelText: {
-    color: "#FF3B30",
-    fontWeight: "600",
+    color: "#ef4444",
   },
 });

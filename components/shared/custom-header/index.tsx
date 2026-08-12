@@ -32,7 +32,7 @@ const CustomHeader = ({
       <HStack className="px-5 py-3  gap-6 justify-between w-full max-w-screen-lg mx-auto items-center mt-5">
         <HStack className="items-center gap-3">
           <Image
-            source={require("@/assets/images/copa/jf_icone_v1.png")}
+            source={require("@/assets/images/jf_icone_v1.png")}
             alt="image"
             className="h-11 w-11"
             resizeMode="contain"

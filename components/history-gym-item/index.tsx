@@ -13,6 +13,7 @@ import { Divider } from "../ui/divider";
 interface Props {
   item: FinishedHistory;
   setSelectedItem: (item: FinishedHistory) => void;
+  onOpenDetails: (item: FinishedHistory) => void;
   day: string;
   month: string;
 }
@@ -20,12 +21,13 @@ interface Props {
 export const HistoryGymItem = ({
   item,
   setSelectedItem,
+  onOpenDetails,
   day,
   month,
 }: Props) => {
   const feedback = typeof item?.feedback === "string" ? item.feedback : null;
 
-  return (
+  const cardContent = (
     <Box className="bg-[#2b2b2b9d] rounded-xl p-4 mb-2 min-h-[100px]">
       <HStack
         className="w-full"
@@ -45,7 +47,7 @@ export const HistoryGymItem = ({
             {item?.trainingSubtitle || ""}
           </Text>
 
-          {feedback ? (
+          {item.unrealized ? (
             <HStack className="gap-6 pt-2 flex-wrap">
               <Pressable hitSlop={10} onPress={() => setSelectedItem(item)}>
                 <Box className="relative">
@@ -65,9 +67,9 @@ export const HistoryGymItem = ({
                 </Box>
               </Pressable>
             </HStack>
-          ) : (
+          ) : !feedback ? (
             <Text className="pt-5 text-[#e96b10]">Aguardando feedback</Text>
-          )}
+          ) : null}
         </VStack>
 
         {day && month && (
@@ -111,4 +113,10 @@ export const HistoryGymItem = ({
       </HStack>
     </Box>
   );
+
+  if (item.unrealized) {
+    return cardContent;
+  }
+
+  return <Pressable onPress={() => onOpenDetails(item)}>{cardContent}</Pressable>;
 };

@@ -688,7 +688,7 @@ const IndoorScreen = ({ safeId, titleStr }: Props) => {
                 {calculateAverage(intensities)}
               </Text>
               <Text className="text-1xl text-white">
-                {unitMeasurement === "pace" ? "Tempo médio" : "Km médio"}
+                {unitMeasurement === "pace" ? "Tempo médio" : "Km/h médio"}
               </Text>
             </VStack>
           </HStack>
@@ -921,7 +921,7 @@ const IndoorScreen = ({ safeId, titleStr }: Props) => {
           setDistanceShowPicker(false);
         }}
         initialValue={values.distanceInMeters}
-        title="Selecione a distância percorrida (km/h)"
+        title="Selecione a distância percorrida (km)"
       />
       <TimePicker
         visible={showTimePicker}

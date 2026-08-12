@@ -1,3 +1,4 @@
+import { LoadingOverlayProvider } from "@/components/shared/loading";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { Image } from "@/components/ui/image";
 import { ENV } from "@/config/env";
@@ -5,8 +6,18 @@ import { SessionProvider } from "@/contexts/Authentication";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { ThemeContext, ThemeProvider } from "@/contexts/theme-context";
 import "@/global.css";
+import {
+  fetchAppVersionStatus,
+  type AppVersionStatus,
+} from "@/services/app-version.service";
 import * as Sentry from "@sentry/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  Baloo2_400Regular,
+  Baloo2_600SemiBold,
+  Baloo2_700Bold,
+  Baloo2_800ExtraBold,
+} from "@expo-google-fonts/baloo-2";
 import { Audio } from "expo-av";
 import { useFonts } from "expo-font";
 import * as Notifications from "expo-notifications";
@@ -16,21 +27,22 @@ import { StatusBar } from "expo-status-bar";
 import * as TaskManager from "expo-task-manager";
 import * as Updates from "expo-updates";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  BackHandler,
+  Dimensions,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { LocaleConfig } from "react-native-calendars";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
-import {
-  Baloo2_400Regular,
-  Baloo2_600SemiBold,
-  Baloo2_700Bold,
-  Baloo2_800ExtraBold,
-} from "@expo-google-fonts/baloo-2";
-
-// ✅ Usando ENV.SENTRY_DSN ao invés de hardcoded
 Sentry.init({
   dsn: ENV.SENTRY_DSN,
   sendDefaultPii: true,
@@ -79,16 +91,8 @@ function IntegratedNotificationHandler() {
     }, delay);
   };
 
-  const handleNotificationData = (data: any) => {
-    if (!data) return;
-    if (data.url && typeof data.url === "string") {
-      const url = data.url;
-      const prefix = "jfapp://";
-      if (url.startsWith(prefix)) {
-        const path = url.slice(prefix.length);
-        safeNavigate(`/${path}` as any);
-      }
-    }
+  const handleNotificationData = (_data: any) => {
+    safeNavigate("/(tabs)/(home)");
   };
 
   useEffect(() => {
@@ -135,7 +139,7 @@ const SplashScreenView: React.FC<SplashScreenProps> = ({ onFinish }) => {
   useEffect(() => {
     const start = async () => {
       await SplashScreen.hideAsync();
-      setTimeout(() => onFinish(), 2000);
+      setTimeout(() => onFinish(), 6000);
     };
     start();
   }, []);
@@ -155,15 +159,13 @@ const SplashScreenView: React.FC<SplashScreenProps> = ({ onFinish }) => {
       <StatusBar style="light" backgroundColor="#000000" translucent={false} />
       <View style={styles.logoContainer}>
         <Image
-          source={require("@/assets/images/copa/jf_logo_full.png")}
+          source={require("@/assets/images/loading-foltz.gif")}
           alt="logo"
           size="none"
           resizeMode="contain"
           style={styles.logoImage}
         />
       </View>
-      <Text style={styles.loadingText}>Carregando...</Text>
-      <View style={styles.loadingDot} />
     </View>
   );
 };
@@ -221,6 +223,10 @@ const MainLayout = () => {
   });
   const [appReady, setAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [forceUpdateStatus, setForceUpdateStatus] =
+    useState<AppVersionStatus | null>(null);
+  const [isOpeningStore, setIsOpeningStore] = useState(false);
+  const startupChecksExecutedRef = useRef(false);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -229,30 +235,51 @@ const MainLayout = () => {
   }, [fontsLoaded]);
 
   useEffect(() => {
-    const runAutoUpdate = async () => {
+    if (!appReady || showSplash || startupChecksExecutedRef.current) {
+      return;
+    }
+
+    startupChecksExecutedRef.current = true;
+    let isMounted = true;
+
+    const runStartupChecks = async () => {
       try {
-        // ✅ Usando ENV.isProd ao invés de process.env
-        if (!ENV.isProd) {
-          return;
+        if (ENV.isProd) {
+          try {
+            const update = await Updates.checkForUpdateAsync();
+
+            if (update.isAvailable) {
+              await Updates.fetchUpdateAsync();
+
+              setTimeout(() => {
+                Updates.reloadAsync();
+              }, 800);
+              return;
+            }
+          } catch (error) {
+            console.error("Erro no OTA automático:", error);
+          }
         }
 
-        const update = await Updates.checkForUpdateAsync();
+        try {
+          const status = await fetchAppVersionStatus();
 
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-
-          setTimeout(() => {
-            Updates.reloadAsync();
-          }, 800);
+          if (isMounted && status?.forceUpdate) {
+            setForceUpdateStatus(status);
+          }
+        } catch (error) {
+          console.error("Erro ao verificar versao minima do app:", error);
         }
       } catch (error) {
-        console.error("Erro no OTA automático:", error);
+        console.error("Erro ao executar checagens iniciais:", error);
       }
     };
 
-    if (appReady && !showSplash) {
-      runAutoUpdate();
-    }
+    runStartupChecks();
+
+    return () => {
+      isMounted = false;
+    };
   }, [appReady, showSplash]);
 
   useEffect(() => {
@@ -262,7 +289,64 @@ const MainLayout = () => {
     });
   }, []);
 
+  useEffect(() => {
+    if (!forceUpdateStatus) {
+      return;
+    }
+
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => true,
+    );
+
+    return () => subscription.remove();
+  }, [forceUpdateStatus]);
+
   const handleSplashFinish = () => setShowSplash(false);
+
+  const handleOpenStore = async () => {
+    if (!forceUpdateStatus?.storeUrl || isOpeningStore) {
+      return;
+    }
+
+    try {
+      setIsOpeningStore(true);
+      await Linking.openURL(forceUpdateStatus.storeUrl);
+    } catch (error) {
+      console.error("Erro ao abrir loja do app:", error);
+    } finally {
+      setIsOpeningStore(false);
+    }
+  };
+
+  const currentVersionLabel = forceUpdateStatus
+    ? [
+        forceUpdateStatus.currentVersion
+          ? `Versão atual ${forceUpdateStatus.currentVersion}`
+          : null,
+        forceUpdateStatus.currentBuild
+          ? `build ${forceUpdateStatus.currentBuild}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" • ")
+    : "";
+
+  const minimumVersionLabel = forceUpdateStatus
+    ? [
+        forceUpdateStatus.latestVersion || forceUpdateStatus.minimumVersion
+          ? `Versão requerida ${
+              forceUpdateStatus.latestVersion ||
+              forceUpdateStatus.minimumVersion
+            }`
+          : null,
+        forceUpdateStatus.minimumBuild
+          ? `build ${forceUpdateStatus.minimumBuild}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" • ")
+    : "";
 
   if (!appReady || showSplash) {
     return <SplashScreenView onFinish={handleSplashFinish} />;
@@ -271,17 +355,69 @@ const MainLayout = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#000000" }}>
       <GluestackUIProvider mode={colorMode}>
-        <NotificationProvider>
-          <SessionProvider>
-            <StatusBar
-              style="light"
-              translucent={false}
-              backgroundColor="#000000"
-            />
-            <Slot />
-            <IntegratedNotificationHandler />
-          </SessionProvider>
-        </NotificationProvider>
+        <LoadingOverlayProvider>
+          <NotificationProvider>
+            <SessionProvider>
+              <StatusBar
+                style="light"
+                translucent={false}
+                backgroundColor="#000000"
+              />
+              <Slot />
+              <IntegratedNotificationHandler />
+              {forceUpdateStatus ? (
+                <View style={styles.forceUpdateOverlay}>
+                  <View style={styles.forceUpdateCard}>
+                    <Text style={styles.forceUpdateTitle}>
+                      {forceUpdateStatus.title}
+                    </Text>
+                    <Text style={styles.forceUpdateMessage}>
+                      {forceUpdateStatus.message}
+                    </Text>
+
+                    {currentVersionLabel ? (
+                      <Text style={styles.forceUpdateMetaText}>
+                        {currentVersionLabel}
+                      </Text>
+                    ) : null}
+
+                    {minimumVersionLabel ? (
+                      <Text style={styles.forceUpdateMetaTextStrong}>
+                        {minimumVersionLabel}
+                      </Text>
+                    ) : null}
+
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={handleOpenStore}
+                      disabled={!forceUpdateStatus.storeUrl || isOpeningStore}
+                      style={[
+                        styles.forceUpdateButton,
+                        !forceUpdateStatus.storeUrl &&
+                          styles.forceUpdateButtonDisabled,
+                      ]}
+                    >
+                      {isOpeningStore ? (
+                        <ActivityIndicator color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.forceUpdateButtonText}>
+                          Atualizar agora
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+
+                    {!forceUpdateStatus.storeUrl ? (
+                      <Text style={styles.forceUpdateSupportText}>
+                        Link da loja não configurado. Defina APP_STORE_URL_
+                        {forceUpdateStatus.platform.toUpperCase()} na API.
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              ) : null}
+            </SessionProvider>
+          </NotificationProvider>
+        </LoadingOverlayProvider>
       </GluestackUIProvider>
     </SafeAreaView>
   );
@@ -313,66 +449,70 @@ const styles = StyleSheet.create({
     width: Math.min(Dimensions.get("window").width * 1.18, 640),
     height: Math.min(Dimensions.get("window").height * 0.5, 380),
   },
-  loadingText: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#FFFFFF",
-    textAlign: "center",
-    marginBottom: 30,
-  },
-  loadingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#FFFFFF",
-    opacity: 0.7,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
+  forceUpdateOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#000000",
     justifyContent: "center",
-    alignItems: "center",
+    paddingHorizontal: 24,
+    zIndex: 999,
+    elevation: 999,
   },
-  modalContainer: {
-    backgroundColor: "#1C1C1C",
-    padding: 24,
-    borderRadius: 12,
-    width: "80%",
-    alignItems: "center",
+  forceUpdateCard: {
+    backgroundColor: "#111111",
+    borderWidth: 1,
+    borderColor: "#242424",
+    borderRadius: 24,
+    paddingVertical: 28,
+    paddingHorizontal: 22,
   },
-  modalTitle: {
+  forceUpdateTitle: {
     color: "#FFFFFF",
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: "700",
-    marginBottom: 12,
     textAlign: "center",
+    marginBottom: 16,
   },
-  modalMessage: {
-    color: "#FFFFFF",
+  forceUpdateMessage: {
+    color: "#D4D4D8",
     fontSize: 16,
+    lineHeight: 24,
+    textAlign: "center",
+    marginBottom: 18,
+  },
+  forceUpdateMetaText: {
+    color: "#A1A1AA",
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  forceUpdateMetaTextStrong: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
     textAlign: "center",
     marginBottom: 24,
   },
-  button: {
+  forceUpdateButton: {
+    minHeight: 54,
+    borderRadius: 999,
     backgroundColor: "#FF6B00",
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    marginBottom: 12,
-    width: "100%",
     alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
   },
-  buttonText: {
+  forceUpdateButtonDisabled: {
+    opacity: 0.45,
+  },
+  forceUpdateButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
-  buttonSecondary: {
-    backgroundColor: "#2C2C2C",
-  },
-  buttonTextSecondary: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+  forceUpdateSupportText: {
+    color: "#A1A1AA",
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: "center",
+    marginTop: 16,
   },
 });

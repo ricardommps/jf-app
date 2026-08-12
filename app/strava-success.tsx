@@ -1,54 +1,97 @@
-// app/strava-success.tsx
-
+import { StravaConnectedSuccess } from "@/components/strava/StravaConnectedSuccess";
+import { StravaPairingShell } from "@/components/strava/StravaPairingShell";
+import { useSession } from "@/contexts/Authentication";
 import {
-  Toast,
-  ToastDescription,
-  ToastTitle,
-  useToast,
-} from "@/components/ui/toast";
-import { useStravaStatus } from "@/hooks/useConnectStrava/useConnectStrava";
-import { useRouter } from "expo-router";
-import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+  useDisconnectStrava,
+  useStravaStatus,
+} from "@/hooks/useConnectStrava/useConnectStrava";
+import { useNavigation, useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, ScrollView, View } from "react-native";
 
 export default function StravaSuccess() {
+  const navigation = useNavigation();
   const router = useRouter();
-  const toast = useToast();
-  const { refetch } = useStravaStatus();
-
-  const showNewToast = (
-    message: string,
-    type: "success" | "error" = "error",
-  ) => {
-    const newId = Math.random().toString();
-    toast.show({
-      id: newId,
-      placement: "top",
-      duration: 9000,
-      render: ({ id }) => {
-        const uniqueToastId = "toast-" + id;
-        return (
-          <Toast nativeID={uniqueToastId} action={type} variant="solid">
-            <ToastTitle>{type === "success" ? "Sucesso" : "Erro"}</ToastTitle>
-            <ToastDescription>{message}</ToastDescription>
-          </Toast>
-        );
-      },
-    });
-  };
+  const { session } = useSession();
+  const { data, refetch } = useStravaStatus();
+  const { mutate: disconnectStrava, status: disconnectStatus } =
+    useDisconnectStrava();
+  const [isRefreshing, setIsRefreshing] = useState(true);
+  const isDisconnecting = disconnectStatus === "pending";
 
   useEffect(() => {
-    // No Android, o deep link cai aqui — só refaz o fetch e redireciona
+    let isMounted = true;
+
+    WebBrowser.dismissBrowser();
+
     refetch().finally(() => {
-      //router.replace("/stravaConnect/" as any);
-      showNewToast("Strava conectado com sucesso!", "success");
-      router.replace("/" as any);
+      if (isMounted) {
+        setIsRefreshing(false);
+      }
     });
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [refetch]);
+
+  useEffect(() => {
+    if (!isRefreshing && !data?.connected) {
+      router.replace("/stravaConnect/" as any);
+    }
+  }, [data?.connected, isRefreshing, router]);
+
+  const handleClose = () => {
+    if (navigation.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)/(home)" as any);
+  };
+
+  const handleDisconnect = () => {
+    Alert.alert(
+      "Desconectar do Strava",
+      "Você deseja desconectar sua conta do Strava?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Desconectar",
+          style: "destructive",
+          onPress: () => disconnectStrava(),
+        },
+      ],
+    );
+  };
+
+  if (isRefreshing || !data?.connected) {
+    return (
+      <StravaPairingShell onClose={handleClose}>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#FC5200" />
+        </View>
+      </StravaPairingShell>
+    );
+  }
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <ActivityIndicator size="large" />
-    </View>
+    <StravaPairingShell onClose={handleClose}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        <StravaConnectedSuccess
+          userAvatar={session?.user.avatar ?? null}
+          userName={session?.user.name ?? null}
+          isDisconnecting={isDisconnecting}
+          onDisconnect={handleDisconnect}
+        />
+      </ScrollView>
+    </StravaPairingShell>
   );
 }

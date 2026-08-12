@@ -2,7 +2,9 @@ import {
   useConnectStrava,
   useStravaStatus,
 } from "@/hooks/useConnectStrava/useConnectStrava";
+import { ENV } from "@/config/env";
 import React from "react";
+import * as ExpoLinking from "expo-linking";
 import {
   ActivityIndicator,
   Button,
@@ -26,7 +28,13 @@ export default function StravaConnectButton() {
       ) : (
         <Button
           title={isConnecting ? "Conectando..." : "Conectar com Strava"}
-          onPress={() => mutate()}
+          onPress={() =>
+            mutate({
+              redirectUri:
+                ENV.STRAVA_REDIRECT_URI?.trim() ||
+                ExpoLinking.createURL("strava-success"),
+            })
+          }
         />
       )}
     </View>

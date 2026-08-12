@@ -1,11 +1,9 @@
-import * as FileSystem from "expo-file-system";
 import { Asset } from "expo-asset";
+import * as FileSystem from "expo-file-system/legacy";
 
 export async function convertLogoToBase64(): Promise<string> {
   try {
-    const asset = Asset.fromModule(
-      require("../assets/images/copa/jf_icone_v1.png")
-    );
+    const asset = Asset.fromModule(require("../assets/images/jf_icone_v1.png"));
 
     // Sempre baixa para garantir caminho file://
     await asset.downloadAsync();
@@ -15,7 +13,7 @@ export async function convertLogoToBase64(): Promise<string> {
     }
 
     const logoBase64 = await FileSystem.readAsStringAsync(asset.localUri, {
-      encoding: FileSystem.EncodingType.Base64,
+      encoding: "base64",
     });
 
     return logoBase64;

@@ -13,6 +13,48 @@ interface Props {
   currentExtrapolation: ExtrapolationEntry | null;
 }
 
+interface ExtrapolativeValidityContentProps {
+  currentExtrapolation: ExtrapolationEntry | null;
+  emptyMessage?: string;
+}
+
+export const ExtrapolativeValidityContent: React.FC<
+  ExtrapolativeValidityContentProps
+> = ({
+  currentExtrapolation,
+  emptyMessage = "Dados indisponíveis no momento.",
+}) => {
+  if (!currentExtrapolation) {
+    return (
+      <Box className="mt-6 rounded-xl bg-gray-100 dark:bg-[#2b2b2b9d] p-4">
+        <Text className="text-base text-gray-700 dark:text-gray-300">
+          {emptyMessage}
+        </Text>
+      </Box>
+    );
+  }
+
+  return (
+    <Box className="mt-6 rounded-xl bg-gray-100 dark:bg-[#2b2b2b9d] p-3">
+      {Object.entries(currentExtrapolation)
+        .filter(([label]) => label !== "VO2")
+        .map(([label, value]) => (
+          <Box
+            key={label}
+            className="flex-row justify-between py-3 border-b border-gray-200 dark:border-gray-700"
+          >
+            <Text className="text-lg text-gray-700 dark:text-gray-300 font-semibold">
+              {label}
+            </Text>
+            <Text className="text-lg text-gray-900 dark:text-white">
+              {value}
+            </Text>
+          </Box>
+        ))}
+    </Box>
+  );
+};
+
 const ExtrapolativeValidity: React.FC<Props> = ({
   visible,
   onRequestClose,
@@ -42,7 +84,6 @@ const ExtrapolativeValidity: React.FC<Props> = ({
       >
         <Box className="flex-1 bg-background-0 px-1">
           <VStack className="flex-1 p-6">
-            {/* Header */}
             <HStack className="justify-between items-center mb-6">
               <Heading size="lg" className="text-white">
                 Validade Extrapolativa
@@ -57,26 +98,10 @@ const ExtrapolativeValidity: React.FC<Props> = ({
                 <Text className="text-2xl text-white">✕</Text>
               </TouchableOpacity>
             </HStack>
-            {/* Conteúdo principal */}
-            {currentExtrapolation && (
-              <Box className="mt-6 rounded-xl bg-gray-100 dark:bg-[#2b2b2b9d] p-3">
-                {Object.entries(currentExtrapolation)
-                  .filter(([label]) => label !== "VO2")
-                  .map(([label, value]) => (
-                    <Box
-                      key={label}
-                      className="flex-row justify-between py-3 border-b border-gray-200 dark:border-gray-700"
-                    >
-                      <Text className="text-lg text-gray-700 dark:text-gray-300 font-semibold">
-                        {label}
-                      </Text>
-                      <Text className="text-lg text-gray-900 dark:text-white">
-                        {value}
-                      </Text>
-                    </Box>
-                  ))}
-              </Box>
-            )}
+
+            <ExtrapolativeValidityContent
+              currentExtrapolation={currentExtrapolation}
+            />
           </VStack>
         </Box>
       </SafeAreaView>

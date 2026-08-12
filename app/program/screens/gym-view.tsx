@@ -292,7 +292,7 @@ const GymView = ({ workouts, programId }: Props) => {
             return (
               <Pressable
                 key={item.id}
-                className="flex-1 items-center justify-center"
+                className="flex-1 items-center justify-center gap-1"
                 onPress={() => setActiveTab(item.id)}
               >
                 <Animated.View
@@ -306,6 +306,16 @@ const GymView = ({ workouts, programId }: Props) => {
                     }`}
                   />
                 </Animated.View>
+                <Text
+                  size="xs"
+                  className={`${
+                    isActive
+                      ? "text-primary-800 font-dm-sans-bold"
+                      : "text-background-500 font-dm-sans-medium"
+                  }`}
+                >
+                  {item.label}
+                </Text>
               </Pressable>
             );
           })}

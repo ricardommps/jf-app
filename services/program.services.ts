@@ -28,8 +28,18 @@ export async function getProgram(programId: string) {
 export async function runnerProgram() {
   try {
     const response = await axiosInstance.get("/api/v2/program/runnerProgram");
-    return response.data;
+    const data = response.data;
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    return data ? [data] : [];
   } catch (error: any) {
+    if (error?.response?.status === 400) {
+      return [];
+    }
+
     Sentry.captureException(error, { extra: { context: "runnerProgram" } });
     console.error("runnerProgram", error);
     throw error;

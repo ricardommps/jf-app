@@ -49,7 +49,7 @@ const HeaderNavigation = ({ title }: { title?: string }) => {
 
         <VStack className="justify-end flex-shrink-0 ml-2">
           <Image
-            source={require("@/assets/images/copa/jf_icone_v1.png")}
+            source={require("@/assets/images/jf_icone_v1.png")}
             alt="logo"
             resizeMode="contain"
             className="h-10 w-10"

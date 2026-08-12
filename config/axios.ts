@@ -91,17 +91,21 @@ class APICaller {
           this.removeCancelTokenSource(error.config.cancelToken);
         }
 
-        if (this.hasLoggedOut || this.isLoggingOut) {
-          return Promise.reject(new axios.Cancel("Already logged out"));
+        if (axios.isCancel(error)) {
+          return Promise.reject(error);
         }
 
-        if (axios.isCancel(error)) {
+        if (this.hasLoggedOut || this.isLoggingOut) {
           return Promise.reject(error);
         }
 
         if (!this.isLoggingOut) {
           Sentry.captureException(error);
         }
+
+        const shouldSkipNetworkErrorHandler = Boolean(
+          (error.config as any)?.skipNetworkErrorHandler,
+        );
 
         if (error.message === "Network Error" || !error.response) {
           const errorDetails = {
@@ -116,7 +120,9 @@ class APICaller {
             level: "error",
             extra: errorDetails,
           });
-          this.handleNetworkError(errorDetails);
+          if (!shouldSkipNetworkErrorHandler) {
+            this.handleNetworkError(errorDetails);
+          }
 
           const networkError = new Error(errorDetails.message);
           (networkError as any).isNetworkError = true;
@@ -275,6 +281,8 @@ class APICaller {
 
   public resetLogoutState() {
     this.hasLoggedOut = false;
+    this.isLoggingOut = false;
+    this.isNavigatingToError = false;
   }
 
   private async getPushToken(): Promise<string | undefined> {

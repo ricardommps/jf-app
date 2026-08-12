@@ -29,6 +29,7 @@ import {
   RouteIcon,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 import { RefreshControl, View } from "react-native";
 import Comments from "./components/comments";
 
@@ -42,6 +43,7 @@ type SetSelectedItem = React.Dispatch<
 
 const renderCardGym = (
   setSelectedItem: SetSelectedItem,
+  onOpenDetails: (item: FinishedHistory) => void,
   item: FinishedHistory,
   day: string,
   month: string,
@@ -50,6 +52,7 @@ const renderCardGym = (
     <HistoryGymItem
       item={item}
       setSelectedItem={setSelectedItem}
+      onOpenDetails={onOpenDetails}
       day={day}
       month={month}
     />
@@ -62,6 +65,7 @@ const renderCardGym = (
 
 const renderCardRunner = (
   setSelectedItem: SetSelectedItem,
+  onOpenDetails: (item: FinishedHistory) => void,
   item: FinishedHistory,
   day: string,
   month: string,
@@ -75,7 +79,7 @@ const renderCardRunner = (
 
   const feedback = typeof item?.feedback === "string" ? item.feedback : null;
 
-  return (
+  const cardContent = (
     <Box className="bg-[#2b2b2b9d] rounded-xl p-4 mb-2 min-h-[100px]">
       <HStack
         className="w-full mb-4"
@@ -95,7 +99,7 @@ const renderCardRunner = (
             {moduleName(item.trainingName) || ""}
           </Text>
 
-          {feedback ? (
+          {item.unrealized ? (
             <HStack className="gap-6 pt-2 flex-wrap">
               <Pressable hitSlop={10} onPress={() => setSelectedItem(item)}>
                 <Box className="relative">
@@ -114,9 +118,9 @@ const renderCardRunner = (
                 </Box>
               </Pressable>
             </HStack>
-          ) : (
+          ) : !feedback ? (
             <Text className="pt-5 text-[#e96b10]">Aguardando feedback</Text>
-          )}
+          ) : null}
         </VStack>
 
         {day && month && (
@@ -139,11 +143,6 @@ const renderCardRunner = (
 
       {!item.unrealized && (
         <>
-          {/* {item.summaryPolyline && (
-            <Box className="px-1 pt-1">
-              <ActivityMap encodedPolyline={item.summaryPolyline} />
-            </Box>
-          )} */}
           <HStack className="justify-around items-center pt-5">
             <VStack className="items-center">
               <Icon as={RouteIcon} size="xl" />
@@ -192,6 +191,12 @@ const renderCardRunner = (
       )}
     </Box>
   );
+
+  if (item.unrealized) {
+    return cardContent;
+  }
+
+  return <Pressable onPress={() => onOpenDetails(item)}>{cardContent}</Pressable>;
 };
 
 /* =========================================================
@@ -203,6 +208,7 @@ const HistoryScreen = () => {
     null,
   );
 
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery<FinishedHistory[]>({
@@ -232,6 +238,10 @@ const HistoryScreen = () => {
     });
   };
 
+  const handleOpenDetails = (item: FinishedHistory) => {
+    router.push(`/activitie-details?finishedId=${item.id}&source=history` as any);
+  };
+
   if (isLoading) {
     return (
       <View className="flex-1">
@@ -246,8 +256,8 @@ const HistoryScreen = () => {
     return (
       <View>
         {item.trainingRunning
-          ? renderCardRunner(setSelectedItem, item, day, month)
-          : renderCardGym(setSelectedItem, item, day, month)}
+          ? renderCardRunner(setSelectedItem, handleOpenDetails, item, day, month)
+          : renderCardGym(setSelectedItem, handleOpenDetails, item, day, month)}
       </View>
     );
   };

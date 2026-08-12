@@ -26,7 +26,7 @@ const ProgramView = () => {
   };
   return (
     <View className="flex-1 bg-black">
-      <Header title="Meus treinos" />
+      <Header title="Meus treinos" backRoute="/(tabs)/(home)" />
 
       {isLoading ? (
         <Loading />

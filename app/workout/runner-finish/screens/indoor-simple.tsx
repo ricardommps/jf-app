@@ -542,7 +542,7 @@ const IndoorSimpleScreen = ({ safeId, titleStr }: Props) => {
           setDistanceShowPicker(false);
         }}
         initialValue={values.distanceInMeters}
-        title="Selecione a distância percorrida (km)"
+        title="Selecione a distância percorrida (km/h)"
       />
 
       <TimePicker

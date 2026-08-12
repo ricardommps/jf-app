@@ -1,7 +1,7 @@
-import { Invoice, InvoiceData } from "@/types/invoice";
+import { Invoice } from "@/types/invoice";
 import { ProfileType } from "@/types/ProfileType";
 import { Asset } from "expo-asset";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 
 async function loadAssetAsBase64(module: number) {
   const asset = Asset.fromModule(module);
@@ -10,7 +10,7 @@ async function loadAssetAsBase64(module: number) {
   // Se já for file:// podemos ler direto
   if (asset.localUri && asset.localUri.startsWith("file://")) {
     return await FileSystem.readAsStringAsync(asset.localUri, {
-      encoding: FileSystem.EncodingType.Base64,
+      encoding: "base64",
     });
   }
 
@@ -22,19 +22,19 @@ async function loadAssetAsBase64(module: number) {
   });
 
   return await FileSystem.readAsStringAsync(destPath, {
-    encoding: FileSystem.EncodingType.Base64,
+    encoding: "base64",
   });
 }
 
 export async function gerarTemplateHtml(
   invoice: Invoice,
-  profile: ProfileType | null
+  profile: ProfileType | null,
 ): Promise<string> {
   let logoDataUri_ = "";
 
   try {
     const logoBase64 = await loadAssetAsBase64(
-      require("@/assets/images/copa/jf_logo_full.png")
+      require("@/assets/images/jf_logo_full.png"),
     );
     logoDataUri_ = `data:image/png;base64,${logoBase64}`;
   } catch (error) {

@@ -1,5 +1,4 @@
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
@@ -16,7 +15,6 @@ import {
 } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
 import { useSession } from "@/contexts/Authentication";
-import useANotifications from "@/hooks/useNotification";
 import { uploadFile } from "@/services/upload.service";
 import { ProfileType } from "@/types/ProfileType";
 import * as ImagePicker from "expo-image-picker";
@@ -25,10 +23,9 @@ import {
   CameraIcon,
   ChevronRightIcon,
   CircleDollarSignIcon,
-  MailIcon,
   SquareAsteriskIcon,
 } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   Platform,
@@ -37,7 +34,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Notifications from "./components/notifications";
 
 const DashboardLayout = (props: any) => {
   return (
@@ -53,7 +49,6 @@ const DashboardLayout = (props: any) => {
 };
 
 interface MainContentProps {
-  setShowNotifications: (show: boolean) => void;
   profile: ProfileType | null;
   handleInvoice: () => void;
   handleAvatarUpload: () => void;
@@ -61,13 +56,11 @@ interface MainContentProps {
 }
 
 const MainContent = ({
-  setShowNotifications,
   profile,
   handleInvoice,
   handleAvatarUpload,
   handlePassword,
 }: MainContentProps) => {
-  const { notifications } = useANotifications();
   return (
     <VStack className="h-full w-full mb-16 md:mb-0">
       <ScrollView
@@ -128,36 +121,6 @@ const MainContent = ({
           </Center>
           <VStack className="mx-2" space="2xl">
             <VStack className="py-2 px-4 border border-primary-100 rounded-xl border-border-300 justify-between items-center bg-[#2b2b2b9d]">
-              <Pressable
-                onPress={() => setShowNotifications(true)}
-                className="w-full"
-              >
-                <HStack
-                  space="2xl"
-                  className="justify-between items-center w-full py-3 px-2"
-                >
-                  <Box className="relative">
-                    {notifications && notifications?.length > 0 && (
-                      <Badge
-                        variant="solid"
-                        className="absolute -top-2 -right-3 bg-red-500 rounded-full z-10 px-[6px] py-[2px]"
-                      >
-                        <BadgeText className="text-white text-[10px] font-semibold">
-                          {notifications?.length}
-                        </BadgeText>
-                      </Badge>
-                    )}
-                    <HStack className="items-center" space="md">
-                      <Icon as={MailIcon} className="text-typography-700" />
-                      <Text size="lg" className="text-typography-700">
-                        Notificações
-                      </Text>
-                    </HStack>
-                  </Box>
-                  <Icon as={ChevronRightIcon} className="text-typography-700" />
-                </HStack>
-              </Pressable>
-              <Divider orientation="horizontal" />
               <Pressable onPress={handlePassword} className="w-full">
                 <HStack
                   space="2xl"
@@ -204,17 +167,12 @@ const MainContent = ({
 const Profile = () => {
   const router = useRouter();
   const toast = useToast();
-  const [showNotifications, setShowNotifications] = useState(false);
   const [toastId, setToastId] = useState<string>("");
   const { getProfile, updateProfile } = useSession();
-  const { onGetNotifications } = useANotifications();
   const profile = getProfile();
 
   const [modalVisible, setModalVisible] = useState(false);
 
-  useEffect(() => {
-    onGetNotifications();
-  }, []);
 
   const showNewToast = (
     message: string,
@@ -339,18 +297,12 @@ const Profile = () => {
     <View className="h-full w-full">
       <DashboardLayout title="Perfil">
         <MainContent
-          setShowNotifications={setShowNotifications}
           profile={profile}
           handleInvoice={handleInvoice}
           handleAvatarUpload={handleAvatarUpload}
           handlePassword={handlePassword}
         />
       </DashboardLayout>
-      <Notifications
-        open={showNotifications}
-        onClose={() => setShowNotifications(false)}
-        profile={profile}
-      />
 
       <Modal
         transparent

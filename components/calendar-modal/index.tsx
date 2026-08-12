@@ -1,4 +1,4 @@
-import CompetitionIcon from "@/assets/images/copa/jf_logo_icone_push.png";
+import CompetitionIcon from "@/assets/images/jf_logo_icone_push.png";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -35,19 +35,26 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
 }) => {
   const [tempSelectedDate, setTempSelectedDate] =
     React.useState<string>(initialDate);
+  const competitionBorderColor = "#60A5FA";
+  const todayDate = new Date();
+  const todayDateString = new Date(
+    todayDate.getTime() - todayDate.getTimezoneOffset() * 60000,
+  )
+    .toISOString()
+    .split("T")[0];
 
   const handleDayPress = (day: any) => {
     const { dateString } = day;
-    // ✅ CORREÇÃO: Removida a verificação que impedia cliques
     setTempSelectedDate(dateString);
+    onDateSelect?.(dateString);
+    onRequestClose();
   };
 
   useEffect(() => {
-    if (tempSelectedDate) {
-      onDateSelect?.(tempSelectedDate);
-      onRequestClose();
+    if (visible) {
+      setTempSelectedDate(initialDate);
     }
-  }, [tempSelectedDate]);
+  }, [visible, initialDate]);
 
   const markedDates = React.useMemo(() => {
     const marked: { [key: string]: any } = {};
@@ -60,18 +67,8 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
       };
     });
 
-    if (tempSelectedDate) {
-      marked[tempSelectedDate] = {
-        ...marked[tempSelectedDate],
-        startingDay: true,
-        endingDay: true,
-        color: "#1E40AF",
-        textColor: "#ffffff",
-      };
-    }
-
     return marked;
-  }, [customMarkedDates, tempSelectedDate]);
+  }, [customMarkedDates]);
 
   const calendarTheme = {
     backgroundColor: "#334155",
@@ -165,7 +162,7 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
           {/* Header */}
           <HStack className="justify-between items-center p-4 border-b border-slate-600">
             <Heading size="lg" className="text-white">
-              Selecione o treino
+              Selecione o dia
             </Heading>
             <TouchableOpacity
               onPress={onRequestClose}
@@ -194,6 +191,28 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
                 const isCompetition = customMarking?.isCompetition;
                 const bgColor = customMarking?.color;
                 const isDisabled = state === "disabled";
+                const isToday = date.dateString === todayDateString;
+                const isSelectedDate = tempSelectedDate === date.dateString;
+                const hasWorkoutOnDate = Boolean(customMarkedDates[date.dateString]);
+                const shouldHighlightToday = isToday && hasWorkoutOnDate;
+                const borderColor = shouldHighlightToday
+                  ? competitionBorderColor
+                  : isCompetition
+                    ? competitionBorderColor
+                    : bgColor ?? "rgba(226, 232, 240, 0.18)";
+                const borderWidth = isCompetition || bgColor ? 2 : 1;
+                const resolvedBorderWidth = isToday
+                  ? shouldHighlightToday
+                    ? 2
+                    : 0
+                  : borderWidth;
+                const isRangeStart =
+                  Boolean(customMarking?.startingDay) &&
+                  !Boolean(customMarking?.endingDay);
+                const isRangeEnd =
+                  Boolean(customMarking?.endingDay) &&
+                  !Boolean(customMarking?.startingDay);
+                const rangeOverlap = 4;
 
                 return (
                   <TouchableOpacity
@@ -209,10 +228,18 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
                       style={{
                         width: 44,
                         height: 44,
-                        borderRadius: 6,
-                        backgroundColor: "#F3F4F6",
-                        borderWidth: 1,
-                        borderColor: "#E5E7EB",
+                        backgroundColor: "transparent",
+                        borderTopWidth: resolvedBorderWidth,
+                        borderBottomWidth: resolvedBorderWidth,
+                        borderLeftWidth: isRangeEnd ? 0 : resolvedBorderWidth,
+                        borderRightWidth: isRangeStart ? 0 : resolvedBorderWidth,
+                        borderColor: borderColor,
+                        borderTopLeftRadius: isRangeEnd ? 0 : 6,
+                        borderBottomLeftRadius: isRangeEnd ? 0 : 6,
+                        borderTopRightRadius: isRangeStart ? 0 : 6,
+                        borderBottomRightRadius: isRangeStart ? 0 : 6,
+                        marginLeft: isRangeEnd ? -rangeOverlap : 0,
+                        marginRight: isRangeStart ? -rangeOverlap : 0,
                         opacity: isDisabled ? 0.3 : 1,
                         padding: 4,
                       }}
@@ -222,8 +249,8 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
                         <Image
                           source={CompetitionIcon}
                           style={{
-                            width: 28,
-                            height: 28,
+                            width: 24,
+                            height: 24,
                             position: "absolute",
                             top: 0,
                             left: 0,
@@ -232,20 +259,6 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
                         />
                       )}
 
-                      {/* CÍRCULO DE COR (se não for competição) */}
-                      {!isCompetition && bgColor && (
-                        <View
-                          style={{
-                            width: 15,
-                            height: 15,
-                            borderRadius: 10,
-                            backgroundColor: bgColor,
-                            position: "absolute",
-                            top: 6,
-                            left: 6,
-                          }}
-                        />
-                      )}
 
                       {/* DIA — INFERIOR DIREITA */}
                       <Text
@@ -253,9 +266,12 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
                           position: "absolute",
                           bottom: 4,
                           right: 4,
-                          fontSize: 12,
-                          color: "#000000",
-                          fontWeight: "500",
+                          fontSize: isSelectedDate ? 14 : 12,
+                          color: "#FFFFFF",
+                          fontWeight:
+                            isSelectedDate || (isToday && hasWorkoutOnDate)
+                              ? "700"
+                              : "500",
                         }}
                       >
                         {date.day}
@@ -293,10 +309,6 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
               <HStack className="items-center gap-1">
                 <View className="w-3 h-3 rounded-full bg-red-500" />
                 <Text className="text-slate-300 text-xs">Em atraso</Text>
-              </HStack>
-              <HStack className="items-center gap-1">
-                <View className="w-3 h-3 rounded-full bg-blue-700" />
-                <Text className="text-slate-300 text-xs">Hoje</Text>
               </HStack>
               <HStack className="items-center gap-1">
                 <View className="w-3 h-3 rounded-full bg-blue-400" />

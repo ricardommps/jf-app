@@ -1,6 +1,6 @@
 // app/(tabs)/(home)/index.tsx
 import * as Device from "expo-device";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
   ListRenderItem,
@@ -12,11 +12,14 @@ import {
 
 import ProgramCard from "@/components/screens/program/program-card";
 import Loading from "@/components/shared/loading";
+import { StravaHomePromptModal } from "@/components/strava/StravaHomePromptModal";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { VStack } from "@/components/ui/vstack";
 import YearReview from "@/components/year-review";
 import { useSession } from "@/contexts/Authentication";
+import { getStorageItemAsync, setStorageItemAsync } from "@/contexts/useStorageState";
+import { useStravaStatus } from "@/hooks/useConnectStrava/useConnectStrava";
 import {
   deviceInfo,
   DeviceInfoPayload,
@@ -39,12 +42,32 @@ interface ProgramItem {
   endDate: string;
 }
 
+const STRAVA_HOME_PROMPT_STORAGE_KEY = "strava-home-prompt-hidden";
+let stravaHomePromptHandledSessionKey: string | null = null;
+
+const buildStravaHomePromptStorageKey = (customerId?: number | null) =>
+  customerId
+    ? `${STRAVA_HOME_PROMPT_STORAGE_KEY}.customer-${customerId}`
+    : STRAVA_HOME_PROMPT_STORAGE_KEY;
+
+const buildStravaHomePromptSessionKey = (customerId?: number | null) =>
+  customerId ? `customer:${customerId}` : "guest";
+
 const Home = () => {
   const { getProfile } = useSession();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
+  const [showStravaPrompt, setShowStravaPrompt] = useState(false);
+  const [dontShowStravaPromptAgain, setDontShowStravaPromptAgain] =
+    useState(false);
+  const [isStravaPromptPreferenceLoading, setIsStravaPromptPreferenceLoading] =
+    useState(true);
+  const [isStravaPromptPermanentlyHidden, setIsStravaPromptPermanentlyHidden] =
+    useState(false);
+
   const profile = getProfile();
   const customerId = profile?.id;
+  const stravaPromptSessionKey = buildStravaHomePromptSessionKey(customerId ?? null);
 
   const { mutate: syncDeviceInfo, isPending: isSyncingDevice } = useMutation({
     mutationFn: (payload: DeviceInfoPayload) => deviceInfo(payload),
@@ -57,7 +80,6 @@ const Home = () => {
     data: programs,
     isLoading: isProgramsLoading,
     refetch: refetchPrograms,
-    error: programsError,
   } = useQuery<ProgramItem[], AxiosError>({
     staleTime: 0,
     gcTime: 0,
@@ -70,7 +92,6 @@ const Home = () => {
     data: paidInvoices,
     refetch: refetchPaidInvoices,
     isLoading: isInvoicesLoading,
-    error: invoicesError,
   } = useQuery<PaidInvoices, AxiosError>({
     queryKey: ["other-data"],
     staleTime: 0,
@@ -78,6 +99,32 @@ const Home = () => {
     queryFn: getTotalPaidInvoices,
     retry: false,
   });
+
+  const runnerProgram = useMemo(
+    () => programs?.find((item) => item.type === 1) ?? null,
+    [programs],
+  );
+  const hasRunnerProgram = Boolean(runnerProgram);
+
+  const {
+    data: stravaStatus,
+    isLoading: isStravaStatusLoading,
+  } = useStravaStatus({
+    enabled: hasRunnerProgram,
+  });
+
+  const persistStravaPromptPreference = async (hidden: boolean) => {
+    try {
+      const storageKey = buildStravaHomePromptStorageKey(customerId ?? null);
+
+      await setStorageItemAsync(storageKey, hidden ? "true" : null);
+    } catch (error) {
+      console.error(
+        "Erro ao salvar preferência do modal de conexão com Strava:",
+        error,
+      );
+    }
+  };
 
   const checkAndSyncDeviceInfo = async () => {
     try {
@@ -103,6 +150,10 @@ const Home = () => {
         syncDeviceInfo({ customerId, info: currentDeviceInfo });
       }
     } catch (error) {
+      if ((error as AxiosError)?.code === "ERR_CANCELED") {
+        return;
+      }
+
       console.error("Erro ao verificar informações do dispositivo:", error);
     }
   };
@@ -126,6 +177,19 @@ const Home = () => {
     router.push(`/invoice` as any);
   };
 
+  const handleConnectStravaFromPrompt = async () => {
+    await persistStravaPromptPreference(dontShowStravaPromptAgain);
+    setIsStravaPromptPermanentlyHidden(dontShowStravaPromptAgain);
+    setShowStravaPrompt(false);
+    router.push("/stravaConnect/" as any);
+  };
+
+  const handleCloseStravaPrompt = async () => {
+    await persistStravaPromptPreference(dontShowStravaPromptAgain);
+    setIsStravaPromptPermanentlyHidden(dontShowStravaPromptAgain);
+    setShowStravaPrompt(false);
+  };
+
   const renderItem: ListRenderItem<ProgramItem> = ({ item }) => (
     <ProgramCard
       id={item.id}
@@ -138,12 +202,7 @@ const Home = () => {
     />
   );
 
-  const getRunnerProgram = () => {
-    return programs?.find((item) => item.type === 1);
-  };
-
   const shouldShowYearReview = () => {
-    const runnerProgram = getRunnerProgram();
     if (!runnerProgram) return false;
 
     const now = new Date();
@@ -166,6 +225,73 @@ const Home = () => {
     checkAndSyncDeviceInfo();
   }, [customerId]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadStravaPromptPreference = async () => {
+      try {
+        const storageKey = buildStravaHomePromptStorageKey(customerId ?? null);
+        const storedValue = await getStorageItemAsync(storageKey);
+        const isHidden = storedValue === "true";
+
+        if (!isMounted) {
+          return;
+        }
+
+        setIsStravaPromptPermanentlyHidden(isHidden);
+        setDontShowStravaPromptAgain(isHidden);
+      } catch (error) {
+        console.error(
+          "Erro ao carregar preferência do modal de conexão com Strava:",
+          error,
+        );
+
+        if (isMounted) {
+          setIsStravaPromptPermanentlyHidden(false);
+          setDontShowStravaPromptAgain(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsStravaPromptPreferenceLoading(false);
+        }
+      }
+    };
+
+    setIsStravaPromptPreferenceLoading(true);
+    loadStravaPromptPreference();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [customerId]);
+
+  useEffect(() => {
+    if (isProgramsLoading || isStravaStatusLoading || isStravaPromptPreferenceLoading) {
+      return;
+    }
+
+    if (stravaHomePromptHandledSessionKey === stravaPromptSessionKey) {
+      return;
+    }
+
+    stravaHomePromptHandledSessionKey = stravaPromptSessionKey;
+
+    const shouldShowPrompt =
+      hasRunnerProgram &&
+      stravaStatus?.connected === false &&
+      !isStravaPromptPermanentlyHidden;
+
+    setShowStravaPrompt(shouldShowPrompt);
+  }, [
+    hasRunnerProgram,
+    isProgramsLoading,
+    isStravaPromptPermanentlyHidden,
+    isStravaPromptPreferenceLoading,
+    isStravaStatusLoading,
+    stravaPromptSessionKey,
+    stravaStatus?.connected,
+  ]);
+
   if (isProgramsLoading || isInvoicesLoading) {
     return (
       <View style={styles.container}>
@@ -176,8 +302,8 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
-      {shouldShowYearReview() && (
-        <YearReview programId={getRunnerProgram()!.id} />
+      {shouldShowYearReview() && runnerProgram && (
+        <YearReview programId={runnerProgram.id} />
       )}
       <FlatList
         data={programs || []}
@@ -223,13 +349,20 @@ const Home = () => {
           </View>
         )}
       />
+
+      <StravaHomePromptModal
+        visible={showStravaPrompt}
+        dontShowAgain={dontShowStravaPromptAgain}
+        onDontShowAgainChange={setDontShowStravaPromptAgain}
+        onClose={handleCloseStravaPrompt}
+        onConnect={handleConnectStravaFromPrompt}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "var(--background-0)" },
-  loadingContainer: { flex: 1, backgroundColor: "var(--background-0)" },
   flatList: { flex: 1 },
   contentContainer: {
     gap: 32,

@@ -64,7 +64,7 @@ export default function CongratulationScreen() {
       if (!available) {
         Alert.alert(
           "Compartilhamento não disponível",
-          "O recurso de compartilhamento não está disponível nesse dispositivo."
+          "O recurso de compartilhamento não está disponível nesse dispositivo.",
         );
         return;
       }
@@ -95,7 +95,7 @@ export default function CongratulationScreen() {
   return (
     <View className="flex-1" ref={shareViewRef} collapsable={false}>
       <ImageBackground
-        source={require("@/assets/images/copa/foltz_tela.png")}
+        source={require("@/assets/images/foltz_tela.png")}
         resizeMode="cover"
         className="flex-1 p-2"
       >
@@ -148,7 +148,7 @@ export default function CongratulationScreen() {
                                 </Text>
                                 <Text className="text-xs text-typography-900">
                                   {convertMetersToKilometersFormat(
-                                    Number(distanceInMeters)
+                                    Number(distanceInMeters),
                                   )}
                                 </Text>
                               </VStack>
@@ -192,7 +192,7 @@ export default function CongratulationScreen() {
                                 </Text>
                                 <Text className="text-xs text-typography-900">
                                   {convertSecondsToHourMinuteFormat(
-                                    Number(durationInSeconds)
+                                    Number(durationInSeconds),
                                   )}
                                 </Text>
                               </VStack>
@@ -249,7 +249,7 @@ export default function CongratulationScreen() {
                                 </Text>
                                 <Text className="text-xs text-typography-900">
                                   {convertSecondsToHourMinuteFormat(
-                                    Number(durationInSeconds)
+                                    Number(durationInSeconds),
                                   )}
                                 </Text>
                               </VStack>

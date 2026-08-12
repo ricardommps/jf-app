@@ -1,7 +1,7 @@
-import { BarChart3, History, Home, Menu } from "lucide-react-native";
+import { BarChart3, History, Home } from "lucide-react-native";
 
 export interface TabItem {
-  name: "(home)" | "(profile)" | "(history)" | "(monotony)" | "(menu)";
+  name: "(home)" | "(profile)" | "(history)" | "(monotony)";
   label: string;
   icon: React.ElementType;
 }
@@ -11,7 +11,6 @@ const tabItems: TabItem[] = [
   { name: "(history)", label: "Histórico", icon: History },
   { name: "(monotony)", label: "Monotonia", icon: BarChart3 },
 
-  { name: "(menu)", label: "Configurações", icon: Menu },
 ];
 
 export default tabItems;

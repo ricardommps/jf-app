@@ -12,7 +12,7 @@ interface Props {
   onRequestClose: () => void;
 }
 
-const TablePace: React.FC<Props> = ({ visible, onRequestClose }) => {
+export const TablePaceContent = () => {
   const filteredPace = runningPace.map(({ pace, speed }) => ({ pace, speed }));
 
   const ListHeader = () => (
@@ -50,6 +50,19 @@ const TablePace: React.FC<Props> = ({ visible, onRequestClose }) => {
   );
 
   return (
+    <FlatList
+      data={filteredPace}
+      keyExtractor={(_, index) => index.toString()}
+      renderItem={renderItem}
+      ListHeaderComponent={ListHeader}
+      contentContainerStyle={{ paddingBottom: 24 }}
+      className="rounded-md overflow-hidden"
+    />
+  );
+};
+
+const TablePace: React.FC<Props> = ({ visible, onRequestClose }) => {
+  return (
     <Modal
       animationType="slide"
       transparent={false}
@@ -73,7 +86,6 @@ const TablePace: React.FC<Props> = ({ visible, onRequestClose }) => {
       >
         <Box className="flex-1 bg-background-0">
           <VStack className="flex-1 px-4 pt-10">
-            {/* Header */}
             <HStack className="justify-between items-center mb-4">
               <Heading size="lg" className="text-white">
                 Tabela - Pace X Km/h
@@ -89,14 +101,7 @@ const TablePace: React.FC<Props> = ({ visible, onRequestClose }) => {
               </TouchableOpacity>
             </HStack>
 
-            <FlatList
-              data={filteredPace}
-              keyExtractor={(_, index) => index.toString()}
-              renderItem={renderItem}
-              ListHeaderComponent={ListHeader}
-              contentContainerStyle={{ paddingBottom: 24 }}
-              className="rounded-md overflow-hidden"
-            />
+            <TablePaceContent />
           </VStack>
         </Box>
       </SafeAreaView>

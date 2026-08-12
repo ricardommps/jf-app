@@ -1,4 +1,5 @@
 import {
+  disconnectStrava,
   getStravaActivities,
   getStravaConnectUrl,
   getStravaStatus,
@@ -30,11 +31,15 @@ export function useConnectStrava() {
         throw new Error("Falha na autorização");
       }
 
-      // 3. Valida o path de retorno
-      const { path } = Linking.parse(result.url);
-      const normalizedPath = path?.replace(/^\/+/, "");
-      if (normalizedPath !== "strava-success") {
-        throw new Error("Redirect inesperado: " + path);
+      // 3. Valida o retorno tanto no Expo Go quanto no app publicado
+      const { path, hostname } = Linking.parse(result.url);
+      const normalizedTarget = (
+        path?.replace(/^\/+/, "") ??
+        hostname?.replace(/^\/+/, "")
+      )?.trim();
+
+      if (normalizedTarget !== "strava-success") {
+        throw new Error("Redirect inesperado: " + (path || hostname));
       }
 
       return true;
@@ -52,10 +57,13 @@ export function useConnectStrava() {
   });
 }
 
-export function useStravaStatus() {
+export function useStravaStatus(options?: { enabled?: boolean }) {
+  const { enabled = true } = options ?? {};
+
   return useQuery({
     queryKey: ["strava-status"],
     queryFn: getStravaStatus,
+    enabled,
     staleTime: 0,
     gcTime: 0, // ✅ não mantém no cache
     refetchOnMount: true, // ✅ refaz ao montar o componente
@@ -71,5 +79,21 @@ export function useStravaActivities(date?: string) {
       return getStravaActivities(date);
     },
     enabled: false, // mantém disabled, usa refetch() manual
+  });
+}
+
+export function useDisconnectStrava() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: disconnectStrava,
+    onSuccess: async () => {
+      await queryClient.removeQueries({ queryKey: ["strava-status"] });
+      await queryClient.removeQueries({ queryKey: ["strava-activities"] });
+      await queryClient.refetchQueries({ queryKey: ["strava-status"] });
+    },
+    onError: (error) => {
+      console.warn("Strava disconnect:", error.message);
+    },
   });
 }

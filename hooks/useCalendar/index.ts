@@ -29,7 +29,7 @@ interface UseCalendarReturn {
 }
 
 export const useCalendar = (
-  options: UseCalendarOptions = {}
+  options: UseCalendarOptions = {},
 ): UseCalendarReturn => {
   const {
     initialDate = "",
@@ -82,14 +82,14 @@ export const useCalendar = (
         onDateChange?.(date);
       }
     },
-    [multiSelect, onDateChange]
+    [multiSelect, onDateChange],
   );
 
   const onDayPress = useCallback(
     (day: DateData): void => {
       selectDate(day.dateString);
     },
-    [selectDate]
+    [selectDate],
   );
 
   const formatDate = useCallback(
@@ -98,7 +98,7 @@ export const useCalendar = (
       const date = new Date(dateString);
       return date.toLocaleDateString("pt-BR", dateFormat);
     },
-    [dateFormat]
+    [dateFormat],
   );
 
   const isDateSelected = useCallback(
@@ -107,7 +107,7 @@ export const useCalendar = (
         ? selectedDates.includes(dateString)
         : selectedDate === dateString;
     },
-    [multiSelect, selectedDate, selectedDates]
+    [multiSelect, selectedDate, selectedDates],
   );
 
   const clearSelection = useCallback((): void => {
@@ -124,7 +124,7 @@ export const useCalendar = (
     (config: { [key: string]: { color: string; textColor: string } }) => {
       setMarkedConfig(config);
     },
-    []
+    [],
   );
 
   const getMarkedDates = useCallback(() => {
@@ -156,26 +156,8 @@ export const useCalendar = (
       }
     });
 
-    // Data atual (hoje) - só destacar se não tiver configuração personalizada
-    if (!marked[today]) {
-      marked[today] = {
-        selected: true,
-        selectedColor: "#1E40AF",
-        selectedTextColor: "#ffffff",
-      };
-    }
-
-    // Data selecionada pelo usuário
-    if (selectedDate && selectedDate !== today && !marked[selectedDate]) {
-      marked[selectedDate] = {
-        selected: true,
-        selectedColor: "#0EA5E9",
-        selectedTextColor: "#ffffff",
-      };
-    }
-
     return marked;
-  }, [selectedDate, preSelectedDates, markedConfig]);
+  }, [preSelectedDates, markedConfig]);
 
   return {
     selectedDate,

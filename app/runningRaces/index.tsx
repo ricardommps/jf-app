@@ -24,6 +24,7 @@ export default function RunningRacesScreen() {
 
   const programId =
     typeof params.programId === "string" ? params.programId : undefined;
+  const hasProgramId = Boolean(programId);
 
   const {
     data: runningRacesData,
@@ -32,7 +33,7 @@ export default function RunningRacesScreen() {
   } = useQuery({
     queryKey: ["running-races", programId],
     queryFn: async () => runningRaces(programId as string),
-    enabled: !!programId,
+    enabled: hasProgramId,
   });
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -84,35 +85,48 @@ export default function RunningRacesScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#000" }}>
       <Header title="Provas" />
 
-      {/* BOTÃO TOPO DIREITA */}
-      <View style={styles.topActionContainer}>
-        <Button
-          action="primary"
-          size="md"
-          onPress={handleAdd}
-          className="flex-row items-center justify-center gap-2 min-w-[140px] rounded-xl"
-        >
-          <Icon as={AddIcon} size="sm" className="text-white" />
-          <Text className="text-white font-semibold">Adicionar</Text>
-        </Button>
-      </View>
+      {hasProgramId ? (
+        <>
+          <View style={styles.topActionContainer}>
+            <Button
+              action="primary"
+              size="md"
+              onPress={handleAdd}
+              className="flex-row items-center justify-center gap-2 min-w-[140px] rounded-xl"
+            >
+              <Icon as={AddIcon} size="sm" className="text-white" />
+              <Text className="text-white font-semibold">Adicionar</Text>
+            </Button>
+          </View>
 
-      <VStack className="w-full gap-3 px-3 pb-10">
-        <FlatList
-          data={runningRacesData}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id ?? Math.random().toString()}
-          contentContainerStyle={{
-            paddingBottom: 40,
-            gap: 10,
-          }}
-          ListEmptyComponent={() => (
-            <View style={{ marginTop: 48, alignItems: "center" }}>
-              <Text style={{ color: "#999" }}>Nenhuma prova encontrada</Text>
-            </View>
-          )}
-        />
-      </VStack>
+          <VStack className="w-full gap-3 px-3 pb-10">
+            <FlatList
+              data={runningRacesData}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id ?? Math.random().toString()}
+              contentContainerStyle={{
+                paddingBottom: 40,
+                gap: 10,
+              }}
+              ListEmptyComponent={() => (
+                <View style={{ marginTop: 48, alignItems: "center" }}>
+                  <Text style={{ color: "#999" }}>Nenhuma prova encontrada</Text>
+                </View>
+              )}
+            />
+          </VStack>
+        </>
+      ) : (
+        <View style={styles.emptyStateContainer}>
+          <Text style={styles.emptyStateTitle}>
+            Nenhum programa de corrida ativo encontrado.
+          </Text>
+          <Text style={styles.emptyStateDescription}>
+            Assim que houver um programa ativo, suas inscrições em provas
+            aparecerão aqui.
+          </Text>
+        </View>
+      )}
 
       {modalVisible && selectedItem && (
         <ConfirmModalDelete
@@ -134,5 +148,24 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     flexDirection: "row",
     justifyContent: "flex-end",
+  },
+  emptyStateContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    gap: 12,
+  },
+  emptyStateTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  emptyStateDescription: {
+    color: "#94A3B8",
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 22,
   },
 });
