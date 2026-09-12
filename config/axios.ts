@@ -34,7 +34,6 @@ class APICaller {
 
   constructor() {
     // ✅ Usando ENV.API_URL ao invés de Constants
-    console.log("--API_URL--", ENV.API_URL);
     this.client = axios.create({
       baseURL: ENV.API_URL,
       timeout: TIMEOUT,

@@ -9,7 +9,7 @@ export interface TabItem {
 const tabItems: TabItem[] = [
   { name: "(home)", label: "Home", icon: Home },
   { name: "(history)", label: "Histórico", icon: History },
-  { name: "(monotony)", label: "Monotonia", icon: BarChart3 },
+  { name: "(monotony)", label: "Trimp", icon: BarChart3 },
 
 ];
 

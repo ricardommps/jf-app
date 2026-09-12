@@ -8,10 +8,7 @@ import { Box } from "@/components/ui/box";
 import { Pressable } from "@/components/ui/pressable";
 import { useRouter } from "expo-router";
 import { format } from "date-fns";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-} from "react-native-reanimated";
+import { StyleSheet } from "react-native";
 
 const getImageSource = (type: number) => {
   return type === 2
@@ -39,14 +36,6 @@ const ProgramCard = ({
   endDate,
 }: IProgramCard) => {
   const router = useRouter();
-  const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scale.value }],
-    };
-  });
 
   const handleNavigate = (id: number) => {
     router.push(`/program/view?id=${id}&type=${type}`);
@@ -73,18 +62,13 @@ const ProgramCard = ({
   };
 
   return (
-    <AnimatedPressable
-      style={[animatedStyle, { overflow: "hidden", borderRadius: 18 }]} // Garante bordas arredondadas
-      className="flex-1 min-h-[180px]" // Garante que tenha altura suficiente
+    <Pressable
+      style={styles.cardContainer}
       onPress={() => handleNavigate(id)}
     >
       <ImageBackground
         source={getImageSource(type)}
-        style={{
-          flex: 1,
-          justifyContent: "flex-start",
-          position: "relative",
-        }}
+        style={styles.cardBackground}
         className="p-4 rounded-[18px]"
         resizeMode="cover"
       >
@@ -141,8 +125,22 @@ const ProgramCard = ({
           </HStack>
         )}
       </ImageBackground>
-    </AnimatedPressable>
+    </Pressable>
   );
 };
+
+const styles = StyleSheet.create({
+  cardContainer: {
+    width: "100%",
+    minHeight: 180,
+    overflow: "hidden",
+    borderRadius: 18,
+  },
+  cardBackground: {
+    minHeight: 180,
+    justifyContent: "flex-start",
+    position: "relative",
+  },
+});
 
 export default ProgramCard;

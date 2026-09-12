@@ -195,15 +195,16 @@ const CalendarModalScreen: React.FC<CalendarModalScreenProps> = ({
                 const isSelectedDate = tempSelectedDate === date.dateString;
                 const hasWorkoutOnDate = Boolean(customMarkedDates[date.dateString]);
                 const shouldHighlightToday = isToday && hasWorkoutOnDate;
-                const borderColor = shouldHighlightToday
-                  ? competitionBorderColor
-                  : isCompetition
+                const fallbackBorderColor =
+                  isCompetition || shouldHighlightToday
                     ? competitionBorderColor
-                    : bgColor ?? "rgba(226, 232, 240, 0.18)";
-                const borderWidth = isCompetition || bgColor ? 2 : 1;
+                    : "rgba(226, 232, 240, 0.18)";
+                const borderColor = bgColor ?? fallbackBorderColor;
+                const borderWidth =
+                  isCompetition || shouldHighlightToday || bgColor ? 2 : 1;
                 const resolvedBorderWidth = isToday
-                  ? shouldHighlightToday
-                    ? 2
+                  ? hasWorkoutOnDate
+                    ? borderWidth
                     : 0
                   : borderWidth;
                 const isRangeStart =

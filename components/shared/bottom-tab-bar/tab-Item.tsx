@@ -28,7 +28,7 @@ const tabItems: TabItem[] = [
   },
   {
     name: "monotony",
-    label: "Monotonia",
+    label: "Trimp",
     path: "/monotony",
     icon: BarChart3,
   },

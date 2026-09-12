@@ -19,10 +19,20 @@ const IndoorViewScreen = ({
     return <UnrealizedFinishView safeId={safeId} />;
   }
   if (!intensitie) {
-    return <IndoorSimpleScreen safeId={safeId} titleStr={titleStr} />;
+    return (
+      <IndoorSimpleScreen
+        safeId={safeId}
+        titleStr={titleStr}
+      />
+    );
   }
 
-  return <IndoorScreen safeId={safeId} titleStr={titleStr} />;
+  return (
+    <IndoorScreen
+      safeId={safeId}
+      titleStr={titleStr}
+    />
+  );
 };
 
 export default IndoorViewScreen;

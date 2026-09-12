@@ -15,6 +15,17 @@ export async function getWorkouts(programId: number, type: number) {
   }
 }
 
+export async function getWeeklyRunningWorkouts(programId: number) {
+  try {
+    const response = await axiosInstance.get(`/api/v2/workouts/weekly?programId=${programId}`);
+    return response.data;
+  } catch (error: any) {
+    Sentry.captureException(error, { extra: { context: "getWeeklyRunningWorkouts", programId } });
+    console.error("getWeeklyRunningWorkouts error:", error);
+    throw error;
+  }
+}
+
 export async function getWorkout(workoutId: string) {
   try {
     const url = `/api/v2/workouts/workout?id=${workoutId}`;

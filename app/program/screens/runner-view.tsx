@@ -187,10 +187,21 @@ const RunnerView = ({ workouts, programId }: Props) => {
       );
 
       if (workout.title === "COMPETICAO") {
+        const competitionColor =
+          workout.finished && !workout.unrealized
+            ? "#4ADE80"
+            : workout.finished && workout.unrealized
+              ? "#FB923C"
+              : !workout.finished && workoutDate < today
+                ? "#EF4444"
+                : "#60A5FA";
+
         config[workoutDate] = {
           isCompetition: true,
-          color: "#60A5FA",
+          color: competitionColor,
           textColor: "#ffffff",
+          startingDay: true,
+          endingDay: true,
         };
         return;
       }

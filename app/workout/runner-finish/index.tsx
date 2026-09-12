@@ -16,8 +16,14 @@ function useLocalSearchParams(): Params {
 }
 
 const RunnerFinishView = () => {
-  const { id, outdoor, intensities, unrealizedTraining, title, subtitle } =
-    useLocalSearchParams();
+  const {
+    id,
+    outdoor,
+    intensities,
+    unrealizedTraining,
+    title,
+    subtitle,
+  } = useLocalSearchParams();
   const safeId = id ?? "";
   const outdoorBool = outdoor === "true";
   const intensitiesBool = intensities === "true";
@@ -25,7 +31,11 @@ const RunnerFinishView = () => {
   const titleStr = title ?? "";
   if (outdoorBool) {
     return (
-      <OutdoorScreen safeId={safeId} titleStr={titleStr} subtitle={subtitle} />
+      <OutdoorScreen
+        safeId={safeId}
+        titleStr={titleStr}
+        subtitle={subtitle}
+      />
     );
   }
   return (

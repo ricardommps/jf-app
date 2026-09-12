@@ -90,7 +90,10 @@ interface Props {
   titleStr?: string;
 }
 
-const IndoorScreen = ({ safeId, titleStr }: Props) => {
+const IndoorScreen = ({
+  safeId,
+  titleStr,
+}: Props) => {
   const router = useRouter();
   const toast = useToast();
   const { colorMode }: any = useContext(ThemeContext);
@@ -175,8 +178,18 @@ const IndoorScreen = ({ safeId, titleStr }: Props) => {
       payload.link = payload.link;
       payload.executionDay = convertDate(payload.executionDay);
       await finishedWorkout(payload);
+
       router.push(
-        `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}&rpe=${payload.rpe}&title=${titleStr}&trimp=${payload.trimp}` as any,
+        {
+          pathname: "/finished",
+          params: {
+            distanceInMeters: String(payload.distanceInMeters),
+            durationInSeconds: String(payload.durationInSeconds),
+            rpe: String(payload.rpe),
+            title: titleStr ?? "",
+            trimp: String(payload.trimp ?? 0),
+          },
+        } as any,
       );
     } catch (err) {
       const parsedError = err as Error;

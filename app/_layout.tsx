@@ -159,7 +159,7 @@ const SplashScreenView: React.FC<SplashScreenProps> = ({ onFinish }) => {
       <StatusBar style="light" backgroundColor="#000000" translucent={false} />
       <View style={styles.logoContainer}>
         <Image
-          source={require("@/assets/images/loading-foltz.gif")}
+          source={require("@/assets/images/logo_inicial.png")}
           alt="logo"
           size="none"
           resizeMode="contain"

@@ -10,16 +10,15 @@ import {
   View,
 } from "react-native";
 
+import FlechinhaAssistant from "@/components/screens/home/flechinha-assistant";
 import ProgramCard from "@/components/screens/program/program-card";
 import Loading from "@/components/shared/loading";
-import { StravaHomePromptModal } from "@/components/strava/StravaHomePromptModal";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { VStack } from "@/components/ui/vstack";
 import YearReview from "@/components/year-review";
 import { useSession } from "@/contexts/Authentication";
-import { getStorageItemAsync, setStorageItemAsync } from "@/contexts/useStorageState";
-import { useStravaStatus } from "@/hooks/useConnectStrava/useConnectStrava";
+import { useFlechinhaAssistant } from "@/hooks/useFlechinhaAssistant";
 import {
   deviceInfo,
   DeviceInfoPayload,
@@ -28,6 +27,7 @@ import {
 import { getTotalPaidInvoices } from "@/services/invoice.service";
 import { getPrograms } from "@/services/program.services";
 import { PaidInvoices } from "@/types/invoice";
+import { useIsFocused } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { useRouter } from "expo-router";
@@ -42,32 +42,16 @@ interface ProgramItem {
   endDate: string;
 }
 
-const STRAVA_HOME_PROMPT_STORAGE_KEY = "strava-home-prompt-hidden";
-let stravaHomePromptHandledSessionKey: string | null = null;
-
-const buildStravaHomePromptStorageKey = (customerId?: number | null) =>
-  customerId
-    ? `${STRAVA_HOME_PROMPT_STORAGE_KEY}.customer-${customerId}`
-    : STRAVA_HOME_PROMPT_STORAGE_KEY;
-
-const buildStravaHomePromptSessionKey = (customerId?: number | null) =>
-  customerId ? `customer:${customerId}` : "guest";
-
 const Home = () => {
   const { getProfile } = useSession();
   const router = useRouter();
+  const isFocused = useIsFocused();
   const [refreshing, setRefreshing] = useState(false);
-  const [showStravaPrompt, setShowStravaPrompt] = useState(false);
-  const [dontShowStravaPromptAgain, setDontShowStravaPromptAgain] =
-    useState(false);
-  const [isStravaPromptPreferenceLoading, setIsStravaPromptPreferenceLoading] =
-    useState(true);
-  const [isStravaPromptPermanentlyHidden, setIsStravaPromptPermanentlyHidden] =
+  const [hideAssistantUntilRefocus, setHideAssistantUntilRefocus] =
     useState(false);
 
   const profile = getProfile();
   const customerId = profile?.id;
-  const stravaPromptSessionKey = buildStravaHomePromptSessionKey(customerId ?? null);
 
   const { mutate: syncDeviceInfo, isPending: isSyncingDevice } = useMutation({
     mutationFn: (payload: DeviceInfoPayload) => deviceInfo(payload),
@@ -104,27 +88,21 @@ const Home = () => {
     () => programs?.find((item) => item.type === 1) ?? null,
     [programs],
   );
-  const hasRunnerProgram = Boolean(runnerProgram);
 
   const {
-    data: stravaStatus,
-    isLoading: isStravaStatusLoading,
-  } = useStravaStatus({
-    enabled: hasRunnerProgram,
+    activeMessage: activeAssistantMessage,
+    dismissMessage,
+    clickMessage,
+    markMessageSeen,
+    refetchAssistant,
+  } = useFlechinhaAssistant({
+    enabled: true,
   });
 
-  const persistStravaPromptPreference = async (hidden: boolean) => {
-    try {
-      const storageKey = buildStravaHomePromptStorageKey(customerId ?? null);
-
-      await setStorageItemAsync(storageKey, hidden ? "true" : null);
-    } catch (error) {
-      console.error(
-        "Erro ao salvar preferência do modal de conexão com Strava:",
-        error,
-      );
-    }
-  };
+  const visibleAssistantMessage = hideAssistantUntilRefocus
+    ? null
+    : activeAssistantMessage;
+  const shouldRenderAssistant = !!visibleAssistantMessage && !isProgramsLoading;
 
   const checkAndSyncDeviceInfo = async () => {
     try {
@@ -164,6 +142,7 @@ const Home = () => {
       await Promise.all([
         refetchPrograms(),
         refetchPaidInvoices(),
+        refetchAssistant(),
         checkAndSyncDeviceInfo(),
       ]);
     } catch (err) {
@@ -177,17 +156,28 @@ const Home = () => {
     router.push(`/invoice` as any);
   };
 
-  const handleConnectStravaFromPrompt = async () => {
-    await persistStravaPromptPreference(dontShowStravaPromptAgain);
-    setIsStravaPromptPermanentlyHidden(dontShowStravaPromptAgain);
-    setShowStravaPrompt(false);
-    router.push("/stravaConnect/" as any);
+  const handleDismissAssistant = async () => {
+    if (!visibleAssistantMessage) {
+      return;
+    }
+
+    await dismissMessage(visibleAssistantMessage.id);
   };
 
-  const handleCloseStravaPrompt = async () => {
-    await persistStravaPromptPreference(dontShowStravaPromptAgain);
-    setIsStravaPromptPermanentlyHidden(dontShowStravaPromptAgain);
-    setShowStravaPrompt(false);
+  const handleAssistantCtaPress = async () => {
+    if (!visibleAssistantMessage?.cta?.href) {
+      return;
+    }
+
+    setHideAssistantUntilRefocus(true);
+
+    try {
+      await clickMessage(visibleAssistantMessage.id);
+      router.push(visibleAssistantMessage.cta.href as any);
+    } catch (error) {
+      setHideAssistantUntilRefocus(false);
+      console.error("Erro ao navegar pelo CTA da Flechinha:", error);
+    }
   };
 
   const renderItem: ListRenderItem<ProgramItem> = ({ item }) => (
@@ -222,75 +212,22 @@ const Home = () => {
   };
 
   useEffect(() => {
-    checkAndSyncDeviceInfo();
+    void checkAndSyncDeviceInfo();
   }, [customerId]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadStravaPromptPreference = async () => {
-      try {
-        const storageKey = buildStravaHomePromptStorageKey(customerId ?? null);
-        const storedValue = await getStorageItemAsync(storageKey);
-        const isHidden = storedValue === "true";
-
-        if (!isMounted) {
-          return;
-        }
-
-        setIsStravaPromptPermanentlyHidden(isHidden);
-        setDontShowStravaPromptAgain(isHidden);
-      } catch (error) {
-        console.error(
-          "Erro ao carregar preferência do modal de conexão com Strava:",
-          error,
-        );
-
-        if (isMounted) {
-          setIsStravaPromptPermanentlyHidden(false);
-          setDontShowStravaPromptAgain(false);
-        }
-      } finally {
-        if (isMounted) {
-          setIsStravaPromptPreferenceLoading(false);
-        }
-      }
-    };
-
-    setIsStravaPromptPreferenceLoading(true);
-    loadStravaPromptPreference();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [customerId]);
+    if (isFocused) {
+      setHideAssistantUntilRefocus(false);
+    }
+  }, [isFocused]);
 
   useEffect(() => {
-    if (isProgramsLoading || isStravaStatusLoading || isStravaPromptPreferenceLoading) {
+    if (!visibleAssistantMessage?.id) {
       return;
     }
 
-    if (stravaHomePromptHandledSessionKey === stravaPromptSessionKey) {
-      return;
-    }
-
-    stravaHomePromptHandledSessionKey = stravaPromptSessionKey;
-
-    const shouldShowPrompt =
-      hasRunnerProgram &&
-      stravaStatus?.connected === false &&
-      !isStravaPromptPermanentlyHidden;
-
-    setShowStravaPrompt(shouldShowPrompt);
-  }, [
-    hasRunnerProgram,
-    isProgramsLoading,
-    isStravaPromptPermanentlyHidden,
-    isStravaPromptPreferenceLoading,
-    isStravaStatusLoading,
-    stravaPromptSessionKey,
-    stravaStatus?.connected,
-  ]);
+    void markMessageSeen(visibleAssistantMessage.id);
+  }, [markMessageSeen, visibleAssistantMessage?.id]);
 
   if (isProgramsLoading || isInvoicesLoading) {
     return (
@@ -310,7 +247,10 @@ const Home = () => {
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         style={styles.flatList}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[
+          styles.contentContainer,
+          shouldRenderAssistant ? styles.contentContainerWithAssistant : null,
+        ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -322,23 +262,25 @@ const Home = () => {
         }
         ListHeaderComponent={() => (
           <>
-            {paidInvoices && paidInvoices.totalOverdue > 0 && (
-              <Box className="bg-[#e20e0ee1] rounded-xl mb-2 min-h-[80px] p-5">
-                <VStack>
-                  <Text className="text-white font-bold text-base">
-                    Você possui débitos pendentes. Realize o pagamento para
-                    evitar a interrupção do serviço.
-                  </Text>
-                  <Button
-                    action="primary"
-                    className="mt-5"
-                    onPress={handleInvoice}
-                  >
-                    <ButtonText>Ver faturas</ButtonText>
-                  </Button>
-                </VStack>
-              </Box>
-            )}
+            {paidInvoices &&
+              paidInvoices.totalOverdue > 0 &&
+              visibleAssistantMessage?.category !== "financial" && (
+                <Box className="bg-[#e20e0ee1] rounded-xl mb-2 min-h-[80px] p-5">
+                  <VStack>
+                    <Text className="text-white font-bold text-base">
+                      Você possui débitos pendentes. Realize o pagamento para
+                      evitar a interrupção do serviço.
+                    </Text>
+                    <Button
+                      action="primary"
+                      className="mt-5"
+                      onPress={handleInvoice}
+                    >
+                      <ButtonText>Ver faturas</ButtonText>
+                    </Button>
+                  </VStack>
+                </Box>
+              )}
           </>
         )}
         ListEmptyComponent={() => (
@@ -348,15 +290,16 @@ const Home = () => {
             </Text>
           </View>
         )}
+        ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
       />
 
-      <StravaHomePromptModal
-        visible={showStravaPrompt}
-        dontShowAgain={dontShowStravaPromptAgain}
-        onDontShowAgainChange={setDontShowStravaPromptAgain}
-        onClose={handleCloseStravaPrompt}
-        onConnect={handleConnectStravaFromPrompt}
-      />
+      {shouldRenderAssistant ? (
+        <FlechinhaAssistant
+          message={visibleAssistantMessage}
+          onClose={handleDismissAssistant}
+          onCtaPress={handleAssistantCtaPress}
+        />
+      ) : null}
     </View>
   );
 };
@@ -365,10 +308,15 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "var(--background-0)" },
   flatList: { flex: 1 },
   contentContainer: {
-    gap: 32,
     paddingHorizontal: 20,
     paddingVertical: 16,
     flexGrow: 1,
+  },
+  contentContainerWithAssistant: {
+    paddingBottom: 24,
+  },
+  itemSeparator: {
+    height: 32,
   },
   emptyContainer: {
     flex: 1,

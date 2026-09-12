@@ -48,7 +48,7 @@ const tabItems: TabItem[] = [
   },
   {
     name: "(monotony)",
-    label: "Monotonia",
+    label: "Trimp",
     path: "(monotony)",
     inActiveIcon: ActiveChartColumnStackedIcon,
     icon: ChartColumnStackedIcon,

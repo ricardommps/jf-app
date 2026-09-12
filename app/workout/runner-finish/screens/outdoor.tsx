@@ -181,7 +181,11 @@ function ImportedMetricLabel({
   );
 }
 
-const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
+const OutdoorScreen = ({
+  safeId,
+  titleStr,
+  subtitle,
+}: Props) => {
   const router = useRouter();
   const toast = useToast();
 
@@ -454,9 +458,20 @@ const OutdoorScreen = ({ safeId, titleStr, subtitle }: Props) => {
       payload.paceInSeconds = Number(payload.paceInSeconds);
       payload.executionDay = convertDate(payload.executionDay);
       await finishedWorkout(payload);
+
       router.push(
-        `/finished?distanceInMeters=${payload.distanceInMeters}&durationInSeconds=${payload.durationInSeconds}
-        &paceInSeconds=${payload.paceInSeconds}&rpe=${payload.rpe}&title=${titleStr}&subtitle=${subtitle}&trimp=${payload.trimp}` as any,
+        {
+          pathname: "/finished",
+          params: {
+            distanceInMeters: String(payload.distanceInMeters),
+            durationInSeconds: String(payload.durationInSeconds),
+            paceInSeconds: String(payload.paceInSeconds),
+            rpe: String(payload.rpe),
+            title: titleStr ?? "",
+            subtitle: subtitle ?? "",
+            trimp: String(payload.trimp ?? 0),
+          },
+        } as any,
       );
     } catch (err) {
       const parsedError = err as Error;

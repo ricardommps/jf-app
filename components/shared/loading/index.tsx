@@ -13,7 +13,6 @@ import React, {
 import { Dimensions, StyleSheet, Text, View } from "react-native";
 
 const { height } = Dimensions.get("window");
-const MIN_LOADING_DURATION_MS = 2000;
 
 type LoadingOverlayContextValue = {
   show: (id: string) => void;
@@ -70,75 +69,26 @@ function LoadingOverlayContent() {
 }
 
 export function LoadingOverlayProvider({ children }: PropsWithChildren) {
-  const timeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
-    new Map(),
-  );
-  const [requests, setRequests] = useState<Record<string, number>>({});
+  const [requests, setRequests] = useState<Record<string, boolean>>({});
 
-  const clearTimer = useCallback((id: string) => {
-    const timeout = timeoutsRef.current.get(id);
-
-    if (timeout) {
-      clearTimeout(timeout);
-      timeoutsRef.current.delete(id);
-    }
+  const show = useCallback((id: string) => {
+    setRequests((prev) => ({
+      ...prev,
+      [id]: true,
+    }));
   }, []);
 
-  useEffect(() => {
-    return () => {
-      timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
-      timeoutsRef.current.clear();
-    };
-  }, []);
-
-  const show = useCallback(
-    (id: string) => {
-      clearTimer(id);
-      setRequests((prev) => ({
-        ...prev,
-        [id]: Date.now() + MIN_LOADING_DURATION_MS,
-      }));
-    },
-    [clearTimer],
-  );
-
-  const hide = useCallback(
-    (id: string) => {
-      setRequests((prev) => {
-        const visibleUntil = prev[id];
-
-        if (!visibleUntil) {
-          clearTimer(id);
-          return prev;
-        }
-
-        const remaining = visibleUntil - Date.now();
-
-        if (remaining <= 0) {
-          clearTimer(id);
-          const next = { ...prev };
-          delete next[id];
-          return next;
-        }
-
-        if (!timeoutsRef.current.has(id)) {
-          const timeout = setTimeout(() => {
-            setRequests((current) => {
-              const next = { ...current };
-              delete next[id];
-              return next;
-            });
-            timeoutsRef.current.delete(id);
-          }, remaining);
-
-          timeoutsRef.current.set(id, timeout);
-        }
-
+  const hide = useCallback((id: string) => {
+    setRequests((prev) => {
+      if (!prev[id]) {
         return prev;
-      });
-    },
-    [clearTimer],
-  );
+      }
+
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, []);
 
   const value = useMemo(() => ({ show, hide }), [hide, show]);
   const isVisible = Object.keys(requests).length > 0;

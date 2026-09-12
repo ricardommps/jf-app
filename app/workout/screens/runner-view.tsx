@@ -34,15 +34,34 @@ const RunnerView = ({ workout }: Props) => {
       workout.title === "LL2_INTERVALADO" ||
       workout.title === "SPRINT" ||
       workout.title === "HIT_ELEVACAO";
+    const sharedParams = {
+      id: workout.id,
+      title: workout.title,
+      subtitle: workout.subtitle,
+    };
+
     setModalVisible(false);
     setSelected("indoor");
+
     if (selected === "outdoor") {
       router.push(
-        `/workout/runner-finish?id=${workout.id}&outdoor=true&title=${workout.title}&subtitle=${workout.subtitle}` as any
+        {
+          pathname: "/workout/runner-finish",
+          params: {
+            ...sharedParams,
+            outdoor: "true",
+          },
+        } as any,
       );
     } else {
       router.push(
-        `/workout/runner-finish?id=${workout.id}&intensities=${intensities}&title=${workout.title}` as any
+        {
+          pathname: "/workout/runner-finish",
+          params: {
+            ...sharedParams,
+            intensities: String(intensities),
+          },
+        } as any,
       );
     }
   }
