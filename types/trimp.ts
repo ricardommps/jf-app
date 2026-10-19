@@ -4,4 +4,6 @@ export type TrimpItem = {
   durationInSeconds: number;
   trimp: number;
   running: boolean;
+  programType?: number;
+  type?: "corrida" | "forca" | "complementar" | "outro";
 };

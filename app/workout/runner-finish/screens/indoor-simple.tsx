@@ -156,12 +156,14 @@ const IndoorSimpleScreen = ({
       payload.link = payload.link;
       payload.paceInSeconds = Number(payload.paceInSeconds);
       payload.executionDay = convertDate(payload.executionDay);
-      await finishedWorkout(payload);
+      const finished = await finishedWorkout(payload);
 
       router.push(
         {
-          pathname: "/finished",
+          pathname: "/shared",
           params: {
+            id: String(finished.id),
+            layout: "1",
             distanceInMeters: String(payload.distanceInMeters),
             durationInSeconds: String(payload.durationInSeconds),
             paceInSeconds: String(payload.paceInSeconds),

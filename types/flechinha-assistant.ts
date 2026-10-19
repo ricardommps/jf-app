@@ -1,8 +1,9 @@
 export const FLECHINHA_ASSISTANT_PRIORITIES = {
   financial: 1,
-  notification: 2,
-  training: 3,
-  reminder: 4,
+  lessonPackage: 2,
+  notification: 3,
+  training: 4,
+  reminder: 5,
 } as const;
 
 export type FlechinhaAssistantCategory =
@@ -24,8 +25,7 @@ export const FLECHINHA_ASSISTANT_MOODS = [
   "comemorando-medalha",
 ] as const;
 
-export type FlechinhaAssistantMood =
-  (typeof FLECHINHA_ASSISTANT_MOODS)[number];
+export type FlechinhaAssistantMood = (typeof FLECHINHA_ASSISTANT_MOODS)[number];
 
 export type FlechinhaAssistantStatus = "seen" | "dismissed" | "clicked";
 

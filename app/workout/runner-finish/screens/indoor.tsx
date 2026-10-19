@@ -177,12 +177,14 @@ const IndoorScreen = ({
       payload.rpe = Number(payload.rpe);
       payload.link = payload.link;
       payload.executionDay = convertDate(payload.executionDay);
-      await finishedWorkout(payload);
+      const finished = await finishedWorkout(payload);
 
       router.push(
         {
-          pathname: "/finished",
+          pathname: "/shared",
           params: {
+            id: String(finished.id),
+            layout: "1",
             distanceInMeters: String(payload.distanceInMeters),
             durationInSeconds: String(payload.durationInSeconds),
             rpe: String(payload.rpe),

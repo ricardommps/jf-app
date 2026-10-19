@@ -89,6 +89,14 @@ const Home = () => {
     [programs],
   );
 
+  const orderedPrograms = useMemo(
+    () =>
+      [...(programs ?? [])].sort(
+        (first, second) => Number(first.type === 3) - Number(second.type === 3),
+      ),
+    [programs],
+  );
+
   const {
     activeMessage: activeAssistantMessage,
     dismissMessage,
@@ -243,7 +251,7 @@ const Home = () => {
         <YearReview programId={runnerProgram.id} />
       )}
       <FlatList
-        data={programs || []}
+        data={orderedPrograms}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         style={styles.flatList}
@@ -316,7 +324,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   itemSeparator: {
-    height: 32,
+    height: 16,
   },
   emptyContainer: {
     flex: 1,

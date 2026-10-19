@@ -1,19 +1,21 @@
-import React from "react";
-import { HStack } from "@/components/ui/hstack";
-import { Text } from "@/components/ui/text";
-import { ImageBackground } from "@/components/ui/image-background";
-import { VStack } from "@/components/ui/vstack";
-import { View } from "@/components/ui/view";
 import { Box } from "@/components/ui/box";
+import { HStack } from "@/components/ui/hstack";
+import { ImageBackground } from "@/components/ui/image-background";
 import { Pressable } from "@/components/ui/pressable";
-import { useRouter } from "expo-router";
+import { Text } from "@/components/ui/text";
+import { View } from "@/components/ui/view";
+import { VStack } from "@/components/ui/vstack";
 import { format } from "date-fns";
+import { useRouter } from "expo-router";
+import React from "react";
 import { StyleSheet } from "react-native";
 
-const getImageSource = (type: number) => {
-  return type === 2
-    ? require("@/assets/images/banner-gym.jpg")
-    : require("@/assets/images/banner-run.jpg");
+const getImageSource = (type: number) => imageByType[type] ?? imageByType[3];
+
+const imageByType: Record<number, number> = {
+  1: require("@/assets/images/treino_corrida_flechinha.png"),
+  2: require("@/assets/images/treino_forca_flechinha.png"),
+  3: require("@/assets/images/treino_complementar_flechinha.png"),
 };
 
 interface IProgramCard {
@@ -52,20 +54,20 @@ const ProgramCard = ({
       );
     }
 
-    return (
-      <Box className="pb-5">
-        <Text size="lg" className="font-bold text-gray-50 dark:text-white">
-          Treinos de força
-        </Text>
-      </Box>
-    );
+    if (type === 2) {
+      return (
+        <Box className="pb-5">
+          <Text size="lg" className="font-bold text-gray-50 dark:text-white">
+            Treinos de força
+          </Text>
+        </Box>
+      );
+    }
+    return <Box className="pb-1"></Box>;
   };
 
   return (
-    <Pressable
-      style={styles.cardContainer}
-      onPress={() => handleNavigate(id)}
-    >
+    <Pressable style={styles.cardContainer} onPress={() => handleNavigate(id)}>
       <ImageBackground
         source={getImageSource(type)}
         style={styles.cardBackground}
@@ -96,7 +98,7 @@ const ProgramCard = ({
               >
                 {`${format(new Date(startDate), "dd/MM/yyyy")} - ${format(
                   new Date(endDate),
-                  "dd/MM/yyyy"
+                  "dd/MM/yyyy",
                 )}`}
               </Text>
             )}

@@ -27,7 +27,9 @@ import { CalendarDays } from "lucide-react-native";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   TouchableWithoutFeedback,
   View,
@@ -163,11 +165,9 @@ const GymFinishView = () => {
       payload.durationInSeconds = Number(payload.durationInSeconds);
       payload.executionDay = convertDate(payload.executionDay);
       payload.checkList = checkList;
-      await finishedWorkout(payload);
-      //router.push(`/finished` as any);
+      const finished = await finishedWorkout(payload);
       router.push(
-        `/finished?durationInSeconds=${payload.durationInSeconds}
-        &trimp=${payload.trimp}&rpe=${payload.rpe}&title=${titleStr}` as any
+        `/shared?id=${finished.id}&layout=1` as any,
       );
     } catch (err) {
       const parsedError = err as Error;
@@ -260,9 +260,14 @@ const GymFinishView = () => {
   }
 
   return (
-    <View className="flex-1 bg-black">
-      <Header title="Finalizar treino de força" />
-      <ScrollView>
+    <KeyboardAvoidingView
+      className="flex-1"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
+    >
+      <View className="flex-1 bg-black">
+        <Header title="Finalizar treino de força" />
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 32 }}>
         <Box className="pt-2">
           <Text className="text-xl text-center">{titleStr}</Text>
         </Box>
@@ -471,7 +476,8 @@ const GymFinishView = () => {
         }}
         initialValue={values.durationInSeconds}
       />
-    </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 

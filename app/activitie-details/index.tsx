@@ -830,30 +830,6 @@ const getStrengthDurationLabel = (details: ActivityDetailsResponse) => {
   return "-";
 };
 
-const buildShareParams = (details: ActivityDetailsResponse) => {
-  const distanceInKm = details.metrics.distanceInKm;
-  const distanceInMeters =
-    typeof distanceInKm === "number" && Number.isFinite(distanceInKm)
-      ? Math.round(distanceInKm * 100)
-      : 0;
-
-  const paceInSeconds = details.metrics.paceInSeconds;
-  const encodedPaceForShare =
-    typeof paceInSeconds === "number" && Number.isFinite(paceInSeconds)
-      ? Math.floor(paceInSeconds / 60) * 100 + (paceInSeconds % 60)
-      : 0;
-
-  return {
-    distanceInMeters: String(distanceInMeters),
-    durationInSeconds: String(details.metrics.movingTimeInSeconds ?? 0),
-    paceInSeconds: String(encodedPaceForShare),
-    rpe: String(details.rpe ?? 0),
-    title: details.trainingTitle ?? details.title ?? "",
-    subtitle: details.trainingSubtitle ?? "",
-    trimp: details.trimp ?? "",
-  };
-};
-
 function MetricBlock({
   label,
   value,
@@ -946,8 +922,12 @@ export default function ActivitieDetailsScreen() {
     }
 
     router.push({
-      pathname: "/finished",
-      params: buildShareParams(details),
+      pathname: "/shared",
+      params: {
+        id: finishedIdStr,
+        layout: details.unrealized ? "2" : "1",
+        ...(details.unrealized ? { unrealizedTraining: "true" } : {}),
+      },
     } as any);
   };
 

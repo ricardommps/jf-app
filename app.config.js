@@ -54,7 +54,7 @@ export default {
         foregroundImage: "./assets/images/jf_icone_app.png",
         backgroundColor: "#000000",
       },
-      softwareKeyboardLayoutMode: "pan",
+      softwareKeyboardLayoutMode: "resize",
       intentFilters: [
         {
           action: "android.intent.action.VIEW",

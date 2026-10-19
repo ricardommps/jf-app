@@ -1,10 +1,9 @@
 import { Box } from "@/components/ui/box";
 import { TrimpItem } from "@/types/trimp";
-import * as scale from "d3-scale";
 import moment from "moment";
 import React, { useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { StackedBarChart, XAxis, YAxis } from "react-native-svg-charts";
+import { YAxis } from "react-native-svg-charts";
 import TrainingMetrics from "./trainingMetrics";
 
 interface Props {
@@ -26,14 +25,20 @@ export default function TrimpStackedBarChart({ data }: Props) {
     weekDays.push(moment(startOfWeek).add(i, "days").format("YYYY-MM-DD"));
   }
 
-  const grouped: Record<string, { running: number; nonRunning: number }> = {};
+  const grouped: Record<
+    string,
+    { running: number; nonRunning: number; complementary: number }
+  > = {};
   weekDays.forEach((day) => {
-    grouped[day] = { running: 0, nonRunning: 0 };
+    grouped[day] = { running: 0, nonRunning: 0, complementary: 0 };
   });
 
   filteredData.forEach((item) => {
     const day = moment(item.executionDay).format("YYYY-MM-DD");
-    if (item.running) grouped[day].running += item.trimp;
+    if (item.programType === 3 || item.type === "complementar")
+      grouped[day].complementary += item.trimp;
+    else if (item.programType === 1 || item.type === "corrida" || item.running)
+      grouped[day].running += item.trimp;
     else grouped[day].nonRunning += item.trimp;
   });
 
@@ -42,9 +47,17 @@ export default function TrimpStackedBarChart({ data }: Props) {
     label: moment(day).format("DD/MM"),
     running: grouped[day].running,
     nonRunning: grouped[day].nonRunning,
+    complementary: grouped[day].complementary,
   }));
 
-  const dailyTrimpValues = chartData.map((d) => d.running + d.nonRunning);
+  const dailyTrimpValues = chartData.map(
+    (d) => d.running + d.nonRunning + d.complementary
+  );
+  const maxGroupedTrimp = Math.max(
+    ...chartData.flatMap((d) => [d.running, d.nonRunning, d.complementary]),
+    0
+  );
+  const yMax = Math.max(100, Math.ceil(maxGroupedTrimp / 100) * 100);
 
   const hasPrevWeek = useMemo(() => {
     const prevStart = moment(startOfWeek).subtract(1, "week");
@@ -61,9 +74,13 @@ export default function TrimpStackedBarChart({ data }: Props) {
     return nextWeekStart.isSameOrBefore(currentWeekStart);
   }, [weekOffset]);
 
-  const keys = ["nonRunning", "running"];
-  const colors = ["#f55858", "#fc1c1c"];
   const contentInset = { top: 10, bottom: 10 };
+  const chartHeight = 190;
+  const getBarHeight = (value: number) => {
+    if (!value || !yMax) return 0;
+
+    return Math.max(2, (value / yMax) * chartHeight);
+  };
 
   return (
     <View style={{ padding: 16, backgroundColor: "black" }}>
@@ -97,37 +114,96 @@ export default function TrimpStackedBarChart({ data }: Props) {
           </TouchableOpacity>
         </View>
 
-        <View style={{ flexDirection: "row", height: 220 }}>
+        <View style={{ flexDirection: "row" }}>
           <YAxis
-            data={chartData.map((d) => d.running + d.nonRunning)}
+            style={{ height: chartHeight }}
+            data={[0, yMax]}
             contentInset={contentInset}
             svg={{ fill: "#999", fontSize: 10 }}
             numberOfTicks={5}
+            yMin={0}
+            yMax={yMax}
           />
 
           <View style={{ flex: 1, marginLeft: 8 }}>
-            <StackedBarChart
-              style={{ flex: 1 }}
-              keys={keys}
-              colors={colors}
-              data={chartData}
-              contentInset={contentInset}
-              showGrid={false}
-            />
+            <View
+              style={{
+                height: chartHeight,
+                flexDirection: "row",
+                alignItems: "flex-end",
+              }}
+            >
+              {chartData.map((item) => (
+                <View
+                  key={item.day}
+                  style={{
+                    flex: 1,
+                    height: chartHeight,
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "flex-end",
+                      justifyContent: "center",
+                      gap: 2,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 7,
+                        height: getBarHeight(item.running),
+                        backgroundColor: "#fc1c1c",
+                      }}
+                    />
+                    <View
+                      style={{
+                        width: 7,
+                        height: getBarHeight(item.nonRunning),
+                        backgroundColor: "#f55858",
+                      }}
+                    />
+                    <View
+                      style={{
+                        width: 7,
+                        height: getBarHeight(item.complementary),
+                        backgroundColor: "#8e8e93",
+                      }}
+                    />
+                  </View>
+                </View>
+              ))}
+            </View>
 
-            <XAxis
-              style={{ marginTop: 6 }}
-              data={chartData}
-              scale={scale.scaleBand}
-              formatLabel={(_value: number, index: number) => chartData[index].label}
-              svg={{ fill: "white", fontSize: 10 }}
-            />
+            <View
+              style={{
+                flexDirection: "row",
+                marginTop: 6,
+              }}
+            >
+              {chartData.map((item) => (
+                <Text
+                  key={item.day}
+                  style={{
+                    flex: 1,
+                    color: "white",
+                    fontSize: 10,
+                    textAlign: "center",
+                  }}
+                >
+                  {item.label}
+                </Text>
+              ))}
+            </View>
           </View>
         </View>
 
         <View
           style={{
             flexDirection: "row",
+            flexWrap: "wrap",
             justifyContent: "center",
             marginTop: 16,
           }}
@@ -166,6 +242,24 @@ export default function TrimpStackedBarChart({ data }: Props) {
               }}
             />
             <Text style={{ color: "white", fontSize: 12 }}>Força</Text>
+          </View>
+
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginHorizontal: 8,
+            }}
+          >
+            <View
+              style={{
+                width: 16,
+                height: 16,
+                marginRight: 4,
+                backgroundColor: "#8e8e93",
+              }}
+            />
+            <Text style={{ color: "white", fontSize: 12 }}>Complementar</Text>
           </View>
         </View>
       </Box>

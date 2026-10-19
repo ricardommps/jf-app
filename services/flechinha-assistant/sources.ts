@@ -7,6 +7,10 @@ import {
 import { Invoice } from "@/types/invoice";
 import { NotificationV2 } from "@/types/notification-v2";
 import { Workout } from "@/types/workout";
+import {
+  isFeedbackNotification,
+  isLessonPackageNotification,
+} from "@/utils/notification-v2";
 
 type FlechinhaAssistantSourcesInput = {
   invoices?: Invoice[] | null;
@@ -105,11 +109,6 @@ const isInvoiceDueTomorrow = (invoice: Invoice) => {
   return invoiceDueDate === tomorrow;
 };
 
-const isFeedbackNotification = (notification: NotificationV2) =>
-  notification.type === "feedback" ||
-  notification.variant === "feedback-running" ||
-  notification.variant === "feedback-strength";
-
 const buildFinancialMessage = (invoices?: Invoice[] | null) => {
   if (!invoices?.length) {
     return null;
@@ -186,6 +185,10 @@ const resolveNotificationCtaLabel = (
   notification: NotificationV2,
   href: string,
 ) => {
+  if (isLessonPackageNotification(notification)) {
+    return href === "/lesson-packages" ? "Ver pacotes" : "Ver pacote";
+  }
+
   if (notification.action?.label?.trim()) {
     return notification.action.label.trim();
   }
@@ -261,11 +264,14 @@ const buildNotificationMessage = (notifications?: NotificationV2[] | null) => {
   const href =
     resolveNotificationV2Href(currentNotification) || "/notifications-v2";
   const normalizedContent = currentNotification.content?.trim();
+  const isPackage = isLessonPackageNotification(currentNotification);
 
   return {
     id: `notification:${currentNotification.id}`,
-    category: "notification",
-    priority: FLECHINHA_ASSISTANT_PRIORITIES.notification,
+    category: isPackage ? "lessonPackage" : "notification",
+    priority: isPackage
+      ? FLECHINHA_ASSISTANT_PRIORITIES.lessonPackage
+      : FLECHINHA_ASSISTANT_PRIORITIES.notification,
     title: currentNotification.title?.trim() || "Nova notificação",
     message:
       normalizedContent ||
@@ -281,7 +287,9 @@ const buildNotificationMessage = (notifications?: NotificationV2[] | null) => {
     metadata: {
       notificationId: currentNotification.id,
       unreadCount: unreadNotifications.length,
-      variant: currentNotification.variant,
+      variant: isLessonPackageNotification(currentNotification)
+        ? "lesson-package"
+        : currentNotification.variant,
     },
   } satisfies FlechinhaAssistantMessage;
 };
@@ -472,9 +480,23 @@ export const buildFlechinhaAssistantMessages = ({
   const weeklyCompletionMessage =
     buildWeeklyCompletionMessage(showWeeklyCompletion);
 
+  const packageNotifications = sortNotificationsByCreatedAt(
+    (notifications ?? []).filter(
+      (notification) =>
+        !notification.readAt && isLessonPackageNotification(notification),
+    ),
+  );
+
   const messages: (FlechinhaAssistantMessage | null)[] = [
     buildFinancialMessage(invoices),
-    buildNotificationMessage(notifications),
+    ...packageNotifications.map((notification) =>
+      buildNotificationMessage([notification]),
+    ),
+    buildNotificationMessage(
+      notifications?.filter(
+        (notification) => !isLessonPackageNotification(notification),
+      ),
+    ),
     buildTrainingMessage(runnerProgramId, workouts),
     buildReminderMessage(runnerProgramId, stravaConnected),
     weeklyCompletionMessage,

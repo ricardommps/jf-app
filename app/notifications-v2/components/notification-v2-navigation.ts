@@ -1,4 +1,5 @@
 import { NotificationV2 } from "@/types/notification-v2";
+import { isLessonPackageNotification } from "@/utils/notification-v2";
 
 const DEEP_LINK_PREFIX = "jfapp://";
 
@@ -78,6 +79,13 @@ export const extractInvoiceIdFromNotification = (
 export const resolveNotificationV2Href = (
   notification: NotificationV2,
 ): string | null => {
+  if (isLessonPackageNotification(notification)) {
+    const packageId = toStringValue(notification.metadata?.lessonPackageId);
+    return packageId && /^\d+$/.test(packageId) && Number(packageId) > 0
+      ? `/lesson-packages/${packageId}`
+      : "/lesson-packages";
+  }
+
   const navigation = notification.navigation;
   const screen = toStringValue(navigation?.screen);
   const url = toStringValue(navigation?.url);
@@ -93,7 +101,9 @@ export const resolveNotificationV2Href = (
       toStringValue(notification.link);
 
     if (!finishedId) {
-      return screen ? buildRouteFromScreen(screen, params) : normalizeJfappUrl(url!);
+      return screen
+        ? buildRouteFromScreen(screen, params)
+        : normalizeJfappUrl(url!);
     }
 
     return `/activitie-details?finishedId=${encodeURIComponent(finishedId)}&notificationId=${notification.id}`;

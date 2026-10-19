@@ -10,14 +10,15 @@ import {
   fetchAppVersionStatus,
   type AppVersionStatus,
 } from "@/services/app-version.service";
-import * as Sentry from "@sentry/react-native";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Baloo2_400Regular,
   Baloo2_600SemiBold,
   Baloo2_700Bold,
   Baloo2_800ExtraBold,
 } from "@expo-google-fonts/baloo-2";
+import { Kalam_400Regular, Kalam_700Bold } from "@expo-google-fonts/kalam";
+import * as Sentry from "@sentry/react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Audio } from "expo-av";
 import { useFonts } from "expo-font";
 import * as Notifications from "expo-notifications";
@@ -220,6 +221,8 @@ const MainLayout = () => {
     "baloo-semibold": Baloo2_600SemiBold,
     "baloo-bold": Baloo2_700Bold,
     "baloo-extrabold": Baloo2_800ExtraBold,
+    "kalam-regular": Kalam_400Regular,
+    "kalam-bold": Kalam_700Bold,
   });
   const [appReady, setAppReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);

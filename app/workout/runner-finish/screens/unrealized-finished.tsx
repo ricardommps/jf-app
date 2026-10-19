@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { z } from "zod";
 
 import Header from "@/components/header";
@@ -64,8 +64,8 @@ const UnrealizedFinishView = ({ safeId }: Props) => {
       payload.workoutsId = safeId;
       payload.rpe = Number(payload.rpe);
       payload.executionDay = convertDate(new Date());
-      await finishedWorkout(payload);
-      router.push(`/finished?unrealizedTraining=${true}` as any);
+      const finished = await finishedWorkout(payload);
+      router.push(`/shared?id=${finished.id}&layout=2&unrealizedTraining=true` as any);
     } catch (err) {
       const parsedError = err as Error;
       if (!toast.isActive(toastId)) {
@@ -101,9 +101,14 @@ const UnrealizedFinishView = ({ safeId }: Props) => {
   }
 
   return (
-    <View className="flex-1 bg-black">
-      <Header title="Finalizar treino indoor" />
-      <ScrollView>
+    <KeyboardAvoidingView
+      className="flex-1"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
+    >
+      <View className="flex-1 bg-black">
+        <Header title="Finalizar treino indoor" />
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 32 }}>
         <Box className="px-4 pt-2">
           <Text className="text-2xl text-red-700 font-bold">
             Treino não realizado
@@ -138,8 +143,9 @@ const UnrealizedFinishView = ({ safeId }: Props) => {
             <ButtonText>Salvar</ButtonText>
           </Button>
         </HStack>
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 

@@ -39,6 +39,16 @@ export const HistoryGymItem = ({
         }}
       >
         <VStack style={{ flex: 1 }}>
+          {item.type === 3 && (
+            <Text
+              numberOfLines={2}
+              ellipsizeMode="tail"
+              className="text-typography-900 text-xl font-semibold mb-3"
+            >
+              {item.programName}
+            </Text>
+          )}
+
           <Text
             numberOfLines={2}
             ellipsizeMode="tail"
@@ -118,5 +128,7 @@ export const HistoryGymItem = ({
     return cardContent;
   }
 
-  return <Pressable onPress={() => onOpenDetails(item)}>{cardContent}</Pressable>;
+  return (
+    <Pressable onPress={() => onOpenDetails(item)}>{cardContent}</Pressable>
+  );
 };

@@ -1,6 +1,6 @@
 import axiosInstance from "@/config/axios";
-import * as Sentry from "@sentry/react-native";
 import { ActivityDetailsResponse } from "@/types/activity-details";
+import * as Sentry from "@sentry/react-native";
 
 export async function finishedWorkout(payload: any) {
   try {
@@ -46,6 +46,37 @@ export async function getFinishedHistory(id: string) {
   } catch (error: any) {
     Sentry.captureException(error, {
       extra: { context: "getFinishedHistory", id },
+    });
+    throw error;
+  }
+}
+
+export type FinishedShareData = {
+  id: number;
+  executionDay: string | null;
+  module: { key: string | null; label: string | null };
+  title: string | null;
+  subtitle: string | null;
+  distanceKm: number | null;
+  durationInSeconds: number | null;
+  durationLabel: string | null;
+  paceInSeconds: number | null;
+  paceLabel: string | null;
+  effort: number | null;
+  type: number | null;
+};
+
+export async function getFinishedShareData(
+  finishedId: string,
+): Promise<FinishedShareData> {
+  try {
+    const response = await axiosInstance.get(
+      "/api/v2/finished/share/" + finishedId,
+    );
+    return response.data as FinishedShareData;
+  } catch (error: any) {
+    Sentry.captureException(error, {
+      extra: { context: "getFinishedShareData", finishedId },
     });
     throw error;
   }

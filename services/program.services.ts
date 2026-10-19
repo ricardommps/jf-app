@@ -1,3 +1,4 @@
+import axios from "axios";
 import axiosInstance from "@/config/axios";
 import * as Sentry from "@sentry/react-native";
 
@@ -6,6 +7,10 @@ export async function getPrograms() {
     const response = await axiosInstance.get("/api/v2/program");
     return response.data;
   } catch (error: any) {
+    if (axios.isCancel(error)) {
+      return [];
+    }
+
     Sentry.captureException(error, { extra: { context: "getPrograms" } });
     console.error("getPrograms", error);
     throw error;
@@ -36,6 +41,10 @@ export async function runnerProgram() {
 
     return data ? [data] : [];
   } catch (error: any) {
+    if (axios.isCancel(error)) {
+      return [];
+    }
+
     if (error?.response?.status === 400) {
       return [];
     }

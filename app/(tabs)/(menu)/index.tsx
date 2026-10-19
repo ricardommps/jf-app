@@ -1,6 +1,7 @@
 import Loading from "@/components/shared/loading";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { useSession } from "@/contexts/Authentication";
+import { useMyLessonPackages } from "@/hooks/useMyLessonPackages";
 import { getMyProfile } from "@/services/customer.service";
 import { runnerProgram } from "@/services/program.services";
 import { UserType } from "@/types/ProfileType";
@@ -10,6 +11,7 @@ import { useNavigation, useRouter } from "expo-router";
 import {
   ArrowLeft,
   Bell,
+  CalendarDays,
   ChevronRight,
   ClipboardList,
   Gauge,
@@ -125,6 +127,8 @@ export default function Menu() {
 
   const { getProfile, signOut, updateProfile } = useSession();
   const sessionProfile = getProfile();
+  const { data: lessonPackages = [] } = useMyLessonPackages();
+  const hasLessonPackages = lessonPackages.length > 0;
 
   const { data: runnerProgramData, isLoading: isRunnerProgramLoading } =
     useQuery<ProgramItem[]>({
@@ -205,6 +209,19 @@ export default function Menu() {
         icon: <WalletCards color="#9CA3AF" size={22} />,
         onPress: () => router.push(appendFromMenuParam("/invoice") as any),
       },
+      ...(hasLessonPackages
+        ? [
+            {
+              key: "lesson-packages",
+              title: "Pacotes de aula",
+              description: "Confira suas aulas e pacotes anteriores",
+              iconBackgroundColor: "rgba(55, 222, 188, 0.12)",
+              icon: <CalendarDays color="#9CA3AF" size={22} />,
+              onPress: () =>
+                router.push(appendFromMenuParam("/lesson-packages") as any),
+            },
+          ]
+        : []),
       {
         key: "push",
         title: "Push",
@@ -214,7 +231,7 @@ export default function Menu() {
         onPress: () => router.push(appendFromMenuParam("/settings") as any),
       },
     ],
-    [router],
+    [router, hasLessonPackages],
   );
 
   const runningItems = useMemo<MenuItem[]>(
