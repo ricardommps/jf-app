@@ -15,6 +15,21 @@ export async function finishedWorkout(payload: any) {
   }
 }
 
+export async function updateFinished(finishedId: string, payload: any) {
+  try {
+    const response = await axiosInstance.put(
+      `/api/v2/finished/edit/${finishedId}`,
+      payload,
+    );
+    return response.data;
+  } catch (error: any) {
+    Sentry.captureException(error, {
+      extra: { context: "updateFinished", finishedId, payload },
+    });
+    throw error;
+  }
+}
+
 export async function history() {
   try {
     const response = await axiosInstance.get(

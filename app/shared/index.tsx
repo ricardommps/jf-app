@@ -54,7 +54,7 @@ const SharedScreen = () => {
   }
 
   return sharedLayout === "2" ? (
-    <Layout2 id={sharedId} data={shareData} unrealizedTraining={isUnrealizedTraining} />
+    <Layout2 data={shareData} unrealizedTraining={isUnrealizedTraining} />
   ) : (
     <Layout1 id={sharedId} data={shareData} />
   );

@@ -21,6 +21,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import {
   ArrowLeft,
   CalendarDays,
+  Pencil,
   MessageCircleIcon,
   Share2,
 } from "lucide-react-native";
@@ -939,6 +940,30 @@ export default function ActivitieDetailsScreen() {
     setCommentsOpen(true);
   };
 
+  const canEdit =
+    sourceStr === "history" &&
+    details?.review !== true &&
+    details?.unrealized !== true;
+
+  const handleEdit = () => {
+    if (!canEdit || !details) {
+      return;
+    }
+
+    const isStrengthTraining = details.workoutKind === "strength";
+    router.push({
+      pathname: isStrengthTraining ? "/workout/gym-finish" : "/workout/runner-finish",
+      params: {
+        id: String(details.workoutsId ?? details.workoutId ?? ""),
+        editFinishedId: String(details.finishedId),
+        title: details.trainingTitle ?? details.title ?? "",
+        subtitle: details.trainingSubtitle ?? "",
+        outdoor: String(details.outdoor === true),
+        intensities: String(Boolean(details.intensities)),
+      },
+    } as any);
+  };
+
   const isRunning = details?.workoutKind === "running";
   const isIndoor = isRunning && details?.outdoor === false;
   const isStrength = details?.workoutKind === "strength";
@@ -1149,6 +1174,15 @@ const indoorMetricItems =
 
           <View className="border-t border-[#1D1F24] bg-black px-5 pb-5 pt-3">
             <View className="flex-row items-center justify-start gap-5">
+              {canEdit ? (
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleEdit}
+                  className="h-11 w-11 items-center justify-center rounded-full bg-[#1D212A]"
+                >
+                  <Pencil color="#FFFFFF" size={21} strokeWidth={2.1} />
+                </TouchableOpacity>
+              ) : null}
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={handleOpenComments}
@@ -1479,6 +1513,15 @@ const indoorMetricItems =
 
           <View className="border-t border-[#1D1F24] bg-black px-5 pb-5 pt-3">
             <View className="flex-row items-center justify-start gap-5">
+              {canEdit ? (
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleEdit}
+                  className="h-11 w-11 items-center justify-center rounded-full bg-[#1D212A]"
+                >
+                  <Pencil color="#FFFFFF" size={21} strokeWidth={2.1} />
+                </TouchableOpacity>
+              ) : null}
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={handleOpenComments}

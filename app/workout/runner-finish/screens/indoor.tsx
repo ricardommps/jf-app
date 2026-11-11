@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
 import { ThemeContext } from "@/contexts/theme-context";
-import { finishedWorkout } from "@/services/finished.service";
+import { finishedWorkout, getFinishedActivitiesDetails, updateFinished } from "@/services/finished.service";
+import { useQuery } from "@tanstack/react-query";
 import { calendarBaseTheme } from "@/utils/calendar-base-theme";
 import {
   convertMetersToKilometersFormat,
@@ -88,11 +89,13 @@ type WorkoutFormData = z.infer<typeof workoutSchema>;
 interface Props {
   safeId: string;
   titleStr?: string;
+  editFinishedId?: string;
 }
 
 const IndoorScreen = ({
   safeId,
   titleStr,
+  editFinishedId,
 }: Props) => {
   const router = useRouter();
   const toast = useToast();
@@ -154,6 +157,29 @@ const IndoorScreen = ({
   const warmUpIntensities = watch("warmUpIntensities");
   const coolDownDuration = watch("coolDownDuration");
   const coolDownIntensities = watch("coolDownIntensities");
+  const isEditing = Boolean(editFinishedId);
+  const { data: editDetails, isLoading: isLoadingEdit } = useQuery({
+    queryKey: ["finished-activity-details-edit", editFinishedId],
+    queryFn: () => getFinishedActivitiesDetails(editFinishedId as string),
+    enabled: isEditing,
+  });
+
+  useEffect(() => {
+    if (!editDetails) return;
+    const studentComment = editDetails.comments?.find((comment) => !comment.isAdmin);
+    setValue("executionDay", String(editDetails.executionDay ?? "").slice(0, 10));
+    setValue("distanceInMeters", Number(editDetails.distanceInMeters ?? 0));
+    setValue("durationInSeconds", Number(editDetails.durationInSeconds ?? 0));
+    setValue("rpe", Number(editDetails.rpe ?? 0));
+    setValue("trimp", Number(editDetails.trimp ?? 0));
+    setValue("comments", studentComment?.content ?? "");
+    setValue("intensities", Array.isArray(editDetails.intensities) ? editDetails.intensities.map(Number) : []);
+    setValue("unitMeasurement", editDetails.unitMeasurement ?? editDetails.unitmeasurement ?? "pace");
+    setValue("warmUpDuration", Number(editDetails.warmUpDuration ?? 0));
+    setValue("warmUpIntensities", Number(editDetails.warmUpIntensities ?? 0));
+    setValue("coolDownDuration", Number(editDetails.coolDownDuration ?? 0));
+    setValue("coolDownIntensities", Number(editDetails.coolDownIntensities ?? 0));
+  }, [editDetails, setValue]);
 
   const calendarProps = useMemo(() => {
     const baseTheme = { ...calendarBaseTheme };
@@ -177,6 +203,14 @@ const IndoorScreen = ({
       payload.rpe = Number(payload.rpe);
       payload.link = payload.link;
       payload.executionDay = convertDate(payload.executionDay);
+      if (isEditing) {
+        await updateFinished(editFinishedId as string, payload);
+        router.replace({
+          pathname: "/activitie-details",
+          params: { finishedId: editFinishedId, source: "history" },
+        } as any);
+        return;
+      }
       const finished = await finishedWorkout(payload);
 
       router.push(
@@ -400,7 +434,7 @@ const IndoorScreen = ({
     getTrimp();
   }, [values.durationInSeconds, values.rpe]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingEdit) {
     return <Loading />;
   }
 

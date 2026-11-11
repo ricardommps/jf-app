@@ -5,7 +5,7 @@ export default {
     name: "FOLTZ",
     slug: "jfapp",
     owner: "jftreinos",
-    version: "1.3.6",
+    version: "1.3.7",
     orientation: "portrait",
     icon: "./assets/images/jf_icone_app.png",
     scheme: "jfapp",
@@ -27,7 +27,7 @@ export default {
 
     ios: {
       bundleIdentifier: "com.jftreinos.jfapp",
-      buildNumber: "46",
+      buildNumber: "47",
       supportsTablet: false,
       deploymentTarget: "15.1",
       infoPlist: {
@@ -45,11 +45,11 @@ export default {
 
     android: {
       package: "com.jftreinos.jfapp",
-      versionCode: 46,
-      compileSdkVersion: 35,
-      targetSdkVersion: 35,
+      versionCode: 47,
+      compileSdkVersion: 36,
+      targetSdkVersion: 36,
       minSdkVersion: 21,
-      buildToolsVersion: "35.0.0",
+      buildToolsVersion: "36.0.0",
       adaptiveIcon: {
         foregroundImage: "./assets/images/jf_icone_app.png",
         backgroundColor: "#000000",
@@ -84,9 +84,9 @@ export default {
         "expo-build-properties",
         {
           android: {
-            compileSdkVersion: 35,
-            targetSdkVersion: 35,
-            buildToolsVersion: "35.0.0",
+            compileSdkVersion: 36,
+            targetSdkVersion: 36,
+            buildToolsVersion: "36.0.0",
           },
           ios: { useFrameworks: "static", deploymentTarget: "15.1" },
         },

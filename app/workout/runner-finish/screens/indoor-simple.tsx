@@ -45,7 +45,8 @@ import {
   ToastTitle,
   useToast,
 } from "@/components/ui/toast";
-import { finishedWorkout } from "@/services/finished.service";
+import { finishedWorkout, getFinishedActivitiesDetails, updateFinished } from "@/services/finished.service";
+import { useQuery } from "@tanstack/react-query";
 import { calendarBaseTheme } from "@/utils/calendar-base-theme";
 
 const workoutSchema = z.object({
@@ -77,11 +78,13 @@ type WorkoutFormData = z.infer<typeof workoutSchema>;
 interface Props {
   safeId: string;
   titleStr?: string;
+  editFinishedId?: string;
 }
 
 const IndoorSimpleScreen = ({
   safeId,
   titleStr,
+  editFinishedId,
 }: Props) => {
   const router = useRouter();
   const toast = useToast();
@@ -132,6 +135,24 @@ const IndoorSimpleScreen = ({
   const paceInSeconds = watch("paceInSeconds");
   const watchedRpe = watch("rpe");
   const trimp = watch("trimp");
+  const isEditing = Boolean(editFinishedId);
+  const { data: editDetails, isLoading: isLoadingEdit } = useQuery({
+    queryKey: ["finished-activity-details-edit", editFinishedId],
+    queryFn: () => getFinishedActivitiesDetails(editFinishedId as string),
+    enabled: isEditing,
+  });
+
+  useEffect(() => {
+    if (!editDetails) return;
+    const studentComment = editDetails.comments?.find((comment) => !comment.isAdmin);
+    setValue("executionDay", String(editDetails.executionDay ?? "").slice(0, 10));
+    setValue("distanceInMeters", Number(editDetails.distanceInMeters ?? 0));
+    setValue("durationInSeconds", Number(editDetails.durationInSeconds ?? 0));
+    setValue("paceInSeconds", Number(editDetails.paceInSeconds ?? 0));
+    setValue("rpe", Number(editDetails.rpe ?? 0));
+    setValue("trimp", Number(editDetails.trimp ?? 0));
+    setValue("comments", studentComment?.content ?? "");
+  }, [editDetails, setValue]);
 
   const calendarProps = useMemo(() => {
     const baseTheme = { ...calendarBaseTheme };
@@ -156,6 +177,14 @@ const IndoorSimpleScreen = ({
       payload.link = payload.link;
       payload.paceInSeconds = Number(payload.paceInSeconds);
       payload.executionDay = convertDate(payload.executionDay);
+      if (isEditing) {
+        await updateFinished(editFinishedId as string, payload);
+        router.replace({
+          pathname: "/activitie-details",
+          params: { finishedId: editFinishedId, source: "history" },
+        } as any);
+        return;
+      }
       const finished = await finishedWorkout(payload);
 
       router.push(
@@ -257,7 +286,7 @@ const IndoorSimpleScreen = ({
     getTrimp();
   }, [values.durationInSeconds, values.rpe]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingEdit) {
     return <Loading />;
   }
 

@@ -281,9 +281,9 @@ const styles = StyleSheet.create({
   message: {
     color: "#FFFFFF",
     fontFamily: "kalam-bold",
-    fontSize: 18,
-    lineHeight: 32,
-    letterSpacing: 0.6,
+    fontSize: 16,
+    lineHeight: 26,
+    letterSpacing: 0.25,
     paddingTop: 4,
     paddingBottom: 2,
     includeFontPadding: true,

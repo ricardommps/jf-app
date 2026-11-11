@@ -132,6 +132,10 @@ export default function LoginScreen() {
                         onChangeText={onChange}
                         keyboardType="email-address"
                         autoCapitalize="none"
+                        autoCorrect={false}
+                        spellCheck={false}
+                        autoComplete="email"
+                        textContentType="emailAddress"
                         editable={!isLoading}
                       />
                     </Input>
@@ -163,6 +167,10 @@ export default function LoginScreen() {
                           onBlur={onBlur}
                           onChangeText={onChange}
                           secureTextEntry={!showPassword}
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          autoComplete="password"
+                          textContentType="password"
                           onSubmitEditing={handleSubmit(onSubmit)}
                           editable={!isLoading}
                         />

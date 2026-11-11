@@ -7,6 +7,7 @@ interface Props {
   intensitie: boolean;
   unrealizedTrainingBool: boolean;
   titleStr?: string;
+  editFinishedId?: string;
 }
 
 const IndoorViewScreen = ({
@@ -14,6 +15,7 @@ const IndoorViewScreen = ({
   intensitie = false,
   unrealizedTrainingBool = false,
   titleStr,
+  editFinishedId,
 }: Props) => {
   if (unrealizedTrainingBool) {
     return <UnrealizedFinishView safeId={safeId} />;
@@ -23,6 +25,7 @@ const IndoorViewScreen = ({
       <IndoorSimpleScreen
         safeId={safeId}
         titleStr={titleStr}
+        editFinishedId={editFinishedId}
       />
     );
   }
@@ -31,6 +34,7 @@ const IndoorViewScreen = ({
     <IndoorScreen
       safeId={safeId}
       titleStr={titleStr}
+        editFinishedId={editFinishedId}
     />
   );
 };

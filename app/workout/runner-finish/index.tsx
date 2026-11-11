@@ -9,6 +9,7 @@ interface Params {
   unrealizedTraining?: "true" | "false"; // idem
   title?: string;
   subtitle?: string;
+  editFinishedId?: string;
 }
 
 function useLocalSearchParams(): Params {
@@ -23,6 +24,7 @@ const RunnerFinishView = () => {
     unrealizedTraining,
     title,
     subtitle,
+    editFinishedId,
   } = useLocalSearchParams();
   const safeId = id ?? "";
   const outdoorBool = outdoor === "true";
@@ -35,6 +37,7 @@ const RunnerFinishView = () => {
         safeId={safeId}
         titleStr={titleStr}
         subtitle={subtitle}
+        editFinishedId={editFinishedId}
       />
     );
   }
@@ -44,6 +47,7 @@ const RunnerFinishView = () => {
       intensitie={intensitiesBool}
       unrealizedTrainingBool={unrealizedTrainingBool}
       titleStr={titleStr}
+        editFinishedId={editFinishedId}
     />
   );
 };

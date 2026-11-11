@@ -52,7 +52,8 @@ import {
   useStravaActivities,
   useStravaStatus,
 } from "@/hooks/useConnectStrava/useConnectStrava";
-import { finishedWorkout } from "@/services/finished.service";
+import { finishedWorkout, getFinishedActivitiesDetails, updateFinished } from "@/services/finished.service";
+import { useQuery } from "@tanstack/react-query";
 import { calendarBaseTheme } from "@/utils/calendar-base-theme";
 import { FontAwesome5 } from "@expo/vector-icons";
 
@@ -119,6 +120,7 @@ interface Props {
   safeId: string;
   titleStr?: string;
   subtitle?: string;
+  editFinishedId?: string;
 }
 
 type StravaImportedActivity = {
@@ -185,6 +187,7 @@ const OutdoorScreen = ({
   safeId,
   titleStr,
   subtitle,
+  editFinishedId,
 }: Props) => {
   const router = useRouter();
   const toast = useToast();
@@ -277,6 +280,24 @@ const OutdoorScreen = ({
   const watchedAverageHeartrate = watch("averageHeartrate");
   const watchedAverageCadence = watch("averageCadence");
   const watchedCalories = watch("calories");
+  const isEditing = Boolean(editFinishedId);
+  const { data: editDetails, isLoading: isLoadingEdit } = useQuery({
+    queryKey: ["finished-activity-details-edit", editFinishedId],
+    queryFn: () => getFinishedActivitiesDetails(editFinishedId as string),
+    enabled: isEditing,
+  });
+
+  useEffect(() => {
+    if (!editDetails) return;
+    const studentComment = editDetails.comments?.find((comment) => !comment.isAdmin);
+    setValue("executionDay", String(editDetails.executionDay ?? "").slice(0, 10));
+    setValue("distanceInMeters", Number(editDetails.distanceInMeters ?? 0));
+    setValue("durationInSeconds", Number(editDetails.durationInSeconds ?? 0));
+    setValue("paceInSeconds", Number(editDetails.paceInSeconds ?? 0));
+    setValue("rpe", Number(editDetails.rpe ?? 0));
+    setValue("trimp", Number(editDetails.trimp ?? 0));
+    setValue("comments", studentComment?.content ?? "");
+  }, [editDetails, setValue]);
 
   const { refetch: refetchStravaActivities } =
     useStravaActivities(watchedExecutionDay);
@@ -457,6 +478,14 @@ const OutdoorScreen = ({
       payload.linkstrava = payload.linkstrava;
       payload.paceInSeconds = Number(payload.paceInSeconds);
       payload.executionDay = convertDate(payload.executionDay);
+      if (isEditing) {
+        await updateFinished(editFinishedId as string, payload);
+        router.replace({
+          pathname: "/activitie-details",
+          params: { finishedId: editFinishedId, source: "history" },
+        } as any);
+        return;
+      }
       const finished = await finishedWorkout(payload);
 
       router.push(
@@ -561,7 +590,7 @@ const OutdoorScreen = ({
     getTrimp();
   }, [values.durationInSeconds, values.rpe]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingEdit) {
     return <Loading />;
   }
 

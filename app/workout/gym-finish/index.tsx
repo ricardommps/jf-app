@@ -46,7 +46,8 @@ import {
   useToast,
 } from "@/components/ui/toast";
 import { useWorkouut } from "@/contexts/WorkoutContext";
-import { finishedWorkout } from "@/services/finished.service";
+import { finishedWorkout, getFinishedActivitiesDetails, updateFinished } from "@/services/finished.service";
+import { useQuery } from "@tanstack/react-query";
 import { convertSecondsToHourMinuteFormat } from "@/utils/convertValues";
 
 const workoutSchema = z.object({
@@ -72,6 +73,7 @@ type WorkoutFormData = z.infer<typeof workoutSchema>;
 interface Params {
   id?: string;
   title?: string;
+  editFinishedId?: string;
 }
 
 function useLocalSearchParams(): Params {
@@ -79,7 +81,7 @@ function useLocalSearchParams(): Params {
 }
 
 const GymFinishView = () => {
-  const { id, title } = useLocalSearchParams();
+  const { id, title, editFinishedId } = useLocalSearchParams();
   const safeId = id ?? "";
   const router = useRouter();
   const toast = useToast();
@@ -109,6 +111,7 @@ const GymFinishView = () => {
     control,
     handleSubmit,
     setValue,
+    reset,
     watch,
     formState: { errors },
   } = useForm<WorkoutFormData>({
@@ -122,6 +125,26 @@ const GymFinishView = () => {
   const durationInSeconds = watch("durationInSeconds");
   const trimp = watch("trimp");
   const titleStr = title ?? "";
+  const isEditing = Boolean(editFinishedId);
+  const { data: editDetails, isLoading: isLoadingEdit } = useQuery({
+    queryKey: ["finished-activity-details-edit", editFinishedId],
+    queryFn: () => getFinishedActivitiesDetails(editFinishedId as string),
+    enabled: isEditing,
+  });
+
+  useEffect(() => {
+    if (!editDetails) return;
+    const studentComment = editDetails.comments?.find((comment) => !comment.isAdmin);
+    reset({
+      workoutsId: safeId,
+      executionDay: String(editDetails.executionDay ?? "").slice(0, 10),
+      durationInSeconds: Number(editDetails.durationInSeconds ?? 0),
+      rpe: Number(editDetails.rpe ?? 0),
+      trimp: Number(editDetails.trimp ?? 0),
+      comments: studentComment?.content ?? "",
+      checkList: editDetails.checkList ?? [],
+    });
+  }, [editDetails, reset, safeId]);
 
   const calendarTheme = useMemo(
     () => ({
@@ -164,7 +187,15 @@ const GymFinishView = () => {
       payload.rpe = Number(payload.rpe);
       payload.durationInSeconds = Number(payload.durationInSeconds);
       payload.executionDay = convertDate(payload.executionDay);
-      payload.checkList = checkList;
+      payload.checkList = isEditing ? editDetails?.checkList ?? [] : checkList;
+      if (isEditing) {
+        await updateFinished(editFinishedId as string, payload);
+        router.replace({
+          pathname: "/activitie-details",
+          params: { finishedId: editFinishedId, source: "history" },
+        } as any);
+        return;
+      }
       const finished = await finishedWorkout(payload);
       router.push(
         `/shared?id=${finished.id}&layout=1` as any,
@@ -255,7 +286,7 @@ const GymFinishView = () => {
     getTrimp();
   }, [values.durationInSeconds, values.rpe]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingEdit) {
     return <Loading />;
   }
 
